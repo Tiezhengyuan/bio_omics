@@ -1,3 +1,2 @@
 biosequtils
-ftplib
 sh

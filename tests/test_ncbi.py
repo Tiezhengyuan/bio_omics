@@ -2,7 +2,6 @@
 Test class ConnectNCBI
 '''
 from tests.helper import *
-from src.bioomics import ConnFTP, ConnFTPlib
 from src.bioomics import NCBI
 
 @ddt
@@ -36,7 +35,8 @@ class TestNCBI(TestCase):
     def test_download_gene_data(self):
         local_files = NCBI(DIR_DATA).download_gene_data()
         print(local_files)
-
+    
+    # TODO: confirm output
     @skip
     def test_download_pubmed(self):
         res = NCBI(DIR_DATA).download_pubmed()

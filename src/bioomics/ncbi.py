@@ -15,9 +15,8 @@ class NCBI(ConnFTP):
     url = 'ftp.ncbi.nlm.nih.gov'
 
     def __init__(self, local_dir:str, overwrite:bool=None):
-        super().__init__(self.url)
+        super().__init__(url=self.url, overwrite=overwrite)
         self.local_dir = os.path.join(local_dir, "NCBI")
-        self.overwrite = True if overwrite else False
 
     def download_assembly_summary(self, groups:list=None):
         '''
@@ -51,9 +50,7 @@ class NCBI(ConnFTP):
             endpoint = ftp_path.replace('https://ftp.ncbi.nlm.nih.gov/', ''),
             match = '.gz',
             local_path = local_path,
-            overwrite = self.overwrite,
         )
-        print(local_path)
         return local_path, local_files
     
     def download_gene_data(self):
