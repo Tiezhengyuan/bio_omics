@@ -1,12 +1,11 @@
 '''
 Test class 
 '''
-from tests.helper import *
-
-from connector.connect_ftp2 import ConnectFTP2 as cf
+from .helper import *
+from src.bioomics import ConnFTPlib as cf
 
 @ddt
-class Test_(TestCase):
+class TestConnFTPlib(TestCase):
 
     @skip
     @data(
@@ -18,7 +17,6 @@ class Test_(TestCase):
         ['wrong_ftp', 'pubmed', 11001],
     )
     @unpack
-    @mock.patch.dict(os.environ, env)
     def test_connect_ftp(self, endpoint, ftp_path, expect):
         res = cf.connect_ftp(endpoint, ftp_path)
         assert res.get('errno') == expect
@@ -28,7 +26,6 @@ class Test_(TestCase):
         ['ftp.ncbi.nlm.nih.gov', '/pubmed'],
     )
     @unpack
-    @mock.patch.dict(os.environ, env)
     def test_list_contents(self, endpoint, ftp_path):
         cf.list_contents(endpoint, ftp_path)
 
@@ -37,7 +34,6 @@ class Test_(TestCase):
         ['ftp.ncbi.nlm.nih.gov', '/pubmed', 'gz'],
     )
     @unpack
-    @mock.patch.dict(os.environ, env)
     def test_scan_tree(self, endpoint, ftp_path, pattern):
         res = cf.scan_tree(endpoint, ftp_path, pattern)
 
@@ -45,7 +41,6 @@ class Test_(TestCase):
         ['ftp.ncbi.nlm.nih.gov', '/pubmed', 'gz'],
     )
     @unpack
-    @mock.patch.dict(os.environ, env)
     def test_download_tree(self, endpoint, ftp_path, pattern):
         local_path = os.path.join(env['DIR_DOWNLOAD'], 'NCBI')
         cf.download_tree(endpoint, ftp_path, pattern, local_path)

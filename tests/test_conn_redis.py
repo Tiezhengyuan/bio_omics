@@ -1,17 +1,14 @@
 '''
 Test class 
 '''
-from unittest import TestCase, mock, skip
-from ddt import ddt, data, unpack
-import os, json
-
-from connector.connect_redis import ConnectRedis
+from .helper import *
+from src.bioomics import ConnRedis
 
 @ddt
-class Test_(TestCase):
+class TestConnRedis(TestCase):
 
     def setUp(self):
-        self.c = ConnectRedis()
+        self.c = ConnRedis()
         self.c.conn.set('a', 1)
         self.c.conn.set('b', json.dumps({'c':[1,2], 'd':{'e':'f'}}))
 

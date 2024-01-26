@@ -4,7 +4,7 @@ cache data
 import re
 import redis
 import json
-from utils.utils import Utils
+from biosequtils import KeyValue
 
 # default database is 0
 redis_db = {
@@ -17,7 +17,7 @@ redis_db = {
     'uniprot_acc': 6,
 
 }
-class ConnectRedis(object):
+class ConnRedis(object):
     def __init__(self, db:str=None, host:str=None, port:int=None):
         if db is None: db = ''
         self.db = redis_db.get(db, 0)
@@ -67,7 +67,7 @@ class ConnectRedis(object):
         
     def put_data(self, key:str, val):
         old = self.get_data(key)
-        insert = Utils.merge_dict(old, val) if old else val
+        insert = KeyValue.merge_dict(old, val) if old else val
         self.set_data(key, insert)
     
     def get_geneid(self, geneid:str):
