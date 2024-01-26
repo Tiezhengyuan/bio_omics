@@ -14,34 +14,45 @@ class ConnFTP:
         self.url = url
         self.overwrite = True if overwrite else False
 
-    def is_dir(self, ftp, name=str):
-        origin_dir = ftp.pwd()
-        try:
-            ftp.cwd(name)
-            ftp.cwd(origin_dir)
-            return True
+    def connect(self, endpoint:str=None):
+        ftp = FTP(self.url)
+        ftp.login()
+        try: 
+            if endpoint:
+                ftp.cwd(endpoint)
+            return ftp
         except Exception as e:
-            # print(e)
             pass
-        # print('origin dir: ', ftp.pwd())
-        return False
+        return None
 
     def list_files(self, endpoint:str=None, match:str=None):
         '''
         list ftp path of files
         not recursive
         '''
-        ftp_files = []
         # connect FTP
         ftp = FTP(self.url)
         ftp.login()
         if endpoint:
             ftp.cwd(endpoint)
+
+        # scan
+        ftp_files = []
         for file_name in ftp.nlst():
-            if not self.is_dir(ftp, file_name):
+            if not self._is_dir(ftp, file_name):
                 if match is None or re.search(match, file_name):
                     ftp_files.append((endpoint, file_name))
         return ftp_files
+
+    def _is_dir(self, ftp, name=str):
+        origin_dir = ftp.pwd()
+        try:
+            ftp.cwd(name)
+            ftp.cwd(origin_dir)
+            return True
+        except Exception as e:
+            pass
+        return False
 
     def download_file(self,
             endpoint:str,
@@ -108,6 +119,7 @@ class ConnFTP:
                 local_files.append(local_file)
         return local_files
 
+    # TODO: need more testing
     def download_tree(self,
             local_path:str,
             endpoint:str=None,
@@ -130,16 +142,15 @@ class ConnFTP:
             _endpoint, _local_path = pool.pop(0)
             if _endpoint:
                 ftp.cwd(_endpoint)
-            print('FTP Path: ', ftp.pwd(), ftp.nlst())
+            # print('FTP Path: ', ftp.pwd(), ftp.nlst())
             # check if name is directory
             for name in ftp.nlst():
-                if self.is_dir(ftp, name):
+                if self._is_dir(ftp, name):
                     sub_endpoint = f"{_endpoint}/{name}"
                     sub_local_path = os.path.join(_local_path, name)
                     Dir(sub_local_path).init_dir()
                     pool.append((sub_endpoint, sub_local_path))
             #download files
-            local_files += self.download_files(
-                None, match, _local_path)
+            local_files += self.download_files(None, match, _local_path)
         return local_files
 

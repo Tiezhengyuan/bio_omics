@@ -2,3 +2,4 @@ Bio
 biosequtils
 sh
 lxml
+redis

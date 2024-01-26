@@ -1,24 +1,19 @@
 '''
 Test class 
 '''
-from unittest import TestCase, mock, skip
-from ddt import ddt, data, unpack
-import os, sys
+from .helper import *
+from src.bioomics import Expasy
 
-from connector.connect_expasy import ConnectExPASy
-
-env = {
-    'DIR_CACHE': "H:\\cache",
-    'DIR_DOWNLOAD': "H:\\download",
-}
 
 @ddt
-class TestKEGG(TestCase):
+class TestExpasy(TestCase):
 
-    @mock.patch.dict(os.environ, env)
     def setUp(self):
-        self.c = ConnectExPASy()
+        self.c = Expasy(DIR_DATA, False)
 
+    def list_files(self):
+        res = self.c.list_files()
+        print(res)
 
     def test_download_data(self):
         res = self.c.download_data()
