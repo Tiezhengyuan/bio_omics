@@ -13,7 +13,7 @@ class RNACentral(ConnFTP):
         super().__init__(url=self.url, overwrite=overwrite)
         self.local_dir = os.path.join(local_dir, "RNACentral")
     
-    def download_sequence(self, file_name:str) -> str:
+    def download_sequence(self, file_name:str) -> tuple:
         _endpoint = f'{self.endpoint}sequences/by-database'
         local_file = self.download_file(
             endpoint = _endpoint,
@@ -21,4 +21,4 @@ class RNACentral(ConnFTP):
             local_path = self.local_dir,
             run_gunzip = False,
         )
-        return local_file
+        return self.local_dir, local_file
