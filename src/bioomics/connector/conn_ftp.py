@@ -10,8 +10,9 @@ from sh import gunzip
 
 
 class ConnFTP:
-    def __init__(self, url:str, username:str=None, password:str=None):
+    def __init__(self, url:str, overwrite:bool=None):
         self.url = url
+        self.overwrite = True if overwrite else False
 
     def is_dir(self, ftp, name=str):
         origin_dir = ftp.pwd()
@@ -42,12 +43,10 @@ class ConnFTP:
                     ftp_files.append((endpoint, file_name))
         return ftp_files
 
-    def download_file(
-            self,
+    def download_file(self,
             endpoint:str,
             file_name:str,
             local_path:str,
-            overwrite:bool=None,
             run_gunzip:bool=None,
         ):
         '''
@@ -55,12 +54,11 @@ class ConnFTP:
         one download one connection avoiding timeout
         '''
         if run_gunzip is None: run_gunzip = True
-        if overwrite is None: overwrite = False
         Dir(local_path).init_dir()
         local_file = os.path.join(local_path, file_name)
         unzip_file = local_file.replace('.gz', '')
         # doesn't download if file exists and overwrite is False
-        if os.path.isfile(unzip_file) and overwrite is False:
+        if os.path.isfile(unzip_file) and self.overwrite is False:
             return unzip_file
         
         # connect FTP
@@ -86,12 +84,10 @@ class ConnFTP:
             os.remove(local_file)
         return None
     
-    def download_files(
-            self,
+    def download_files(self,
             endpoint:str=None,
             match:str=None,
             local_path:str=None,
-            overwrite:bool=None
         ):
         '''
         download files from FTP path
@@ -104,17 +100,15 @@ class ConnFTP:
         local_files = []
         for current_endpoint, file_name in ftp_files:
             local_file = self.download_file(
-                current_endpoint,
-                file_name,
-                local_path,
-                overwrite
+                endpoint = current_endpoint,
+                file_name = file_name,
+                local_path = local_path,
             )
             if local_file and local_file not in local_files:
                 local_files.append(local_file)
         return local_files
 
-    def download_tree(
-            self,
+    def download_tree(self,
             local_path:str,
             endpoint:str=None,
             match:str=None

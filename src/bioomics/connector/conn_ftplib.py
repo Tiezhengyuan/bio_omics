@@ -14,8 +14,13 @@ from typing import Callable
 class ConnFTPlib:
 
     @staticmethod
-    def connect_ftp(ftp_endpoint:str, ftp_path:str, func:Callable=None,
-                    try_times:str=None, **kwargs):
+    def connect_ftp(
+            ftp_endpoint:str,
+            ftp_path:str,
+            func:Callable=None,
+            try_times:str=None,
+            **kwargs
+        ):
         '''
         connection handler
         '''
@@ -116,7 +121,11 @@ class ConnFTPlib:
 
 
     @staticmethod
-    def retrieve_file_names(ftp_endpoint:str, ftp_path:str, name_pattern:str=None)->list:
+    def retrieve_file_names(
+            ftp_endpoint:str,
+            ftp_path:str,
+            name_pattern:str=None
+        )->list:
         '''
         Suppose that large number of files exists in one directory.
         Don't consider sub-directory
