@@ -15,7 +15,7 @@ class TestNCBI(TestCase):
     )
     @unpack
     def test_download_assembly_summary(self, input, expect):
-        res = NCBI(DIR_DATA).download_assembly_summary([input,])
+        _, res = NCBI(DIR_DATA).download_assembly_summary([input,])
         assert res == expect
 
     @skip

@@ -35,7 +35,7 @@ class NCBI(ConnFTP):
                 local_path = outdir
             )
             res[antonomy] = local_file
-        return res
+        return self.local_dir, res
 
     def download_genome(self, ftp_path:str, specie:str, version:str=None):
         '''
