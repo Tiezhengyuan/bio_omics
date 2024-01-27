@@ -4,7 +4,8 @@ from .connector.conn_ftplib import ConnFTPlib
 from .connector.conn_redis import ConnRedis
 
 # database
-from .ncbi import NCBI
+from .ncbi import NCBI, ANATOMY_GROUPS
 from .rnacentral import RNACentral
 from .mirbase import Mirbase
 from .expasy import Expasy
+
