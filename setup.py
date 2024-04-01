@@ -16,7 +16,7 @@ setup(
     url = "https://github.com/Tiezhengyuan/bio_omics",
     long_description_content_type="text/markdown",
     long_description=long_description,
-    packages=find_packages(include=['src']),
+    packages=find_packages(include=['src.bioomics']),
     install_requires=[
         "Bio",
         "biosequtils",
