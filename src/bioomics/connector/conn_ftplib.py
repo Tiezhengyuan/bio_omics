@@ -4,7 +4,7 @@ connect FTP using static methods
 2. FTP login can't be alive long time.
 3. internet connection is low-speed
 """
-from biosequtils import Dir, HandleJson
+from biosequtils import Dir
 import ftplib
 import os
 import time
@@ -82,7 +82,6 @@ class ConnFTPlib:
         if 'return' in res:
             return res['return']
 
-
     @staticmethod
     def parse_contents(ftp_endpoint:str, ftp_path:str, pattern:str=None):
         parser = {
@@ -121,14 +120,10 @@ class ConnFTPlib:
 
 
     @staticmethod
-    def retrieve_file_names(
-            ftp_endpoint:str,
-            ftp_path:str,
-            name_pattern:str=None
-        )->list:
+    def retrieve_file_names(ftp_endpoint:str, ftp_path:str, name_pattern:str=None) -> list:
         '''
-        Suppose that large number of files exists in one directory.
-        Don't consider sub-directory
+        Note: Suppose that large number of files exists in one directory.
+            Don't consider sub-directory
         '''
         # scan ftp path
         res = ConnFTPlib.connect_ftp(
@@ -141,7 +136,6 @@ class ConnFTPlib:
             for name in res['return']:
                 if name_pattern is None or (name_pattern is not None\
                         and name.endswith(name_pattern)):
-                    # print(ftp_path, name)
                     file_names.append(name)
             return file_names
         return []
@@ -199,5 +193,3 @@ class ConnFTPlib:
                 file_name,
                 current_local_path
             )
-
-
