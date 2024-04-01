@@ -42,7 +42,10 @@ class TestConnFTPlib(TestCase):
     )
     @unpack
     def test_download_tree(self, endpoint, ftp_path, pattern):
-        local_path = os.path.join(env['DIR_DOWNLOAD'], 'NCBI')
+        '''
+        download all files
+        '''
+        local_path = os.path.join(DIR_DATA, 'NCBI')
         cf.download_tree(endpoint, ftp_path, pattern, local_path)
 
 
@@ -54,7 +57,6 @@ class TestConnFTPlib(TestCase):
         ],
     )
     @unpack
-    @mock.patch.dict(os.environ, env)
     def test_parse_contents(self, endpoint, ftp_path, expect_dirs, expect_files):
         res = cf.parse_contents(endpoint, ftp_path, 'gz')
         assert set(res['dirs']) == expect_dirs
@@ -68,7 +70,6 @@ class TestConnFTPlib(TestCase):
         ['/pubmed/updatefiles', 'wrong_file_name', False],
     )
     @unpack
-    @mock.patch.dict(os.environ, env)
     def test_download_file(self, ftp_path, file_name, expect):
         endpoint = 'ftp.ncbi.nlm.nih.gov'
         res = cf.download_file(endpoint, ftp_path, file_name, DIR_DATA)
@@ -82,7 +83,6 @@ class TestConnFTPlib(TestCase):
         ['/pubmed', 'unmatched', True],
     )
     @unpack
-    @mock.patch.dict(os.environ, env)
     def test_retrieve_file_names(self, path, pattern, expect):
         endpoint = 'ftp.ncbi.nlm.nih.gov'
         res = cf.retrieve_file_names(endpoint, path, pattern)

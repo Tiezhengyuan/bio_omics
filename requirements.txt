@@ -1,5 +1,6 @@
 Bio
 biosequtils
-sh
+ddt
 lxml
 redis
+sh

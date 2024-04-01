@@ -7,7 +7,6 @@ from src.bioomics import NCBI
 @ddt
 class TestNCBI(TestCase):
 
-    @skip
     @data(
         ['vertebrate_mammalian', {'vertebrate_mammalian': os.path.join(DIR_DATA, \
             'NCBI/assembly_summary/vertebrate_mammalian/assembly_summary.txt')}],
@@ -18,7 +17,6 @@ class TestNCBI(TestCase):
         _, res = NCBI(DIR_DATA).download_assembly_summary([input,])
         assert res == expect
 
-    @skip
     @data(
         ['https://ftp.ncbi.nlm.nih.gov/genomes/all/GCF/000/001/405/GCF_000001405.40_GRCh38.p14',
             'Homo sapiens', 'GRCh38.p14', os.path.join(DIR_DATA, 'NCBI', 'genome', \
