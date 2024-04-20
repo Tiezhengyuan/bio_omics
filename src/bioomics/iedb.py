@@ -12,6 +12,9 @@ from .connector.conn_http import ConnHTTP
 
 class IEDB:
     url = "https://www.iedb.org"
+    source = "IEDB"
+    meta_file_name = 'meta.json'
+
     def __init__(self, local_path:str, version:str=None, overwrite:bool=None):
         self.local_path = local_path
         Dir(self.local_path).init_dir()
@@ -19,21 +22,16 @@ class IEDB:
         self.overwrite = overwrite
         self.meta = {
             'local_path': self.local_path,
+            'source': self.source,
             'version': self.version,
         }
 
-
-    def update_meta(self, info:dict):
-        infile = os.path.join(self.local_path, 'meta.json')
-        if os.path.isfile(infile):
-            with open(infile, 'r') as f:
-                self.meta = json.load(f)
-        if self.version not in self.meta:
-            self.meta[self.version] = {}
-        self.meta[self.version][info['name']] = info
-        if self.meta:
-            with open(infile, 'w') as f:
-                json.dump(self.meta, f)
+    def save_meta(self, local_path:str=None):
+        outfile = os.path.join(local_path, self.meta_file_name) if local_path \
+            else os.path.join(self.local_path, self.meta_file_name)
+        with open(outfile, 'w') as f:
+            json.dump(self.meta, f, indent=4)
+        return outfile
 
     def pull(self, type:str):
         res = {'name': type,}
@@ -53,15 +51,13 @@ class IEDB:
             self.update_meta(res)
         return res
 
-    def csv_to_dict(self, local_csv:str=None):
-        if local_csv is None:
-            local_csv = self.meta.get('local_csv', '')
+    def csv_to_dict(self, local_csv):
         if os.path.isfile(local_csv):
             df = pd.read_csv(local_csv, compression='zip', header=1, sep=',')
             data = df.to_dict(orient='records')
             return data
         return {}
-    
+
     def download_csv(self, type:str):
         '''
         type: epitope|antigen|tcell|bcell|reference etc
@@ -117,10 +113,6 @@ class IEDB:
         data_list = df.replace({np.nan:None}).to_dict(orient='records')
         entity_data, n = {}, 1
         for data in data_list:
-            # accession
-            # if data["Source Molecule IRI"]:
-            #     acc = os.path.basename(data["Source Molecule IRI"])
-            #     data['accession'] = acc.split('.')[-1]
             if data["Molecule Parent IRI"]:
                 data['accession'] = os.path.basename(data["Molecule Parent IRI"])
             # detect unique key
@@ -132,7 +124,7 @@ class IEDB:
                 print(data)
             entity_data[key] = data
             n += 1
-            # if n == 5000:
+            # if n == 1000:
             #     break
         return entity_data
     
