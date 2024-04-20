@@ -28,7 +28,7 @@ class IntegrateData:
             self.index_meta.update(input)
         if self.index_meta:
             with open(self.index_meta_file, 'w') as f:
-                json.dump(self.index_meta, f)
+                json.dump(self.index_meta, f, indent=4)
             return True
         return False
     

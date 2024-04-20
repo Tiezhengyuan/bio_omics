@@ -7,8 +7,8 @@ import json
 from .iedb import IEDB
 from .integrate_data import IntegrateData
 
-class IEDBAntigen(IEDB):
-    entity = 'antigen'
+class IEDBEpitope(IEDB):
+    entity = 'epitope'
     key = 'accession'
 
     def __init__(self, local_path:str):
@@ -20,11 +20,11 @@ class IEDBAntigen(IEDB):
     
     def process(self):
         self.integrate = IntegrateData(self.meta['entity_path'])
-        
-        # antigen
-        # self.integrate_antigen()
+
         #epitope
         self.integrate_epitope()
+        # antigen
+        self.integrate_antigen()
 
         # 
         self.integrate.save_index_meta()
@@ -37,44 +37,54 @@ class IEDBAntigen(IEDB):
             local_file = self.download_csv(entity)
             key = f"{entity}_csv"
             self.meta[key] = local_file
-
-    def integrate_antigen(self):
-        self.download(self.entity, 'csv')
-        entity_data = self.antigen(self.meta['antigen_csv'])
-        # check if data exists in json
-        for json_data in self.integrate.scan():
-            acc = json_data.get(self.key)
-            if  acc in entity_data:
-                json_data[self.source]=entity_data[acc]
-                self.integrate.save_data(json_data)
-                del entity_data[acc]
-        # add new
-        for data in entity_data.values():
-            self.integrate.add_data({self.source: data}, data.get(self.key))
+            return local_file
 
     def integrate_epitope(self):
-        self.download('epitope', 'csv')
-        entity_data = self.epitope(self.meta['epitope_csv'])
+        local_file = self.download('epitope', 'csv')
+        entity_data = self.epitope(local_file)
         # aggregate epitopes by protein
-        agg, m = {},0
+        agg, r, p = {},0, 0
         for epitope_id, data in entity_data.items():
-            m += 1
+            r += 1
             if self.key in data:
                 acc = data[self.key]
                 if acc not in agg:
                     agg[acc] = {}
+                    p += 1
                 agg[acc][epitope_id] = data
-
-        n=0
+        self.meta['epitopes'] = r
+        self.meta['proteins_of_epitopes'] = p
+        # check if data exists in json
         for json_data in self.integrate.scan():
-            acc = json_data['key']
-            if acc in agg:
+            acc = json_data.get(self.key)
+            if  acc in agg:
+                if self.source not in json_data:
+                    json_data[self.source] = {}
                 json_data[self.source]['epitopes'] = agg[acc]
                 self.integrate.save_data(json_data)
-                n += len(agg[acc])
-            else:
-                print(json.dumps(json_data, indent=4))
-        print(f"{m}-{n}")
+                del agg[acc]
+        # export new data
+        for acc, data in agg.items():
+            input = {
+                self.source: {
+                    'epitopes': data
+                }
+            }
+            self.integrate.add_data(input, acc)
+
+
+    def integrate_antigen(self):
+        self.download('antigen', 'csv')
+        entity_data = self.antigen(self.meta['antigen_csv'])
+        # add antigen into proteins with epitopes
+        for json_data in self.integrate.scan():
+            acc = json_data.get('key', '')
+            if  acc in entity_data:
+                if self.source not in json_data:
+                    json_data[self.source] = {}
+                json_data[self.source]['antigen'] = entity_data[acc]
+                self.integrate.save_data(json_data)
+                del entity_data[acc]
 
     def _test(self):
         import zipfile
@@ -84,13 +94,3 @@ class IEDBAntigen(IEDB):
                     print(line)
 
 
-    # def integrate_reference(self):
-    #     self.download('reference', 'csv')
-    #     entity_data = self.reference(self.meta['reference_csv'])
-    #     for data in self.integrate.scan():
-    #         acc = str(data["# References"])
-    #         if acc and acc in entity_data:
-    #             data["# References"] = entity_data[acc]
-    #             self.integrate.save_data(data)
-    #         else:
-    #             print(data)
