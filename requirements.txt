@@ -2,5 +2,7 @@ Bio
 biosequtils
 ddt
 lxml
+pandas
 redis
 sh
+urllib3
