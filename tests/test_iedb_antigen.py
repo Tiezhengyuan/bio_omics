@@ -10,4 +10,3 @@ class TestIEDBAntigen(TestCase):
 
     def test_(self):
         IEDBAntigen(DIR_DATA).process()
-        # IEDBAntigen(DIR_DATA)._test()
