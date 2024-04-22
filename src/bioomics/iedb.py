@@ -13,22 +13,31 @@ from .connector.conn_http import ConnHTTP
 class IEDB:
     url = "https://www.iedb.org"
     source = "IEDB"
-    meta_file_name = 'meta.json'
+    meta_file_name = 'IEDB_meta.json'
 
     def __init__(self, local_path:str, version:str=None, overwrite:bool=None):
         self.local_path = local_path
         Dir(self.local_path).init_dir()
         self.version = 'v3' if version is None else version
         self.overwrite = overwrite
-        self.meta = {
-            'local_path': self.local_path,
-            'source': self.source,
-            'version': self.version,
-        }
-
+        self.get_meta()
+    
+    def get_meta(self):
+        self.meta_file = os.path.join(self.local_path, self.meta_file_name)
+        if os.path.isfile(self.meta_file):
+            print('get meta.')
+            with open(self.meta_file, 'r') as f:
+                self.meta = json.load(f)
+        else:
+            self.meta = {
+                'local_path': self.local_path,
+                'source': self.source,
+                'version': self.version,
+            }
+    
     def save_meta(self, local_path:str=None):
-        outfile = os.path.join(local_path, self.meta_file_name) if local_path \
-            else os.path.join(self.local_path, self.meta_file_name)
+        outfile = os.path.join(local_path, self.meta_file_name) \
+            if local_path else self.meta_file
         with open(outfile, 'w') as f:
             json.dump(self.meta, f, indent=4)
         return outfile
@@ -392,7 +401,8 @@ class IEDB:
                         ids['epitope_id'] = base_name
                     elif "assay" in value:
                         ids['assay_id'] = base_name
-                    
+                elif "Epitope IRI" in key and "epitope" in value:
+                    ids['epitope_id'] = base_name
                 elif "Organism" in key and "NCBITaxon" in value:
                     ids['taxon_id'] = base_name.split('_')[-1]
                 elif key == 'Group IRI' and 'receptor' in value:
