@@ -69,8 +69,11 @@ class ConnFTP:
         local_file = os.path.join(local_path, file_name)
         unzip_file = local_file.replace('.gz', '')
         # doesn't download if file exists and overwrite is False
-        if os.path.isfile(unzip_file) and self.overwrite is False:
-            return unzip_file
+        if self.overwrite is False:
+            if os.path.isfile(unzip_file):
+                return unzip_file
+            elif os.path.isfile(local_file):
+                return local_file
         
         # connect FTP
         ftp = FTP(self.url)
@@ -84,16 +87,16 @@ class ConnFTP:
             with open(local_file, 'wb') as f:
                 ftp.retrbinary(f"RETR {file_name}", f.write)
                 print(f"Download {ftp_file}")
-            # unzip .gz file
-            if run_gunzip and local_file.endswith('gz'):
-                print(f"decompress {local_file} to {unzip_file}")
-                gunzip(local_file, '-f')
-                return unzip_file
-            return local_file
         except Exception as e:
             print('Failure: download data from FTP, error=', e)
             os.remove(local_file)
-        return None
+            local_file = None
+        # unzip .gz file
+        if run_gunzip and local_file and local_file.endswith('gz'):
+            print(f"decompress {local_file} to {unzip_file}")
+            gunzip(local_file, '-f')
+            return unzip_file
+        return local_file
     
     def download_files(self,
             endpoint:str=None,

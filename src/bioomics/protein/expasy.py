@@ -2,7 +2,7 @@
 FTP of ExPASy: ftp.expasy.org
 """
 import os
-from .connector.conn_ftp import ConnFTP
+from ..connector.conn_ftp import ConnFTP
 
 class Expasy(ConnFTP):
     url = "ftp.expasy.org"

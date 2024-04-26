@@ -7,7 +7,7 @@ from biosequtils import Dir
 import os
 import json
 from .iedb import IEDB
-from .integrate_data import IntegrateData
+from ..integrate_data import IntegrateData
 
 class IEDBAntigen(IEDB):
     key = 'accession'
