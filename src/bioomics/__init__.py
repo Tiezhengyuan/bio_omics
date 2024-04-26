@@ -9,14 +9,17 @@ from .connector.conn_redis import ConnRedis
 
 # comprehensive database
 from .ncbi import NCBI, ANATOMY_GROUPS
-from .expasy import Expasy
+from .protein.expasy import Expasy
+from .protein.uniprot import UniProt
+from .protein.uniprot_sprot import UniProtSprot
+from .protein.uniprot_trembl import UniProtTrembl
 
 # RNA, non-coding RNA
 from .rnacentral import RNACentral
 from .mirbase import Mirbase
 
 # immuno-biology
-from .iedb import IEDB
-from .iedb_antigen import IEDBAntigen
-from .iedb_epitope import IEDBEpitope
+from .immune.iedb import IEDB
+from .immune.iedb_antigen import IEDBAntigen
+from .immune.iedb_epitope import IEDBEpitope
 

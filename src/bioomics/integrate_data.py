@@ -7,16 +7,21 @@ import math
 from typing import Iterable
 
 class IntegrateData:
-    def __init__(self, local_path:str):
-        self.local_path = local_path
+    def __init__(self, entity_path:str):
+        '''
+        args: entity_path: store integrated data.
+        '''
+        self.entity_path = entity_path
+        Dir(self.entity_path).init_dir()
         self.index_meta = self.get_index_meta()
 
     def get_index_meta(self) -> dict:
         '''
+        self.index_meta
         key: a certain accession
         value: dictionary
         '''
-        self.index_meta_file = os.path.join(self.local_path, 'index_meta.json')
+        self.index_meta_file = os.path.join(self.entity_path, 'index_meta.json')
         if os.path.isfile(self.index_meta_file):
             with open(self.index_meta_file, 'r') as f:
                 index_meta = json.load(f)
@@ -31,7 +36,33 @@ class IntegrateData:
                 json.dump(self.index_meta, f, indent=4)
             return True
         return False
-    
+
+    def get_meta(self, updated_meta:dict):
+        '''
+        meta varies by database
+        '''
+        meta = {}
+        source = meta.get('source', '')
+        meta_file = os.path.join(self.entity_path, f"{source}_meta.json")
+        if os.path.isfile(meta_file):
+            print('get meta.')
+            with open(meta_file, 'r') as f:
+                meta = json.load(f)
+        else:
+            meta = {
+                'entity_path': self.entity_path,
+                'index_meta_file': self.index_meta_file,
+                'meta_file': meta_file,
+            }
+        # update meta
+        meta.update(updated_meta)
+        return meta
+
+    def save_meta(self, meta:dict):
+        with open(meta['meta_file'], 'w') as f:
+            json.dump(meta, f, indent=4)
+        return meta['meta_file']
+        
     def scan(self) -> Iterable:
         '''
         Note: self.index_meta could be updated
@@ -57,7 +88,7 @@ class IntegrateData:
         '''
         id_prefix = str(math.floor(int(new_id)/1000))
         sub_dirs = [id_prefix[i:i+2] for i in range(0, len(id_prefix), 2)]
-        path = os.path.join(self.local_path, *sub_dirs)
+        path = os.path.join(self.entity_path, *sub_dirs)
         Dir(path).init_dir()
         json_file = os.path.join(path, f'{new_id}.json')
         return json_file

@@ -1,10 +1,11 @@
 # bio_omics
 Download, retrieve and process omics data, or biological informatics data from public database
 
-Comprehensive databases
-- NCBI
+Comprehensive Databases
+- NCBI: genome database, 
+- UniProt: protein database, https://www.expasy.org/resources/uniprotkb-swiss-prot
 
-Sepecific databases
+Sepecific Databases
 - miRBase: mircoRNA database, https://www.mirbase.org/
 - RNACentral: non-coding RNA squence database, https://rnacentral.org/
 - IEDB: immune epitope database, https://www.iedb.org/

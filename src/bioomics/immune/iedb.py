@@ -7,7 +7,7 @@ import os
 import pandas as pd
 import numpy as np
 
-from .connector.conn_http import ConnHTTP
+from ..connector.conn_http import ConnHTTP
 
 
 class IEDB:
@@ -16,6 +16,9 @@ class IEDB:
     meta_file_name = 'IEDB_meta.json'
 
     def __init__(self, local_path:str, version:str=None, overwrite:bool=None):
+        '''
+        args: mode: normal(default), debug, update
+        '''
         self.local_path = local_path
         Dir(self.local_path).init_dir()
         self.version = 'v3' if version is None else version
@@ -373,6 +376,7 @@ class IEDB:
         '''
         entity_data = {}
         for data in data_list:
+            data['source'] = self.source
             ids = self.retrieve_ids(data)
             data.update(ids)
             # detect unique key

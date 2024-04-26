@@ -1,19 +1,21 @@
 '''
-build data mapping of antigen from IEDB
+build data mapping of epitopes from IEDB
+entity is proteins with epitopes
 '''
 from biosequtils import Dir
 import os
-import json
+
 from .iedb import IEDB
-from .integrate_data import IntegrateData
+from ..integrate_data import IntegrateData
 
 class IEDBEpitope(IEDB):
     key = 'accession'
 
-    def __init__(self, local_path:str):
+    def __init__(self, local_path:str, entity_path:str=None):
         super().__init__(local_path, None, False)
         self.meta['entity'] = 'epitope'
-        self.meta['entity_path'] = os.path.join(self.meta['local_path'], 'epitope')
+        self.meta['entity_path'] = entity_path if entity_path \
+            else os.path.join(self.meta['local_path'], 'epitope')
         Dir(self.meta['entity_path']).init_dir()
         self.integrate = None
     
