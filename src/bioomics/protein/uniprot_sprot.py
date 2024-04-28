@@ -2,7 +2,7 @@
 FTP of UniProtKB/Swiss-Prot
 """
 import os
-
+import json
 from ..integrate_data import IntegrateData
 from .uniprot import UniProt
 
@@ -59,18 +59,20 @@ class UniProtSprot(UniProt):
                     json_data['epitopes'] = {}
                 json_data['epitopes'][self.source] = entity_data[acc]['epitopes']
                 json_data[self.source] = entity_data[acc]['source']
-                self.integrate.save_data(json_data)
+                # print(json.dumps(json_data, indent=4))
+                self.integrate.save_data(json_data, (self.source, 'epitope'))
                 del entity_data[acc]
                 m += 1
         # export new data
         for acc, data in entity_data.items():
+            # print(acc, data)
             input = {
                 self.source: data['source'],
                 'epitopes': {
                     self.source: data['epitopes']
                 },
             }
-            self.integrate.add_data(input, acc)
+            self.integrate.add_data(input, acc, (self.source, 'epitope'))
             n += 1
         self.meta['updated_epitopes'] = m
         self.meta['new_epitopes'] = n
