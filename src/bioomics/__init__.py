@@ -1,5 +1,6 @@
 # 
 from .integrate_data import IntegrateData
+from .bio_dict import BioDict
 
 # connector
 from .connector.conn_http import ConnHTTP

@@ -42,8 +42,8 @@ class IntegrateData:
         meta varies by database
         '''
         meta = {}
-        source = meta.get('source', '')
-        meta_file = os.path.join(self.entity_path, f"{source}_meta.json")
+        file_name = f"{updated_meta.get('source', '')}_meta.json"
+        meta_file = os.path.join(self.entity_path, file_name)
         if os.path.isfile(meta_file):
             print('get meta.')
             with open(meta_file, 'r') as f:
@@ -93,7 +93,7 @@ class IntegrateData:
         json_file = os.path.join(path, f'{new_id}.json')
         return json_file
     
-    def add_data(self, data:dict, key_value:str=None):
+    def add_data(self, data:dict, key_value:str=None, source:str=None):
         '''
         'key' and 'ID' are added into new data
         key is unique id for identification of data
@@ -113,14 +113,20 @@ class IntegrateData:
             'ID': new_id,
             'key': key_value,
             'json_file': json_file,
+            'source': [source if source else "UNKNOWN",],
         }
         with open(json_file, 'w') as f:
             json.dump(new_data, f, indent=4)
             return json_file
     
-    def save_data(self, data:dict) -> str:
+    def save_data(self, data:dict, source:str=None) -> str:
+        '''
+        new data is added or data is updated
+        '''
         if 'key' in data:
             key_value = data['key']
+            if source and source not in self.index_meta[key_value]['source']:
+                    self.index_meta[key_value]['source'].append(source)
             json_file = self.index_meta[key_value]['json_file']
             if os.path.isfile(json_file):
                 with open(json_file, 'w') as f:

@@ -5,9 +5,11 @@ from Bio import SeqIO
 from biosequtils import Dir
 import gzip
 import os
+import json
 from typing import Iterable
 
 from ..connector.conn_ftp import ConnFTP
+from ..bio_dict import BioDict
 
 class UniProt(ConnFTP):
     url = "ftp.uniprot.org"
@@ -51,22 +53,16 @@ class UniProt(ConnFTP):
                 note = ft.qualifiers.get('note', '')
                 if 'epitope' in note:
                     if record.id not in data:
-                        m += 1
-                        refs = dict([tuple(i.split(':', 1)) for i in record.dbxrefs])
                         data[record.id] = {
-                            'source': {
-                                'accession': record.id,
-                                'annotations': record.annotations,
-                                'seq': str(record.seq),
-                                'dbxrefs': refs,
-                            },
-                            'epitopes': {},
+                            'accession': record.id,
+                            'source': BioDict.swiss_source(record),
+                            'epitopes': [],
                         }
+                        m += 1
                     n += 1
-                    data[record.id]['epitopes'][ft.id] = {
-                        'id': ft.id,
-                        'qualifiers': ft.qualifiers,
-                        'seq': str(record.seq[ft.location.start:ft.location.end]),
-                    }
+                    # update epitope to data
+                    epitope = BioDict.feature(record, ft)
+                    data[record.id]['epitopes'].append(epitope)
+                    # print(json.dumps(data[record.id], indent=4))
         print(m,n)
         return data

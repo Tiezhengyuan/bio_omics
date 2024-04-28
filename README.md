@@ -28,7 +28,7 @@ Note:
 {
     "ID": "79541",
     "key": "H0YED9",
-    "Uni-Prot": {
+    "UniProt_SwissProt": {
         ....
     },
     "NCBI": {
@@ -37,5 +37,6 @@ Note:
     "PDB": {
         ....
     },
+    ....    
 }
 ```

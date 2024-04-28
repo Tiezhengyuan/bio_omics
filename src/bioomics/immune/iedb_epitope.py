@@ -3,6 +3,7 @@ build data mapping of epitopes from IEDB
 entity is proteins with epitopes
 '''
 from biosequtils import Dir
+import json
 import os
 
 from .iedb import IEDB
@@ -10,12 +11,13 @@ from ..integrate_data import IntegrateData
 
 class IEDBEpitope(IEDB):
     key = 'accession'
+    entity = 'epitope'
 
     def __init__(self, local_path:str, entity_path:str=None):
         super().__init__(local_path, None, False)
-        self.meta['entity'] = 'epitope'
+        self.meta['entity'] = self.entity
         self.meta['entity_path'] = entity_path if entity_path \
-            else os.path.join(self.meta['local_path'], 'epitope')
+            else os.path.join(self.meta['local_path'], self.entity)
         Dir(self.meta['entity_path']).init_dir()
         self.integrate = None
     
@@ -59,9 +61,9 @@ class IEDBEpitope(IEDB):
             if self.key in data:
                 acc = data[self.key]
                 if acc not in agg:
-                    agg[acc] = {}
+                    agg[acc] = []
                     n += 1
-                agg[acc][epitope_id] = data
+                agg[acc].append(data)
         self.meta['epitopes'] = m
         self.meta['proteins'] = n
         # check if data exists in json
@@ -71,14 +73,14 @@ class IEDBEpitope(IEDB):
                 if 'epitopes' not in json_data:
                     json_data['epitopes'] = {}
                 json_data['epitopes'][self.source] = agg[acc]
-                self.integrate.save_data(json_data)
+                self.integrate.save_data(json_data, (self.source, self.entity))
                 del agg[acc]
         # export new data
         for acc, data in agg.items():
             input = {
                 'epitopes': {self.source: data},
             }
-            self.integrate.add_data(input, acc)
+            self.integrate.add_data(input, acc, (self.source, self.entity))
 
     def integrate_antigen(self):
         '''
@@ -92,7 +94,7 @@ class IEDBEpitope(IEDB):
                 if 'antigen' not in json_data:
                     json_data['antigen'] = {}
                 json_data['antigen'][self.source] = entity_data[acc]
-                self.integrate.save_data(json_data)
+                self.integrate.save_data(json_data, (self.source, 'antigen'))
                 del entity_data[acc]
                 n += 1
         self.meta['antigens'] = n
@@ -109,7 +111,6 @@ class IEDBEpitope(IEDB):
                     agg[epitope_id] = {}
                 agg[epitope_id][assay_id] = data
             # print(json.dumps(data, indent=4))
-            # break
         self.meta[inner_key] = n
         self.meta[f"{inner_key}_epitopes"] = len(agg)
 
@@ -120,14 +121,14 @@ class IEDBEpitope(IEDB):
             # the key "epitopes" is defined by integrate_epitope()
             if 'epitopes' in json_data and self.source in json_data['epitopes']:
                 json_epitopes = json_data['epitopes'][self.source]
-                for epitope_id, epitope_data in json_epitopes.items():
-                    if epitope_id in agg:
+                for epitope_data in json_epitopes:
+                    if epitope_data.get('epitope_id') in agg:
                         epitope_data[inner_key] = agg[epitope_id]
                         # print(json.dumps(agg[epitope_id], indent=4))
                         m += 1
                         n += len(agg[epitope_id])
                         tag = 1
             if tag == 1:
-                self.integrate.save_data(json_data)
+                self.integrate.save_data(json_data, (self.source, inner_key))
         self.meta[f"parsed_{inner_key}_epitopes"] = m
         self.meta[f"parsed_{inner_key}"] = n
