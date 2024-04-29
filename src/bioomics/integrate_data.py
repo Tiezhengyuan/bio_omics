@@ -45,7 +45,6 @@ class IntegrateData:
         file_name = f"{updated_meta.get('source', '')}_meta.json"
         meta_file = os.path.join(self.entity_path, file_name)
         if os.path.isfile(meta_file):
-            print('get meta.')
             with open(meta_file, 'r') as f:
                 meta = json.load(f)
         else:

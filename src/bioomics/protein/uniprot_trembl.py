@@ -27,7 +27,8 @@ class UniProtTrembl(UniProt):
         dat_gz = self.download_dat()
         parser = self.parse_dat(dat_gz)
         entity_data = self.parse_epitope(parser)
-        self.integrate_epitope(entity_data)
+        count = self.integrate_epitope(self.integrate, entity_data)
+        self.meta.update(count)
 
         self.integrate.save_meta(self.meta)
         self.integrate.save_index_meta()
@@ -45,32 +46,3 @@ class UniProtTrembl(UniProt):
         )
         return local_file
     
-    def integrate_epitope(self, entity_data:dict):
-        '''
-        integrate eiptope data into json data
-        '''
-        m, n = 0, 0
-        # check if data exists in json
-        for json_data in self.integrate.scan():
-            acc = json_data.get('key')
-            if  acc in entity_data:
-                if 'epitopes' not in json_data:
-                    json_data['epitopes'] = {}
-                json_data['epitopes'][self.source] = entity_data[acc]['epitopes']
-                json_data[self.source] = entity_data[acc]['source']
-                self.integrate.save_data(json_data)
-                del entity_data[acc]
-                m += 1
-        # export new data
-        for acc, data in entity_data.items():
-            input = {
-                self.source: data['source'],
-                'epitopes': {
-                    self.source: data['epitopes']
-                },
-            }
-            self.integrate.add_data(input, acc)
-            n += 1
-        self.meta['updated_epitopes'] = m
-        self.meta['new_epitopes'] = n
-        self.meta['epitopes'] = n + m
