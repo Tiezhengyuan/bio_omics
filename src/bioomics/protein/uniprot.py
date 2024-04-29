@@ -10,6 +10,7 @@ from typing import Iterable
 
 from ..connector.conn_ftp import ConnFTP
 from ..bio_dict import BioDict
+from ..integrate_data import IntegrateData
 
 class UniProt(ConnFTP):
     url = "ftp.uniprot.org"
@@ -47,6 +48,7 @@ class UniProt(ConnFTP):
         retrieve records according to keywords defined in features
         args: parser is determined by self.parse_dat()
         '''
+        print("Try to detect epitopes...")
         data, m, n = {}, 0, 0
         for record in parser:
             for ft in record.features:
@@ -63,6 +65,45 @@ class UniProt(ConnFTP):
                     # update epitope to data
                     epitope = BioDict.feature(record, ft)
                     data[record.id]['epitopes'].append(epitope)
-                    # print(json.dumps(data[record.id], indent=4))
-        print(m,n)
+                    print(json.dumps(data[record.id], indent=4))
+        print(f"proteins={m},epitopes={n}")
         return data
+
+    def integrate_epitope(self, integrate_obj:IntegrateData, entity_data:dict):
+        '''
+        integrate eiptope data into json data
+        '''
+        count = {
+            'epitopes': 0,
+            'epitope_proteins': len(entity_data),
+            'updated_proteins': 0,
+            'updated_epitopes': 0,
+            'new_epitopes': 0,
+            'new_proteins': 0,
+        }
+        # check if data exists in json
+        for json_data in integrate_obj.scan():
+            acc = json_data.get('key')
+            if  acc in entity_data:
+                if 'epitopes' not in json_data:
+                    json_data['epitopes'] = {}
+                json_data['epitopes'][self.source] = entity_data[acc]['epitopes']
+                json_data[self.source] = entity_data[acc]['source']
+                # print(json.dumps(json_data, indent=4))
+                integrate_obj.save_data(json_data, (self.source, 'epitope'))
+                count['updated_epitopes'] += len(entity_data[acc]['epitopes'])
+                count['updated_proteins'] += 1
+                del entity_data[acc]
+        # export new data
+        for acc, data in entity_data.items():
+            input = {
+                self.source: data['source'],
+                'epitopes': {
+                    self.source: data['epitopes']
+                },
+            }
+            integrate_obj.add_data(input, acc, (self.source, 'epitope'))
+            count['new_epitopes'] += len(data['epitopes'])
+            count['new_proteins'] += 1
+        count['epitopes'] = count['updated_epitopes'] + count['new_epitopes']
+        return count
