@@ -1,6 +1,7 @@
 # 
 from .integrate_data import IntegrateData
 from .bio_dict import BioDict
+from .bio_handler import BioHandler
 
 # connector
 from .connector.conn_http import ConnHTTP
@@ -8,8 +9,12 @@ from .connector.conn_ftp import ConnFTP
 from .connector.conn_ftplib import ConnFTPlib
 from .connector.conn_redis import ConnRedis
 
-# comprehensive database
-from .ncbi import NCBI, ANATOMY_GROUPS
+# NCBI
+from .ncbi.ncbi import NCBI, ANATOMY_GROUPS
+from .ncbi.retrieve_ncbi import RetrieveNCBI
+from .ncbi.refseq import Refseq
+
+# ExPAsy/UniProt
 from .protein.expasy import Expasy
 from .protein.uniprot import UniProt
 from .protein.uniprot_sprot import UniProtSprot

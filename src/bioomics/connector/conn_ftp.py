@@ -10,12 +10,16 @@ from sh import gunzip
 
 
 class ConnFTP:
+    overwrite = False
+    run_gunzip = False
+
     def __init__(self, url:str, overwrite:bool=None):
         self.url = url
-        self.overwrite = True if overwrite else False
+        if overwrite:
+            self.overwrite = True
 
     def connect(self, endpoint:str=None):
-        ftp = FTP(self.url)
+        ftp = FTP(self.url, timeout=100)
         ftp.login()
         try: 
             if endpoint:
@@ -45,8 +49,8 @@ class ConnFTP:
         return ftp_files
 
     def _is_dir(self, ftp, name=str):
-        origin_dir = ftp.pwd()
         try:
+            origin_dir = ftp.pwd()
             ftp.cwd(name)
             ftp.cwd(origin_dir)
             return True
@@ -54,17 +58,11 @@ class ConnFTP:
             pass
         return False
 
-    def download_file(self,
-            endpoint:str,
-            file_name:str,
-            local_path:str,
-            run_gunzip:bool=None,
-        ):
+    def download_file(self, endpoint:str, file_name:str, local_path:str):
         '''
         download one file from FTP
         one download one connection avoiding timeout
         '''
-        if run_gunzip is None: run_gunzip = True
         Dir(local_path).init_dir()
         local_file = os.path.join(local_path, file_name)
         unzip_file = local_file.replace('.gz', '')
@@ -92,23 +90,20 @@ class ConnFTP:
             os.remove(local_file)
             local_file = None
         # unzip .gz file
-        if run_gunzip and local_file and local_file.endswith('gz'):
+        if self.run_gunzip and local_file and local_file.endswith('gz'):
             print(f"decompress {local_file} to {unzip_file}")
             gunzip(local_file, '-f')
             return unzip_file
         return local_file
     
-    def download_files(self,
-            endpoint:str=None,
-            match:str=None,
-            local_path:str=None,
-        ):
+    def download_files(self, endpoint:str=None, match:str=None, local_path:str=None):
         '''
         download files from FTP path
         That isnot recursive
         '''
         # list all files
         ftp_files = self.list_files(endpoint, match)
+        print(endpoint, ftp_files)
 
         # download files
         local_files = []
@@ -122,12 +117,7 @@ class ConnFTP:
                 local_files.append(local_file)
         return local_files
 
-    # TODO: need more testing
-    def download_tree(self,
-            local_path:str,
-            endpoint:str=None,
-            match:str=None
-        ):
+    def download_tree(self, local_path:str, endpoint:str=None, match:str=None):
         '''
         arg: local_name is determined by os.path.join()
         Download FTP directory recursively
@@ -154,6 +144,6 @@ class ConnFTP:
                     Dir(sub_local_path).init_dir()
                     pool.append((sub_endpoint, sub_local_path))
             #download files
-            local_files += self.download_files(None, match, _local_path)
+            local_files += self.download_files(_endpoint, match, _local_path)
         return local_files
 

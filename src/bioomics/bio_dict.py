@@ -1,6 +1,7 @@
 '''
 convert object of biopython to dictionary
 '''
+import re
 
 class BioDict:
 
@@ -39,11 +40,46 @@ class BioDict:
         }
 
     @staticmethod
-    def feature(record, ft):
+    def swiss_feature(record, ft):
         return {
             'id': ft.id,
             'qualifiers': ft.qualifiers,
             'seq_start': ft.location.start,
             'seq_end': ft.location.end,
             'seq': str(record.seq[ft.location.start:ft.location.end]),
+        }
+    
+    @staticmethod
+    def gbk_source(record):
+        '''
+        *.GBK
+        '''
+        return {
+            'accessions': record.accession,
+            'db_source': record.db_source,
+            'record_definition': record.record_definition,
+            'keywords': record.keywords,
+            'locus': record.locus,
+            'organism': record.organism,
+            'seq': record.sequence,
+        }
+
+    @staticmethod
+    def gbk_feature(record, ft):
+        '''
+        *.GBK
+        '''
+        qualifiers = dict([(re.sub(r'^/|=$', '', q.key), \
+            re.sub(r'"', '', q.value)) for q in ft.qualifiers])
+        # print(record.locus, ft, ft.location)
+        locations = re.findall('\d+', ft.location)
+        start = int(locations[0]) if len(locations) > 0 else 0
+        end = int(locations[1]) if len(locations) > 1 else 0
+        return {
+            'feature_name': ft.key,
+            'location': ft.location,
+            'qualifiers': qualifiers,
+            'seq_start': start,
+            'seq_end': end,
+            'seq': record.sequence[start-1:end],
         }

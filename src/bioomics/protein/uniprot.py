@@ -63,7 +63,7 @@ class UniProt(ConnFTP):
                         m += 1
                     n += 1
                     # update epitope to data
-                    epitope = BioDict.feature(record, ft)
+                    epitope = BioDict.swiss_feature(record, ft)
                     data[record.id]['epitopes'].append(epitope)
                     print(json.dumps(data[record.id], indent=4))
         print(f"proteins={m},epitopes={n}")

@@ -3,8 +3,8 @@ download data from NCIB FTP
 """
 import os
 
-from .connector.conn_ftp import ConnFTP
-from .connector.conn_ftplib import ConnFTPlib
+from ..connector.conn_ftp import ConnFTP
+from ..connector.conn_ftplib import ConnFTPlib
 
 # lock the scope of groups in local version
 ANATOMY_GROUPS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
@@ -14,9 +14,9 @@ ANATOMY_GROUPS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
 class NCBI(ConnFTP):
     url = 'ftp.ncbi.nlm.nih.gov'
 
-    def __init__(self, local_dir:str, overwrite:bool=None):
+    def __init__(self, local_path:str, overwrite:bool=None):
         super().__init__(url=self.url, overwrite=overwrite)
-        self.local_dir = os.path.join(local_dir, "NCBI")
+        self.local_path = os.path.join(local_path, "NCBI")
 
     def download_assembly_summary(self, groups:list=None):
         '''
@@ -28,20 +28,20 @@ class NCBI(ConnFTP):
         
         res = {}
         for antonomy in groups:
-            outdir = os.path.join(self.local_dir, 'assembly_summary', antonomy)
+            outdir = os.path.join(self.local_path, 'assembly_summary', antonomy)
             local_file = self.download_file(
                 endpoint = f'genomes/refseq/{antonomy}/',
                 file_name = 'assembly_summary.txt',
                 local_path = outdir
             )
             res[antonomy] = local_file
-        return self.local_dir, res
+        return self.local_path, res
 
     def download_genome(self, ftp_path:str, specie:str, version:str=None):
         '''
         download genome including subdirectories and files
         '''
-        local_path = os.path.join(self.local_dir, 'genome', specie)
+        local_path = os.path.join(self.local_path, 'genome', specie)
         if version:
             local_path = os.path.join(local_path, version)
 
@@ -53,12 +53,49 @@ class NCBI(ConnFTP):
         )
         return local_path, local_files
     
+    def download_refseq_uniprotkb(self):
+        '''
+        download gene_refseq_uniprotkb_collab.gz from 
+        https://ftp.ncbi.nlm.nih.gov/refseq/uniprotkb/
+        map refeseq ~ uniprotkb
+        '''
+        local_file = self.download_file(
+            endpoint='refseq/uniprotkb/',
+            file_name='gene_refseq_uniprotkb_collab.gz',
+            local_path=os.path.join(self.local_path, 'refseq'),
+        )
+        return local_file
+    
+    def download_refseq_gpff(self):
+        local_files = []
+        species = ['H_sapiens', 'D_rerio', 'B_taurus', 'M_musculus',\
+            'R_norvegicus', 'S_scrofa', 'X_tropicalis']
+        for sub in species:
+            local_files += self.download_files(
+                local_path = os.path.join(self.local_path, 'refseq', 'mRNA_Prot'),
+                endpoint = f'refseq/{sub}/mRNA_Prot',
+                match = '.gpff.gz$'
+            )
+        return local_files
+
+    def download_refseq_complete_gpff(self):
+        local_files = []
+        species = ['vertebrate_mammalian',]
+        for sub in species:
+            local_files += self.download_files(
+            local_path = os.path.join(self.local_path, 'refseq', 'release', 'gpff'),
+            endpoint = f'refseq/release/{sub}/',
+            match = '.gpff.gz$'
+        )
+        return local_files
+
+
     def download_gene_data(self):
         '''
         download /gene/DATA including subdirectories and files
         '''
         local_files = self.download_tree(
-            local_path = os.path.join(self.local_dir, 'gene', 'DATA'),
+            local_path = os.path.join(self.local_path, 'gene', 'DATA'),
             endpoint = 'gene/DATA',
             match = '.gz$'
         )
@@ -72,6 +109,6 @@ class NCBI(ConnFTP):
             ftp_endpoint = self.url,
             ftp_path = '/pubmed',
             match = '.gz',
-            local_path = self.local_dir
+            local_path = self.local_path
         )
         return res
