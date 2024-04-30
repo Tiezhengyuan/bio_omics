@@ -73,15 +73,15 @@ class ConnFTP:
             elif os.path.isfile(local_file):
                 return local_file
         
-        # connect FTP
-        ftp = FTP(self.url)
-        ftp.login()
-        if endpoint:
-            ftp.cwd(endpoint)
-        ftp_file = f"{self.url}/{endpoint}/{file_name}"
-        
         # download
         try:
+            # connect FTP
+            ftp = FTP(self.url)
+            ftp.login()
+            if endpoint:
+                ftp.cwd(endpoint)
+            ftp_file = f"{self.url}/{endpoint}/{file_name}"
+            # donwload
             with open(local_file, 'wb') as f:
                 ftp.retrbinary(f"RETR {file_name}", f.write)
                 print(f"Download {ftp_file}")

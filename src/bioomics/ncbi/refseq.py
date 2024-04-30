@@ -1,6 +1,7 @@
 
 import pandas as pd
 import json
+import os
 
 
 from .ncbi import NCBI
@@ -15,7 +16,6 @@ class Refseq:
     def __init__(self, local_path:str):
         self.local_path = local_path
 
-    # NOTE: no epitopes detect in refseq
     def process_epitope(self, entity_path):
         entity_path = entity_path if entity_path \
             else os.path.join(self.local_path, 'epitope')
@@ -27,9 +27,10 @@ class Refseq:
         self.meta = self.integrate.get_meta(self.meta)
 
         # download
+        local_files = []
         # NOTE: no epitopes detect in refseq
         # local_files = NCBI(self.local_path).download_refseq_gpff()
-        local_files = NCBI(self.local_path).download_refseq_complete_gpff()
+        # local_files = NCBI(self.local_path).download_refseq_complete_gpff()
 
         # detect epitope in feature.note
         for gpff_gz in local_files:

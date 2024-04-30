@@ -38,10 +38,14 @@ class TestNCBI(TestCase):
     @skip
     def test_download_refseq_gpff(self):
         local_files = NCBI(DIR_DATA).download_refseq_gpff()
-        print(local_files)
 
+    @skip
     def test_download_refseq_complete_gpff(self):
         local_files = NCBI(DIR_DATA).download_refseq_complete_gpff()
+        
+
+    def test_download_protein_fasta(self):
+        local_files = NCBI(DIR_DATA).download_protein_fasta()
         print(local_files)
 
 
