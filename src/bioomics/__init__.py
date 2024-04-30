@@ -11,8 +11,8 @@ from .connector.conn_redis import ConnRedis
 
 # NCBI
 from .ncbi.ncbi import NCBI, ANATOMY_GROUPS
-from .ncbi.retrieve_ncbi import RetrieveNCBI
 from .ncbi.refseq import Refseq
+from .ncbi.genBank import GenBank
 
 # ExPAsy/UniProt
 from .protein.expasy import Expasy

@@ -89,6 +89,18 @@ class NCBI(ConnFTP):
         )
         return local_files
 
+    def download_protein_fasta(self):
+        local_files = []
+        for i in range(1, 260):
+            local_file = self.download_file(
+                endpoint='ncbi-asn1/protein_fasta/',
+                file_name=f"gbbct{i}.fsa_aa.gz",
+                local_path=os.path.join(self.local_path, 'protein_fasta'),
+            )
+            if local_file:
+                local_files.append(local_file)
+        return local_files
+
 
     def download_gene_data(self):
         '''

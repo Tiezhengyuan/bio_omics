@@ -83,3 +83,17 @@ class BioDict:
             'seq_end': end,
             'seq': record.sequence[start-1:end],
         }
+
+    @staticmethod
+    def fasta(record):
+        output =  {
+            'description': record.description,
+            'id': record.id,
+            'name': record.name,
+            'seq': str(record.seq),
+        }
+        for attr in ['annotations', 'features', 'dbxrefs']:
+            if hasattr(record, attr):
+                output[attr] = getattr(record, attr)
+        output['accession'] = record.id.split('.', 1)[0]
+        return output
