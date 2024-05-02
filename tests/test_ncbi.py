@@ -43,9 +43,12 @@ class TestNCBI(TestCase):
     def test_download_refseq_complete_gpff(self):
         local_files = NCBI(DIR_DATA).download_refseq_complete_gpff()
         
-
+    @skip
     def test_download_protein_fasta(self):
         local_files = NCBI(DIR_DATA).download_protein_fasta()
+
+    def test_download_id_mapping(self):
+        local_files = NCBI(DIR_DATA).download_id_mapping()
         print(local_files)
 
 

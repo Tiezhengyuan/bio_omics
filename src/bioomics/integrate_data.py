@@ -5,11 +5,13 @@ import os
 import json
 import math
 from typing import Iterable
+from datetime import datetime
 
 class IntegrateData:
     def __init__(self, entity_path:str):
         '''
         args: entity_path: store integrated data.
+        args: key_index: use key as index or build new index if
         '''
         self.entity_path = entity_path
         Dir(self.entity_path).init_dir()
@@ -55,9 +57,16 @@ class IntegrateData:
             }
         # update meta
         meta.update(updated_meta)
+        meta['start_time'] = datetime.now()
         return meta
 
     def save_meta(self, meta:dict):
+        end_time = datetime.now()
+        delta = end_time - meta['start_time']
+        meta['duration'] = delta.seconds
+        meta['start_time'] = meta['start_time'].strftime("%m/%d/Y, %H:%M:%S")
+        meta['end_time'] = end_time.strftime("%m/%d/Y, %H:%M:%S")
+        # save
         with open(meta['meta_file'], 'w') as f:
             json.dump(meta, f, indent=4)
         return meta['meta_file']
@@ -76,7 +85,7 @@ class IntegrateData:
 
     def next_id(self) -> str:
         if self.index_meta:
-            ids = [int(i['ID']) for i in self.index_meta.values()]
+            ids = [int(i['key']) for i in self.index_meta.values()]
             return str(max(ids) + 1)
         return '1'
     
@@ -87,29 +96,36 @@ class IntegrateData:
         '''
         id_prefix = str(math.floor(int(new_id)/1000))
         sub_dirs = [id_prefix[i:i+2] for i in range(0, len(id_prefix), 2)]
-        path = os.path.join(self.entity_path, *sub_dirs)
+        path = os.path.join(self.entity_path, 'data', *sub_dirs)
         Dir(path).init_dir()
         json_file = os.path.join(path, f'{new_id}.json')
+        return json_file
+
+    def key_json_path(self, key_value:str):
+        id_prefix = str(key_value)[:-2]
+        sub_dirs = [id_prefix[i:i+3] for i in range(0, len(id_prefix), 3)]
+        path = os.path.join(self.entity_path, 'data',  *sub_dirs)
+        Dir(path).init_dir()
+        json_file = os.path.join(path, f'{key_value}.json')
         return json_file
     
     def add_data(self, data:dict, key_value:str=None, source:str=None):
         '''
-        'key' and 'ID' are added into new data
+        'key' is added into new data
         key is unique id for identification of data
         key could be new_id or accession
         '''
-        new_id = self.next_id()
-        json_file = self.new_json_path(new_id)
+        json_file = None
         if key_value is None:
-            key_value = new_id
-        new_data = {
-            'ID': new_id,
-            'key': key_value
-        }
+            key_value = self.next_id()
+            json_file = self.new_json_path(self.next_id())
+        else:
+            json_file = self.key_json_path(key_value)
+                    
+        new_data = {'key': key_value}
         new_data.update(data)
         # update index_meta
         self.index_meta[key_value] = {
-            'ID': new_id,
             'key': key_value,
             'json_file': json_file,
             'source': [source if source else "UNKNOWN",],
