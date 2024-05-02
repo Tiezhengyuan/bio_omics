@@ -53,6 +53,26 @@ class NCBI(ConnFTP):
         )
         return local_path, local_files
     
+
+    def download_id_mapping(self):
+        '''
+        '''
+        local_files = []
+        file_names = ['gene2accession.gz', 'gene2ensembl.gz', 'gene2go.gz', \
+            'gene2pubmed.gz', 'gene2refseq.gz', 'gene_group.gz', 'gene_history.gz', \
+            'gene_info.gz', 'gene_neighbors.gz', 'gene_orthologs.gz', \
+            'gene_refseq_uniprotkb_collab.gz',]
+        for file_name in file_names:
+            local_file = self.download_file(
+                endpoint='gene/DATA',
+                file_name=file_name,
+                local_path=os.path.join(self.local_path, 'gene', 'DATA'),
+            )
+            if local_file:
+                local_files.append(local_file)
+        return local_files
+
+
     def download_refseq_uniprotkb(self):
         '''
         download gene_refseq_uniprotkb_collab.gz from 

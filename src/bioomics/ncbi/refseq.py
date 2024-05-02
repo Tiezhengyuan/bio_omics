@@ -107,22 +107,4 @@ class Refseq:
         count['epitopes'] = count['updated_epitopes'] + count['new_epitopes']
         return count
 
-    def parse_uniprotkb(self, by_uniprotkb:bool=None):
-        '''
-        gene_refseq_uniprotkb_collab.gz
-        index by refseq or unirpotkb accession
-        '''
-        by_uniprotkb = True if by_uniprotkb else False
-        gz_file = NCBI(self.local_path).download_refseq_uniprotkb()
-        df = pd.read_csv(gz_file, compression='gzip', sep='\t', header=0)
-
-        data = {}        
-        index_key = 'UniProtKB_protein_accession' if by_uniprotkb \
-            else '#NCBI_protein_accession'
-        groups = df.groupby(index_key)
-        for name, group in groups:
-            data[name] = group.to_dict(orient="records")
-            # if group.shape[0]>1:
-            #     print(name, json.dumps(data[name], indent=4))
-        return data
 

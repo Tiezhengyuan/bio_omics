@@ -13,6 +13,8 @@ from .connector.conn_redis import ConnRedis
 from .ncbi.ncbi import NCBI, ANATOMY_GROUPS
 from .ncbi.refseq import Refseq
 from .ncbi.genBank import GenBank
+from .ncbi.parse_id import ParseID
+from .ncbi.integrate_id import IntegrateID
 
 # ExPAsy/UniProt
 from .protein.expasy import Expasy
