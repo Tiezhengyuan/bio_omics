@@ -72,8 +72,17 @@ class NCBI(ConnFTP):
                 local_files.append(local_file)
         return local_files
 
+    def download_gene_map(self, file_name:str):
+        '''
+        '''
+        local_file = self.download_file(
+            endpoint='gene/DATA',
+            file_name=file_name,
+            local_path=os.path.join(self.local_path, 'gene', 'DATA'),
+        )
+        return local_file
 
-    def download_refseq_uniprotkb(self):
+    def download_gene_refseq_uniprotkb(self):
         '''
         download gene_refseq_uniprotkb_collab.gz from 
         https://ftp.ncbi.nlm.nih.gov/refseq/uniprotkb/

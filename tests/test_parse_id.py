@@ -11,12 +11,12 @@ class TestParseID(TestCase):
         self.c = ParseID(nrows=10)
 
     @data(
-        [False, "AP_000001.1"],
-        [True, "A0A9W3HR54"],
+        ['#NCBI_protein_accession', "AP_000001.1"],
+        ["UniProtKB_protein_accession", "A0A9W3HR54"],
     )
     @unpack
-    def test_parse_uniprotkb(self, by_uniprotkb, expect):
+    def test_gene_mapp(self, index_key, expect):
         infile = os.path.join(DIR_DATA, 'NCBI', 'gene', 'DATA', 'gene_refseq_uniprotkb_collab.gz')
-        res = self.c.parse_uniprotkb(infile, by_uniprotkb)
+        res = self.c.gene_map(infile, index_key)
         assert expect in res
     

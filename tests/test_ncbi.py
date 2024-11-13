@@ -30,8 +30,8 @@ class TestNCBI(TestCase):
         assert len(local_files) == expect_files
 
     @skip
-    def test_download_refseq_unirpotkb(self):
-        local_file = NCBI(DIR_DATA).download_refseq_uniprotkb()
+    def test_download_gene_refseq_unirpotkb(self):
+        local_file = NCBI(DIR_DATA).download_gene_refseq_uniprotkb()
         expect = os.path.join(DIR_DATA, 'NCBI', 'refseq', 'gene_refseq_uniprotkb_collab.gz')
         assert local_file == expect
 
