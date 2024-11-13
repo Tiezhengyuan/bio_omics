@@ -24,6 +24,7 @@ class IntegrateData:
         value: dictionary
         '''
         self.index_meta_file = os.path.join(self.entity_path, 'index_meta.json')
+        print(f"Try to get path of json files from {self.index_meta_file}")
         if os.path.isfile(self.index_meta_file):
             with open(self.index_meta_file, 'r') as f:
                 index_meta = json.load(f)
@@ -115,30 +116,34 @@ class IntegrateData:
         key is unique id for identification of data
         key could be new_id or accession
         '''
-        json_file = None
-        if key_value is None:
-            key_value = self.next_id()
-            json_file = self.new_json_path(self.next_id())
-        else:
-            json_file = self.key_json_path(key_value)
-                    
-        new_data = {'key': key_value}
-        new_data.update(data)
-        # update index_meta
-        self.index_meta[key_value] = {
-            'key': key_value,
-            'json_file': json_file,
-            'source': [source if source else "UNKNOWN",],
-        }
-        with open(json_file, 'w') as f:
-            json.dump(new_data, f, indent=4)
-            return json_file
+        try:
+            json_file = None
+            if key_value is None:
+                key_value = self.next_id()
+                json_file = self.new_json_path(self.next_id())
+            else:
+                json_file = self.key_json_path(key_value)
+                        
+            new_data = {'key': key_value}
+            new_data.update(data)
+            # update index_meta
+            self.index_meta[key_value] = {
+                'key': key_value,
+                'json_file': json_file,
+                'source': [source if source else "UNKNOWN",],
+            }
+            with open(json_file, 'w') as f:
+                json.dump(new_data, f, indent=4)
+                return json_file
+        except Exception as e:
+            print(f"Error: can't save json file. error={e}")
+
     
     def save_data(self, data:dict, source:str=None) -> str:
         '''
         new data is added or data is updated
         '''
-        if 'key' in data:
+        try:
             key_value = data['key']
             if source and source not in self.index_meta[key_value]['source']:
                     self.index_meta[key_value]['source'].append(source)
@@ -147,6 +152,8 @@ class IntegrateData:
                 with open(json_file, 'w') as f:
                     json.dump(data, f, indent=4)
                 return json_file
+        except exception as e:
+            print(f"Error: can't update json file. error={e}")
         # add data
         return self.add_data(data)
                 
