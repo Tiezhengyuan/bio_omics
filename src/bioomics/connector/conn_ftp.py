@@ -10,13 +10,11 @@ from sh import gunzip
 
 
 class ConnFTP:
-    overwrite = False
-    run_gunzip = False
 
-    def __init__(self, url:str, overwrite:bool=None):
+    def __init__(self, url:str, overwrite:bool=None, run_gunzip:bool=None):
         self.url = url
-        if overwrite:
-            self.overwrite = True
+        self.overwrite = True if overwrite is None else False
+        self.run_gunzip = False if run_gunzip is None else True
 
     def connect(self, endpoint:str=None):
         ftp = FTP(self.url, timeout=100)
