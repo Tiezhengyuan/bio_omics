@@ -15,14 +15,10 @@ from ..integrate_data import IntegrateData
 class UniProt(ConnFTP):
     url = "ftp.uniprot.org"
 
-    def __init__(self, local_path:str, overwrite:bool=None):
-        super().__init__(url=self.url, overwrite=overwrite)
-        self.local_path = self.local_path = os.path.join(local_path, "UniProt")
+    def __init__(self, local_path, overwrite:bool, run_gunzip:bool):
+        super().__init__(self.url, overwrite, run_gunzip)
+        self.local_path = local_path
         Dir(self.local_path).init_dir()
-        self.meta = {
-            'url': self.url,
-            'local_path': local_path,
-        }
   
     def parse_dat(self, dat_file:str) -> Iterable:
         '''
@@ -65,8 +61,8 @@ class UniProt(ConnFTP):
                     # update epitope to data
                     epitope = BioDict.swiss_feature(record, ft)
                     data[record.id]['epitopes'].append(epitope)
-                    print(json.dumps(data[record.id], indent=4))
-        print(f"proteins={m},epitopes={n}")
+                    # print(json.dumps(data[record.id], indent=4))
+        print(f"proteins={m}, epitopes={n}")
         return data
 
     def integrate_epitope(self, integrate_obj:IntegrateData, entity_data:dict):

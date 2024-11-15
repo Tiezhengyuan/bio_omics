@@ -18,18 +18,19 @@ from .ncbi.parse_id import ParseID
 from .ncbi.integrate_ncbi_protein import IntegrateNCBIProtein
 from .ncbi.integrate_uniprotkb_protein import IntegrateUniProtKBProtein
 
-# ExPAsy/UniProt
+# Protein
 from .protein.expasy import Expasy
 from .protein.uniprot import UniProt
 from .protein.uniprot_sprot import UniProtSprot
 from .protein.uniprot_trembl import UniProtTrembl
+from .protein.uniref import Uniref
+from .protein.iedb import IEDB
+from .protein.iedb_antigen import IEDBAntigen
+from .protein.iedb_epitope import IEDBEpitope
+from .protein.protein_meta import ProteinMeta
 
 # RNA, non-coding RNA
 from .rnacentral import RNACentral
 from .mirbase import Mirbase
 
-# immuno-biology
-from .immune.iedb import IEDB
-from .immune.iedb_antigen import IEDBAntigen
-from .immune.iedb_epitope import IEDBEpitope
 

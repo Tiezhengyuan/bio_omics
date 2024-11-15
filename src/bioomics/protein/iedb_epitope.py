@@ -2,27 +2,26 @@
 build data mapping of epitopes from IEDB
 entity is proteins with epitopes
 '''
-from biosequtils import Dir
 import json
 import os
 
 from .iedb import IEDB
 from ..integrate_data import IntegrateData
+from .protein_meta import ProteinMeta
 
 class IEDBEpitope(IEDB):
     key = 'accession'
     entity = 'epitope'
 
-    def __init__(self, local_path:str, entity_path:str=None):
-        super().__init__(local_path, None, False)
-        self.meta['entity'] = self.entity
-        self.meta['entity_path'] = entity_path if entity_path \
-            else os.path.join(self.meta['local_path'], self.entity)
-        Dir(self.meta['entity_path']).init_dir()
-        self.integrate = None
+    def __init__(self, local_path:str, result_dir:str):
+        super().__init__(local_path, False)
+        # meta data
+        self.pro_meta = ProteinMeta(result_dir, self.entity, self.source)
     
     def process(self):
-        self.integrate = IntegrateData(self.meta['entity_path'])
+        # initialize two objects
+        self.meta = self.pro_meta.get_meta(self.meta)
+        self.integrate = IntegrateData(self.meta)
 
         print("Process epitopes")
         self.integrate_epitope()
@@ -44,9 +43,10 @@ class IEDBEpitope(IEDB):
         entity_data = self.tcr_json()
         self.integrate_epitope_related(entity_data, 't_cell_receptor')
 
-        # 
+        # save IEDB_index.json
         self.integrate.save_index_meta()
-        self.save_meta(self.meta['entity_path'])
+        # save IEDB_meta.json
+        self.pro_meta.save_meta(self.meta)
         return True
 
     def integrate_epitope(self):

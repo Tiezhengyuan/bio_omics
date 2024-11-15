@@ -13,37 +13,23 @@ from ..connector.conn_http import ConnHTTP
 class IEDB:
     url = "https://www.iedb.org"
     source = "IEDB"
-    meta_file_name = 'IEDB_meta.json'
 
-    def __init__(self, local_path:str, version:str=None, overwrite:bool=None):
+
+    def __init__(self, local_path:str, overwrite:bool=None):
         '''
         args: mode: normal(default), debug, update
         '''
-        self.local_path = local_path
-        Dir(self.local_path).init_dir()
-        self.version = 'v3' if version is None else version
+        # path: download data from IEDB
+        self.local_db_path = os.path.join(local_path, self.source)
+        Dir(self.local_db_path).init_dir()
         self.overwrite = overwrite
-        self.get_meta()
-    
-    def get_meta(self):
-        self.meta_file = os.path.join(self.local_path, self.meta_file_name)
-        if os.path.isfile(self.meta_file):
-            print('get meta.')
-            with open(self.meta_file, 'r') as f:
-                self.meta = json.load(f)
-        else:
-            self.meta = {
-                'local_path': self.local_path,
-                'source': self.source,
-                'version': self.version,
-            }
-    
-    def save_meta(self, local_path:str=None):
-        outfile = os.path.join(local_path, self.meta_file_name) \
-            if local_path else self.meta_file
-        with open(outfile, 'w') as f:
-            json.dump(self.meta, f, indent=4)
-        return outfile
+        # initialize meta
+        self.version = 'v3'
+        self.meta = {
+            'local_db_path': self.local_db_path,
+            'source': self.source,
+            'version': self.version,
+        }
 
     def pull(self, type:str):
         res = {'name': type,}
@@ -56,7 +42,7 @@ class IEDB:
             df = pd.read_csv(local_file, compression='zip', header=1, sep=',')
             res['records'] = df.shape[0]
             data = df.to_dict(orient='records')
-            json_file = os.path.join(self.local_path, f"{type}_{self.version}.json")
+            json_file = os.path.join(self.local_db_path, f"{type}_{self.version}.json")
             with open(json_file, 'w') as f:
                 json.dump(data, f)
             res['json_file'] = json_file
@@ -87,7 +73,7 @@ class IEDB:
             'iedb': f"iedb_3d_full.zip",
         }
         if type in _names:
-            conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+            conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
             file_name = _names[type] 
             end_point = f"/downloader.php?file_name=doc/{file_name}"
             _, local_file = conn.download_file(end_point, file_name)
@@ -109,7 +95,7 @@ class IEDB:
             'bcr': f"bcr_full_{self.version}_json.zip",
         }
         if type in _names:
-            conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+            conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
             file_name = _names[type] 
             end_point = f"/downloader.php?file_name=doc/{file_name}"
             _, local_file = conn.download_file(end_point, file_name)
@@ -130,7 +116,7 @@ class IEDB:
     def antigen_csv(self) -> dict:
         # download
         file_name = f"antigen_full_{self.version}.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -145,7 +131,7 @@ class IEDB:
         '''
         # download
         file_name = f"antigen_full_{self.version}_json.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
        
@@ -161,7 +147,7 @@ class IEDB:
         '''
         # download
         file_name = f"epitope_full_{self.version}.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -175,7 +161,7 @@ class IEDB:
         '''
         # download
         file_name = f"epitope_full_{self.version}_json.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # retrieve data
@@ -190,7 +176,7 @@ class IEDB:
         '''
         # download
         file_name = f"tcr_full_{self.version}.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -206,7 +192,7 @@ class IEDB:
         '''
         # download
         file_name = f"tcr_full_{self.version}_json.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -221,7 +207,7 @@ class IEDB:
         '''
         # download
         file_name = f"tcell_full_{self.version}.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -237,7 +223,7 @@ class IEDB:
         '''
         # download
         file_name = f"tcell_full_{self.version}_json.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -252,7 +238,7 @@ class IEDB:
         '''
         # download
         file_name = f"bcr_full_{self.version}.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -268,7 +254,7 @@ class IEDB:
         '''
         # download
         file_name = f"bcr_full_{self.version}_json.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -283,7 +269,7 @@ class IEDB:
         '''
         # download
         file_name = f"bcell_full_{self.version}_single_file.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -299,7 +285,7 @@ class IEDB:
         '''
         # download
         file_name = f"bcell_full_{self.version}_json.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -314,7 +300,7 @@ class IEDB:
         '''
         # download
         file_name = f"mhc_ligand_full_single_file.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -330,7 +316,7 @@ class IEDB:
         '''
         # download
         file_name = f"mhc_ligand_full_json.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -345,7 +331,7 @@ class IEDB:
         '''
         # download
         file_name = f"reference_full_{self.version}.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert
@@ -361,7 +347,7 @@ class IEDB:
         '''
         # download
         file_name = f"reference_full_{self.version}_json.zip"
-        conn = ConnHTTP(self.url, self.local_path, self.overwrite)
+        conn = ConnHTTP(self.url, self.local_db_path, self.overwrite)
         end_point = f"/downloader.php?file_name=doc/{file_name}"
         _, local_file = conn.download_file(end_point, file_name)
         # convert

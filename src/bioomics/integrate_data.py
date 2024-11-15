@@ -8,13 +8,13 @@ from typing import Iterable
 from datetime import datetime
 
 class IntegrateData:
-    def __init__(self, entity_path:str):
+    def __init__(self, meta:dict):
         '''
         args: entity_path: store integrated data.
         args: key_index: use key as index or build new index if
         '''
-        self.entity_path = entity_path
-        Dir(self.entity_path).init_dir()
+        self.entity_path = meta['entity_path']
+        self.index_meta_file = meta['index_file']
         self.index_meta = self.get_index_meta()
 
     def get_index_meta(self) -> dict:
@@ -23,7 +23,6 @@ class IntegrateData:
         key: a certain accession
         value: dictionary
         '''
-        self.index_meta_file = os.path.join(self.entity_path, 'index_meta.json')
         print(f"Try to get path of json files from {self.index_meta_file}")
         if os.path.isfile(self.index_meta_file):
             with open(self.index_meta_file, 'r') as f:
@@ -40,37 +39,6 @@ class IntegrateData:
             return True
         return False
 
-    def get_meta(self, updated_meta:dict):
-        '''
-        meta varies by database
-        '''
-        meta = {}
-        file_name = f"{updated_meta.get('source', '')}_meta.json"
-        meta_file = os.path.join(self.entity_path, file_name)
-        if os.path.isfile(meta_file):
-            with open(meta_file, 'r') as f:
-                meta = json.load(f)
-        else:
-            meta = {
-                'entity_path': self.entity_path,
-                'index_meta_file': self.index_meta_file,
-                'meta_file': meta_file,
-            }
-        # update meta
-        meta.update(updated_meta)
-        meta['start_time'] = datetime.now()
-        return meta
-
-    def save_meta(self, meta:dict):
-        end_time = datetime.now()
-        delta = end_time - meta['start_time']
-        meta['duration'] = delta.seconds
-        meta['start_time'] = meta['start_time'].strftime("%m/%d/Y, %H:%M:%S")
-        meta['end_time'] = end_time.strftime("%m/%d/Y, %H:%M:%S")
-        # save
-        with open(meta['meta_file'], 'w') as f:
-            json.dump(meta, f, indent=4)
-        return meta['meta_file']
         
     def scan(self) -> Iterable:
         '''
@@ -97,7 +65,7 @@ class IntegrateData:
         '''
         id_prefix = str(math.floor(int(new_id)/1000))
         sub_dirs = [id_prefix[i:i+2] for i in range(0, len(id_prefix), 2)]
-        path = os.path.join(self.entity_path, 'data', *sub_dirs)
+        path = os.path.join(self.entity_path, *sub_dirs)
         Dir(path).init_dir()
         json_file = os.path.join(path, f'{new_id}.json')
         return json_file
@@ -105,7 +73,7 @@ class IntegrateData:
     def key_json_path(self, key_value:str):
         id_prefix = str(key_value)[:-2]
         sub_dirs = [id_prefix[i:i+3] for i in range(0, len(id_prefix), 3)]
-        path = os.path.join(self.entity_path, 'data',  *sub_dirs)
+        path = os.path.join(self.entity_path, *sub_dirs)
         Dir(path).init_dir()
         json_file = os.path.join(path, f'{key_value}.json')
         return json_file
