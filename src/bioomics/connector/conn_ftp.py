@@ -13,7 +13,7 @@ class ConnFTP:
 
     def __init__(self, url:str, overwrite:bool=None, run_gunzip:bool=None):
         self.url = url
-        self.overwrite = True if overwrite is None else False
+        self.overwrite = False if overwrite is None else True
         self.run_gunzip = False if run_gunzip is None else True
 
     def connect(self, endpoint:str=None):

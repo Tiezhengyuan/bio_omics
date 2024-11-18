@@ -5,21 +5,67 @@ from Bio import SeqIO
 from biosequtils import Dir
 import gzip
 import os
-import json
 from typing import Iterable
 
 from ..connector.conn_ftp import ConnFTP
-from ..bio_dict import BioDict
-from ..integrate_data import IntegrateData
 
 class UniProt(ConnFTP):
     url = "ftp.uniprot.org"
+    source = 'UniProt'
 
-    def __init__(self, local_path, overwrite:bool, run_gunzip:bool):
+    def __init__(self, local_dir:str, overwrite:bool=None, run_gunzip:bool=None):
         super().__init__(self.url, overwrite, run_gunzip)
-        self.local_path = local_path
+        self.local_path = os.path.join(local_dir, self.source)
         Dir(self.local_path).init_dir()
-  
+        self.meta = {
+            'url': self.url,
+            'local_path': self.local_path,
+        }   
+
+    def download_uniprot_sprot(self):
+        '''
+        download uniprot_sprot.dat.gz  
+        '''
+        local_file = self.download_file(
+            endpoint = '/pub/databases/uniprot/current_release/knowledgebase/complete',
+            file_name = 'uniprot_sprot.dat.gz',
+            local_path = self.local_path,
+        )
+        return local_file
+    
+    def download_uniprot_trembl(self) -> str:
+        '''
+        download uniprot_trembl.dat.gz  
+        '''
+        local_file = self.download_file(
+            endpoint = '/pub/databases/uniprot/current_release/knowledgebase/complete',
+            file_name = 'uniprot_trembl.dat.gz',
+            local_path = self.local_path,
+        )
+        return local_file
+
+    def download_uniref50(self) -> str:
+        '''
+        download uniref50.dat.gz  
+        '''
+        local_file = self.download_file(
+            endpoint = '/pub/databases/uniprot/current_release/uniref/uniref50',
+            file_name = 'uniref50.fasta.gz',
+            local_path = self.local_path,
+        )
+        return local_file
+
+    def download_uniref100(self) -> str:
+        '''
+        download uniref100.dat.gz  
+        '''
+        local_file = self.download_file(
+            endpoint = '/pub/databases/uniprot/current_release/uniref/uniref100',
+            file_name = 'uniref100.fasta.gz',
+            local_path = self.local_path,
+        )
+        return local_file
+
     def parse_dat(self, dat_file:str) -> Iterable:
         '''
         attributes:
@@ -39,67 +85,41 @@ class UniProt(ConnFTP):
                 for record in SeqIO.parse(f, 'swiss'):
                     yield record
 
-    def parse_epitope(self, parser:Iterable):
-        '''
-        retrieve records according to keywords defined in features
-        args: parser is determined by self.parse_dat()
-        '''
-        print("Try to detect epitopes...")
-        data, m, n = {}, 0, 0
-        for record in parser:
-            for ft in record.features:
-                note = ft.qualifiers.get('note', '')
-                if 'epitope' in note:
-                    if record.id not in data:
-                        data[record.id] = {
-                            'accession': record.id,
-                            'source': BioDict.swiss_source(record),
-                            'epitopes': [],
-                        }
-                        m += 1
-                    n += 1
-                    # update epitope to data
-                    epitope = BioDict.swiss_feature(record, ft)
-                    data[record.id]['epitopes'].append(epitope)
-                    # print(json.dumps(data[record.id], indent=4))
-        print(f"proteins={m}, epitopes={n}")
-        return data
+    def parse_fasta(self, infile:str, prefix:str) -> Iterable:
+        if infile.endswith('gz'):
+            with gzip.open(infile, 'rt') as f:
+                for record in SeqIO.parse(f, 'fasta'):
+                    rec = {
+                        "id": record.id.replace(prefix, ''),
+                        "name": record.name,
+                        "description": record.description,
+                        "sequence": str(record.seq),
+                    }
+                    yield rec
+        else:
+            with open(infile, 'r') as f:
+                for record in SeqIO.parse(f, 'fasta'):
+                    rec = {
+                        "id": record.id.replace(prefix, ''),
+                        "name": record.name,
+                        "description": record.description,
+                        "sequence": str(record.seq),
+                    }
+                    yield rec
 
-    def integrate_epitope(self, integrate_obj:IntegrateData, entity_data:dict):
+    def filter_uniref50(self, index_meta:dict):
         '''
-        integrate eiptope data into json data
         '''
-        count = {
-            'epitopes': 0,
-            'epitope_proteins': len(entity_data),
-            'updated_proteins': 0,
-            'updated_epitopes': 0,
-            'new_epitopes': 0,
-            'new_proteins': 0,
-        }
-        # check if data exists in json
-        for json_data in integrate_obj.scan():
-            acc = json_data.get('key')
-            if  acc in entity_data:
-                if 'epitopes' not in json_data:
-                    json_data['epitopes'] = {}
-                json_data['epitopes'][self.source] = entity_data[acc]['epitopes']
-                json_data[self.source] = entity_data[acc]['source']
-                # print(json.dumps(json_data, indent=4))
-                integrate_obj.save_data(json_data, (self.source, 'epitope'))
-                count['updated_epitopes'] += len(entity_data[acc]['epitopes'])
-                count['updated_proteins'] += 1
-                del entity_data[acc]
-        # export new data
-        for acc, data in entity_data.items():
-            input = {
-                self.source: data['source'],
-                'epitopes': {
-                    self.source: data['epitopes']
-                },
-            }
-            integrate_obj.add_data(input, acc, (self.source, 'epitope'))
-            count['new_epitopes'] += len(data['epitopes'])
-            count['new_proteins'] += 1
-        count['epitopes'] = count['updated_epitopes'] + count['new_epitopes']
-        return count
+        fa_gz = self.download_uniref50()
+        parser = self.parse_fasta(fa_gz, 'UniRef50_')
+        
+        entity_data, m, n = {}, 0, 0
+        for rec in parser:
+            acc = rec['id']
+            if acc in index_meta:
+                entity_data[acc] = {
+                    'protein'
+                }
+
+        return entity_data
+    

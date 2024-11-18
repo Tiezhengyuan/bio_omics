@@ -21,8 +21,7 @@ from .ncbi.integrate_uniprotkb_protein import IntegrateUniProtKBProtein
 # Protein
 from .protein.expasy import Expasy
 from .protein.uniprot import UniProt
-from .protein.uniprot_sprot import UniProtSprot
-from .protein.uniprot_trembl import UniProtTrembl
+from .protein.uniprot_epitope import UniprotEpitope
 from .protein.uniref import Uniref
 from .protein.iedb import IEDB
 from .protein.iedb_antigen import IEDBAntigen

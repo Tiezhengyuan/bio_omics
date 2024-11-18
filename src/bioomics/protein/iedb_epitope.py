@@ -25,20 +25,26 @@ class IEDBEpitope(IEDB):
 
         print("Process epitopes")
         self.integrate_epitope()
+        
         print("Integrate antigen")
         self.integrate_antigen()
+
         print("Integrate MHC")
         entity_data = self.mhc_json()
         self.integrate_epitope_related(entity_data, 'MHC')
+        
         print("Integrate B-cell")
         entity_data = self.bcell_json()
         self.integrate_epitope_related(entity_data, 'b_cell')
+        
         print("Integrate B-cell receptor")
         entity_data = self.bcr_json()
         self.integrate_epitope_related(entity_data, 'b_cell_receptor')
+        
         print("Integrate T-cell")
         entity_data = self.tcell_json()
         self.integrate_epitope_related(entity_data, 't_cell')
+        
         print("Integrate T-cell receptor")
         entity_data = self.tcr_json()
         self.integrate_epitope_related(entity_data, 't_cell_receptor')
