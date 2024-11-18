@@ -71,6 +71,9 @@ class IntegrateData:
         return json_file
 
     def key_json_path(self, key_value:str):
+        '''
+        slice key_value per 3-char as sub-dir
+        '''
         id_prefix = str(key_value)[:-2]
         sub_dirs = [id_prefix[i:i+3] for i in range(0, len(id_prefix), 3)]
         path = os.path.join(self.entity_path, *sub_dirs)

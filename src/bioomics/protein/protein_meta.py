@@ -10,8 +10,6 @@ class ProteinMeta:
         self.entity = entity
         self.source = source
 
-
-
     def entity_path(self):
         entity_path = os.path.join(self.result_dir, self.entity, self.source)
         Dir(entity_path).init_dir()
@@ -65,3 +63,10 @@ class ProteinMeta:
         with open(meta['meta_file'], 'w') as f:
             json.dump(meta, f, indent=4)
         return meta['meta_file']
+
+    def get_index_meta(self, index_meta_file:str=None):
+        index_file = self.index_file()
+        if os.path.isfile(index_file):
+            with open(index_file, 'r') as f:
+                return json.load(f)
+        return {}
