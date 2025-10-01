@@ -1,5 +1,6 @@
 venv/
 tests/data/
+src/bioomics/database/*.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
