@@ -8,7 +8,7 @@ from typing import Iterable
 from ..bio_dict import BioDict
 from ..integrate_data import IntegrateData
 from .uniprot import UniProt
-from .protein_meta import ProteinMeta
+from ..protein_meta import ProteinMeta
 
 
 class UniprotEpitope(UniProt):

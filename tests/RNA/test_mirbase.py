@@ -1,7 +1,7 @@
 '''
 MiRBase
 '''
-from .helper import *
+from ..helper import *
 from src.bioomics import Mirbase
 
 class TestMirbase(TestCase):

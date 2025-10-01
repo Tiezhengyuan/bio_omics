@@ -1,7 +1,7 @@
 '''
 '''
 
-from .helper import *
+from ..helper import *
 from src.bioomics import RNACentral
 
 @ddt

@@ -7,7 +7,7 @@ import os
 
 from .iedb import IEDB
 from ..integrate_data import IntegrateData
-from .protein_meta import ProteinMeta
+from ..protein_meta import ProteinMeta
 
 class IEDBEpitope(IEDB):
     key = 'accession'

@@ -11,25 +11,34 @@ from .connector.conn_ftplib import ConnFTPlib
 from .connector.conn_redis import ConnRedis
 
 # NCBI
-from .ncbi.ncbi import NCBI, ANATOMY_GROUPS
-from .ncbi.refseq import Refseq
-from .ncbi.genBank import GenBank
-from .ncbi.parse_id import ParseID
-from .ncbi.integrate_ncbi_protein import IntegrateNCBIProtein
-from .ncbi.integrate_uniprotkb_protein import IntegrateUniProtKBProtein
+from .NCBI.ncbi import NCBI, ANATOMY_GROUPS
+from .NCBI.refseq import Refseq
+from .NCBI.genBank import GenBank
+from .NCBI.parse_id import ParseID
+from .NCBI.integrate_ncbi_protein import IntegrateNCBIProtein
+from .NCBI.integrate_uniprotkb_protein import IntegrateUniProtKBProtein
+
+# antibody
+from .antibody.iedb import IEDB
+from .antibody.iedb_antigen import IEDBAntigen
+from .antibody.iedb_epitope import IEDBEpitope
+from .antibody.parse_imgt_annot import ParseImgtAnnot
+from .antibody.imgt import Imgt
+from .antibody.imgt_genedb import ImgtGenedb
+from .antibody.imgt_ligmdb import ImgtLigmdb
 
 # Protein
-from .protein.expasy import Expasy
-from .protein.uniprot import UniProt
-from .protein.uniprot_epitope import UniprotEpitope
-from .protein.uniref import Uniref
-from .protein.iedb import IEDB
-from .protein.iedb_antigen import IEDBAntigen
-from .protein.iedb_epitope import IEDBEpitope
-from .protein.protein_meta import ProteinMeta
+from .UniProt.expasy import Expasy
+from .UniProt.uniprot import UniProt
+from .UniProt.uniprot_epitope import UniprotEpitope
+from .UniProt.uniref import Uniref
+
+
+from .protein_meta import ProteinMeta
+
 
 # RNA, non-coding RNA
-from .rnacentral import RNACentral
-from .mirbase import Mirbase
+from .RNA.rnacentral import RNACentral
+from .RNA.mirbase import Mirbase
 
 

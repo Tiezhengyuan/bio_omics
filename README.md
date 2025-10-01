@@ -2,13 +2,20 @@
 Download, retrieve and process omics data, or biological informatics data from public database
 
 Comprehensive Databases
-- NCBI: genome database, 
-- UniProt: protein database, https://www.expasy.org/resources/uniprotkb-swiss-prot
+- NCBI: genome database
 
-Sepecific Databases
+Protein
+- UniProt: protein database, https://www.expasy.org/resources/uniprotkb-swiss-prot
+- PDB: protein structure bank, https://www.rcsb.org/
+
+RNA
 - miRBase: mircoRNA database, https://www.mirbase.org/
 - RNACentral: non-coding RNA squence database, https://rnacentral.org/
-- IEDB: immune epitope database, https://www.iedb.org/
+
+Antibody
+- IEDB: Immune Epitope Database, https://www.iedb.org/
+- IMGT: THE INTERNATIONAL IMMUNOGENETICS INFORMATION SYSTEM, https://www.imgt.org/
+- ABSD: Antibody Sequence Databse, https://absd.pasteur.cloud/
 
 
 See the help documents of example coding at https://www.fbridges.com/pipeline/bio_omics.
@@ -39,4 +46,11 @@ Note:
     },
     ....    
 }
+```
+
+
+## tests
+
+```
+conda activate py
 ```
