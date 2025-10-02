@@ -33,9 +33,13 @@ from .UniProt.uniprot import UniProt
 from .UniProt.uniprot_epitope import UniprotEpitope
 from .UniProt.uniref import Uniref
 
+# PDB
+from .PDB.pdb import *
+from .PDB.parse_structure import *
 
 from .protein_meta import ProteinMeta
-
+from .constants.amino_acids import *
+from .constants.iedb import *
 
 # RNA, non-coding RNA
 from .RNA.rnacentral import RNACentral

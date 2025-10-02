@@ -4,9 +4,9 @@ example IEDB data
 # antigen
 antigen = {
     "Antigen - Antigen Name":"Streptokinase A",
-    "Antigen - Antigen IRI":"http:\/\/www.uniprot.org\/uniprot\/P10520",
+    "Antigen - Antigen IRI":"http:\\/\\/www.uniprot.org\\/uniprot\\/P10520",
     "Antigen - Organism Name":"Streptococcus pyogenes",
-    "Antigen - Organism IRI":"http:\/\/purl.obolibrary.org\/obo\/NCBITaxon_1314",
+    "Antigen - Organism IRI":"http:\\/\\/purl.obolibrary.org\\/obo\\/NCBITaxon_1314",
     "Antigen - # Epitopes":"3",
     "Antigen - # Assays":"4",
     "Antigen - # References":"3"
