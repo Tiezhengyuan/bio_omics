@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-from ..concurrency import multi_threads
+from ..common.concurrency import multi_threads
 
 from .ncbi import NCBI
 from .parse_id import ParseID

@@ -15,8 +15,8 @@ from .process_seq import ProcessSeq
 class Imgt(ProcessData):
     url = 'https://www.imgt.org/'
 
-    def __init__(self, data_dir:str):
-        super().__init__(data_dir)
+    def __init__(self, data_dir:str, verbose:bool=False):
+        super().__init__(data_dir, verbose)
     
     '''
     3D-DB: INN

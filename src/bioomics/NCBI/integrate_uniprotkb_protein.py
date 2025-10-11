@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 
-from ..concurrency import *
+from ..common.concurrency import *
 from .ncbi import NCBI
 from .parse_id import ParseID
 from .integrate import Integrate

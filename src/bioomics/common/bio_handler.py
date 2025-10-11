@@ -1,5 +1,3 @@
-
-
 from Bio import GenBank, SeqIO
 import gzip
 from typing import Iterable

@@ -5,8 +5,8 @@ import os
 
 
 from .ncbi import NCBI
-from ..bio_handler import BioHandler
-from ..bio_dict import BioDict
+from ..common.bio_handler import BioHandler
+from ..common.bio_dict import BioDict
 from ..integrate_data import IntegrateData
 
 class GenBank:

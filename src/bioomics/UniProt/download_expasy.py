@@ -4,7 +4,7 @@ FTP of ExPASy: ftp.expasy.org
 import os
 from ..connector.conn_ftp import ConnFTP
 
-class Expasy(ConnFTP):
+class DownloadExpasy(ConnFTP):
     url = "ftp.expasy.org"
 
     def __init__(self, local_dir:str, overwrite:bool=None):

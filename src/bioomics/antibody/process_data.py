@@ -5,8 +5,9 @@ import requests
 from biosequtils import Dir
 
 class ProcessData:
-    def __init__(self, data_dir:str):
+    def __init__(self, data_dir:str, verbose:bool=False):
         self.data_dir = data_dir
+        self.verbose = verbose
         self.data = None
 
     @staticmethod
@@ -41,6 +42,12 @@ class ProcessData:
                 if os.path.isfile(out_file) and out_file.find('/.') == -1:
                     yield out_file
 
+    @staticmethod
+    def to_label_csv(df, outfile):
+        df = df.sample(frac=1, replace=False, random_state=1)
+        df.to_csv(outfile, index=False, header=False)
+        print(df.shape, outfile)
+        
     @staticmethod
     def load_json(infile):
         try:

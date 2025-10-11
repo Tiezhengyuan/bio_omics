@@ -5,17 +5,17 @@ import os
 import json
 from typing import Iterable
 
-from ..bio_dict import BioDict
+from ..common.bio_dict import BioDict
 from ..integrate_data import IntegrateData
-from .uniprot import UniProt
 from ..protein_meta import ProteinMeta
+from .uniprot import Uniprot
+from .download_uniprot import DownloadUniprot
 
-
-class UniprotEpitope(UniProt):
+class UniprotEpitope:
     entity = 'epitope'
 
     def __init__(self, local_dir:str, result_dir:str, overwrite:bool=None):
-        super().__init__(local_dir, overwrite, False)
+        self.local_dir = local_dir
         self.result_dir = result_dir
 
     def __call__(self, entity_path:str=None) -> bool:
@@ -32,19 +32,18 @@ class UniprotEpitope(UniProt):
         self.integrate = IntegrateData(self.meta)
 
         # detect proteins annotated with epitopes
+        client = DownloadUniprot(self.local_dir, overwrite)
         # uniprot_sprot.dat
         # download data to the local
         print(len(iebd_index_meta))
-        dat_gz = self.download_uniprot_sprot()
-        parser = self.parse_dat(dat_gz)
-        entity_data = self.parse_epitope(parser, iebd_index_meta)
+        dat_gz = client.download_uniprot_sprot()
+        entity_data = self.parse_epitope(dat_gz, iebd_index_meta)
         print(len(iebd_index_meta))
         data_source = (self.source, 'uniprot_sprot', self.entity)
         self.meta['uniprot_sprot'] = self.integrate_epitope(entity_data, data_source)
 
-        dat_gz = self.download_uniprot_trembl()
-        parser = self.parse_dat(dat_gz)
-        entity_data = self.parse_epitope(parser, iebd_index_meta)
+        dat_gz = client.download_uniprot_trembl()
+        entity_data = self.parse_epitope(dat_gz, iebd_index_meta)
         print(len(iebd_index_meta))
         data_source = (self.source, 'uniprot_trembl', self.entity)
         self.meta['uniprot_trembl'] = self.integrate_epitope(entity_data, data_source)
@@ -58,11 +57,13 @@ class UniprotEpitope(UniProt):
         return True
 
 
-    def parse_epitope(self, parser:Iterable, iebd_index_meta:dict):
+    def parse_epitope(self, dat_gz, iebd_index_meta:dict):
         '''
         retrieve records according to keywords defined in features
         args: parser is determined by self.parse_dat()
         '''
+        parser = Uniprot(dat_gz).dat_iter()
+
         print("Try to detect epitopes...")
         entity_data, m, n, p = {}, 0, 0, 0
         for record in parser:

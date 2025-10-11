@@ -10,4 +10,7 @@ from ddt import ddt, data, unpack
 from unittest import TestCase, mock, skip
 
 # store example data for unit and local testing
-DIR_DATA = os.path.join(os.path.dirname(__file__), 'data')
+TESTS_DIR = os.path.dirname(__file__)
+DATA_DIR = os.path.join(TESTS_DIR, 'data')
+RESULTS_DIR = os.path.join(TESTS_DIR, 'results')
+

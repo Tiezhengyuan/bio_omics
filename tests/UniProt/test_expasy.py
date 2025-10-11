@@ -2,14 +2,14 @@
 Test class 
 '''
 from .helper import *
-from src.bioomics import Expasy
+from src.bioomics import DownloadExpasy
 
 
 @ddt
 class TestExpasy(TestCase):
 
     def setUp(self):
-        self.c = Expasy(DIR_DATA, False)
+        self.c = DownloadExpasy(DIR_DATA, False)
 
     def list_files(self):
         res = self.c.list_files()

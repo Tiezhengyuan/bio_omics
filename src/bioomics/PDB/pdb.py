@@ -21,6 +21,7 @@ warnings.simplefilter("ignore", PDBConstructionWarning)
 
 from .parse_structure import ParseStructure
 from ..constants.amino_acids import longer_names
+from ..common.process_pickle import ProcessPickle
 # from .atom_select import ChainAtomSelect, LigandAtomSelect, AllAtomSelect
 # from .download import Download
 
@@ -31,28 +32,22 @@ class NonHetSelect(Select):
 
 class Pdb(ParseStructure):
 
-    def __init__(self, args:dict):
+    def __init__(self, pdb_file:str, outdir:str=None, verbose:bool=False):
         super().__init__()
-
-        self.args = args
         # pdb_file
-        self.pdb_file = args['pdb_file']
-        self.indir = os.path.dirname(self.pdb_file)
-        self.pdb_file_name = os.path.basename(self.pdb_file)
-        self.verbose = args.get('verbose')
+        self.pdb_file = pdb_file
+        self.outdir = outdir if outdir else os.path.dirname(pdb_file)
+        self.verbose = verbose
         # default objects should be updated
+        self.structure_id = None
         self.annot = {}
         self.info = []
-        self.outdir = None
-        # load structure
-        self.get_parser()
-        self.load_structure()
-        self.init_outdir()
 
     def get_parser(self):
         '''
-        update self.parser
+        update self.pdb_file_name, self.parser
         '''
+        self.pdb_file_name = os.path.basename(self.pdb_file)
         file_type = 'cif' if self.pdb_file_name.endswith('.cif') or \
             self.pdb_file_name.endswith('.cif.gzs')else 'pdb'
 
@@ -64,33 +59,38 @@ class Pdb(ParseStructure):
 
     def load_structure(self):
         """
-        update self.structure
+        update self.structure, self.structure_id
         """
-        if self.parser:
-            if self.pdb_file.endswith('.gz'):
-                with gzip.open(self.pdb_file, 'rt') as gzf:
-                    self.structure = self.parser.get_structure(
-                        self.pdb_file_name,
-                        gzf
-                    )
-            else:
+        # initialize parser
+        self.get_parser()
+        # load structure
+        if self.pdb_file.endswith('.gz'):
+            with gzip.open(self.pdb_file, 'rt') as gzf:
                 self.structure = self.parser.get_structure(
                     self.pdb_file_name,
-                    self.pdb_file
+                    gzf
                 )
-            if self.structure:
-                self.structure_id = self.structure.header.get('idcode', '').upper()
-                if self.verbose:
-                    print(f"Successfully retrieve structure of {self.structure_id}")
-
-    def init_outdir(self):
-        if self.args.get('outdir') and os.path.isdir(self.args['outdir']):
-            # update self.outdir
-            prefix = self.structure_id[:2]
-            self.outdir = os.path.join(self.args['outdir'], prefix, self.structure_id)
-            Dir(self.outdir).init_dir()
+        else:
+            self.structure = self.parser.get_structure(
+                self.pdb_file_name,
+                self.pdb_file
+            )
+        if self.structure:
+            self.structure_id = self.structure.header.get('idcode', '').upper()
             if self.verbose:
-                print('outputs dir: ', self.outdir)
+                print(f"Successfully retrieve structure of {self.structure_id}")
+
+    def init_cascade_outdir(self, pdb_id:str=None):
+        # update self.outdir
+        if pdb_id is None:
+            pdb_id = self.structure_id
+        if pdb_id:
+            cascade_outdir = os.path.join(self.outdir, pdb_id[:2], pdb_id)
+            Dir(cascade_outdir).init_dir()
+            if self.verbose:
+                print('outputs dir: ', cascade_outdir)
+            return cascade_outdir
+        return None
 
     def split_by_chain(self, chain_ids:list, file_name:str=None):
         """
@@ -133,7 +133,6 @@ class Pdb(ParseStructure):
             print(f"Saved chain {chain_ids} to {outfile}")
         return outfile
 
-
     def save_annot(self):
         '''
         1. self.chains
@@ -174,8 +173,9 @@ class Pdb(ParseStructure):
         return raw_table
 
     def export_pdb(self, outfile_name:str, outdir:str=None, has_table=False):
-        outfile = os.path.join(outdir, outfile_name) if \
-            outdir else os.path.join(self.indir, outfile_name)
+        indir = os.path.dirname(self.pdb_file)
+        outfile = os.path.join(outdir, outfile_name) if outdir \
+            else os.path.join(indir, outfile_name)
         if self.verbose:
             print(f"Try to create {outfile}...")
         with open(outfile, 'w') as f:
@@ -189,15 +189,7 @@ class Pdb(ParseStructure):
                 raw_table = self.get_table()
                 f.writelines(raw_table)
     
-    def export_fasta(self, outfile_name:str, outdir:str=None):
-        '''
-        retrieve sequence by chains from pdb
-        '''
-        outfile = os.path.join(outdir, outfile_name) if \
-            outdir else os.path.join(self.indir, outfile_name)
-        if self.verbose:
-            print(f"Try to create {outfile}...")
-
+    def retrieve_sequence(self):
         records = []
         for model in self.structure:
             for chain in model:
@@ -205,12 +197,41 @@ class Pdb(ParseStructure):
                 for residue in chain:
                     if residue.resname in longer_names:
                         seq.append(longer_names[residue.resname])
-                rec = SeqRecord(
-                    Seq(''.join(seq)),
-                    id=f"{self.structure_id}|Chain {chain.id}",
-                    description='',
-                )
-                records.append(rec)
-        # save to fasta
-        with open(outfile, 'w') as f:
-            SeqIO.write(records, f, 'fasta')
+                if seq:
+                    rec = SeqRecord(
+                        Seq(''.join(seq)),
+                        id=f"{self.structure_id}_{model.id}_{chain.id}",
+                        description='',
+                    )
+                    records.append(rec)
+        return records
+
+    def export_fasta(self, outfile):
+        '''
+        retrieve sequence by chains from pdb
+        '''
+        # load structure
+        self.load_structure()
+        # retrieve sequences
+        records = self.retrieve_sequence()
+        if records:
+            try:
+                with open(outfile, 'w') as f:
+                    SeqIO.write(records, f, 'fasta')
+                    if self.verbose:
+                        print(f"Export chain sequences of {self.structure_id} to {outfile}.")
+                return 'succeed'
+            except Exception as e:
+                if self.verbose:
+                    print(e)
+                return 'fail'
+        return 'na'
+        
+
+    def build_pdb_obj(self):
+        pdb_obj = Pdb(self.pdb_file)
+        file_name = f"{pdb_obj.structure_id}_pdb.pickle"
+        outfile = os.path.join(self.outdir, file_name)
+        pp = ProcessPickle(outfile, self.verbose)
+        return pp.save_pickle(pdb_obj)
+

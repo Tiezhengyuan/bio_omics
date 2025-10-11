@@ -32,16 +32,18 @@ import sys
 
 from .imgt import Imgt
 from .process_data import ProcessData
+from ..protein.process_igblast import ProcessIgblast
+from ..common.dir import Dir
 
 class ImgtGenedb(Imgt):
 
-    def __init__(self, data_dir:str):
-        super().__init__(data_dir)
+    def __init__(self, data_dir:str, verbose:bool=False):
+        super().__init__(data_dir, verbose)
         self.data_dir = os.path.join(self.data_dir, 'GENE-DB')
         # keys: specie, gene_name, region_name
         self.data = {}
     
-    def __call__(self):
+    def build_specie_genelist(self):
         # gene list
         df = self.parse_genelist(True)
         g = df.groupby(['Species', 'IMGT/GENE-DB'])
@@ -57,8 +59,8 @@ class ImgtGenedb(Imgt):
         self.parse_fasta()
 
         # save data
-        outdir = os.path.join(self.data_dir, 'gene')
-        self.init_dir(outdir)
+        outdir = os.path.join(self.data_dir, 'genelist')
+        Dir(outdir).init_dir()
         for specie, data1 in self.data.items():
             json_file = os.path.join(outdir, f"{specie}.json")
             self.save_json(data1, json_file)
@@ -96,6 +98,7 @@ class ImgtGenedb(Imgt):
         #
         if to_df:
             df = pd.DataFrame(data, columns=header)
+            df = df.drop(['',], axis=1)
             df = self.label_chain(df)
             return df
         return data
@@ -131,12 +134,11 @@ class ImgtGenedb(Imgt):
                 return pd.Series(['kappa', 'j'])
             # t cell receptor
             if 't cell receptor' in s:
-                return pd.Series(['tcr', np.nan])
-            return pd.Series(['other', np.nan])
+                return pd.Series(['tcr', ''])
+            return pd.Series(['other', ''])
         
         df[['chain', 'domain']] = df.apply(func, axis=1)
         return df
-
     
     def parse_fasta(self):
         '''
@@ -182,7 +184,54 @@ class ImgtGenedb(Imgt):
                 parser = SeqIO.parse(f, 'fasta')
                 yield postfix, parser
 
-    def build_specie_fasta(self):
+    def region_fasta_file(self, ref_type, region_name):
+        outdir = os.path.join(self.data_dir, ref_type, 'region')
+        Dir(outdir).init_dir()
+        return os.path.join(outdir, f"{region_name}.fasta")
+
+    def build_region_fasta(self):
+        for postfix, parser in self.parse_fasta_file():
+            data = {}
+            for record in parser:
+                items = record.description.split('|')
+                allele_name, region_name = items[1], items[4]
+                species = re.split(r'[ |_]', items[2])
+                specie = f'{species[0].title()}_{species[1].lower()}'
+                if region_name not in data:
+                    data[region_name] = []
+                record.id = allele_name + '|' + specie
+                record.description = ''
+                data[region_name].append(record)
+            # export
+            for region_name, records in data.items():
+                outfile = self.region_fasta_file(postfix, region_name)
+                with open(outfile, 'w') as f:
+                    SeqIO.write(records, f, 'fasta')
+
+    def build_igblastp_region(self, bin_dir=None):
+        '''
+        build igblastp database by V/D/J/C regions
+        '''
+        # define outdir
+        ref_type = 'AA-WithoutGaps-F+ORF+inframeP'
+        outdir = os.path.join(self.data_dir, ref_type, 'region_igblastdb')
+        p = ProcessIgblast(outdir, self.verbose)
+
+        # build db by region
+        regions = ['V-REGION', 'D-REGION', 'J-REGION', 'C-REGION']
+        meta = {r:[] for r in regions}
+        for region in regions:
+            fa_file = self.region_fasta_file(postfix, region)
+            result = p.build_prot_db(fa_file, bin_dir)
+            meta[region].append(result)
+        return meta
+
+    def organism_region_fasta_file(self, ref_type, organism, region_name):
+        outdir = os.path.join(self.data_dir, ref_type, 'organism', organism)
+        Dir(outdir).init_dir()
+        return os.path.join(outdir, f"{region_name}.fasta")
+
+    def build_organism_fasta(self):
         '''
         The IMGT/GENE-DB FASTA header contains 15 fields separated by '|':
         1. IMGT/LIGM-DB accession number(s)
@@ -217,44 +266,24 @@ class ImgtGenedb(Imgt):
                 data1[specie][region_name].append(record)
             # export
             for specie, data2 in data1.items():
-                outdir = os.path.join(self.data_dir, postfix, specie)
-                self.init_dir(outdir)
                 for region, records in data2.items():
-                    outfile = os.path.join(outdir, f"{region}.fasta")
+                    outfile = self.organism_region_fasta_file(postfix, specie, region)
                     with open(outfile, 'w') as f:
                         SeqIO.write(records, f, 'fasta')
-        
-    def build_genedb_igblastdb(self):
-        bin_dir = '/home/yuan/data/ncbi-igblast-1.22.0/bin'
-        if bin_dir not in sys.path:
-            sys.path.append(bin_dir)
 
-        
-        ref_types = ('AA-WithoutGaps-F+ORF+inframeP',)
+    def build_igblastp_organism(self, bin_dir=None):
+        ref_type = 'AA-WithoutGaps-F+ORF+inframeP'
         species = ('Mus_musculus', 'Macaca_mulatta', 'Homo_sapiens',
             'Rattus_norvegicus', 'Oryctolagus_cuniculus',)
         regions = ['V-REGION', 'D-REGION', 'J-REGION', 'C-REGION']
         meta = {r:[] for r in regions}
-        for ref_type in ref_types:
-            for specie in species:
-                for region in regions:
-                    outdir = os.path.join(self.data_dir, ref_type, specie)
-                    fasta_file = os.path.join(outdir, f'{region}.fasta')
-                    try:
-                        outprefix = os.path.join(outdir, region)
-                        cmd = [
-                            f'{bin_dir}/makeblastdb',
-                            '-parse_seqids -dbtype prot',
-                            f'-in {fasta_file}',
-                            f'-out {outprefix}',
-                        ]
-                        cmd = ' '.join(cmd)
-                        result = subprocess.run(cmd, capture_output=True, \
-                            shell=True, text=True, check=True)
-                        # print(result.stdout)
-                        meta[region].append(outprefix)
-                    except Exception as e:
-                        pass
+        for specie in species:
+            outdir = os.path.join(self.data_dir, ref_type, 'organism_igblastdb', specie)
+            p = ProcessIgblast(outdir, self.verbose)
+            for region in regions:
+                fa_file = self.organism_region_fasta_file(ref_type, specie, region)
+                result = p.build_prot_db(fa_file, bin_dir)
+                meta[region].append(result)
         return meta
 
     def genedb_region(self, ref_type, specie, region):
