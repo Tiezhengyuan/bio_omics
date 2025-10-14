@@ -22,16 +22,18 @@ class QueryComplex(QueryDb):
         res = self.list_data(query, False)
         return res[0]['date']
 
-    def get_pdb_ids(self, table_name:str):
+    def get_unique_values(self, table_name, col_name:str) -> list:
         query = f"""
-            SELECT DISTINCT pdb_id
+            SELECT DISTINCT {col_name}
             FROM {table_name}
-            WHERE pdb_id is NOT NULL;
+            WHERE {col_name} is NOT NULL;
         """
-        pdb_ids = self.list_data(query, True)
-        if len(pdb_ids) > 0:
-            return set(pdb_ids['pdb_id'])
-        return set([])
+        rows = self.list_data(query, True)
+        if self.verbose:
+            print(f"Detect {len(rows)} records in {table_name}.{col_name}.")
+        if len(rows) > 0:
+            return list(rows[col_name])
+        return []
 
     def delete_pdb_ids(self, table_name:str):
         query = f"""
@@ -119,14 +121,20 @@ class QueryComplex(QueryDb):
 
     def antibody(self):
         query = """
-            SELECT * FROM view_antibody;
+            SELECT * FROM view_pdb_uniprot
+            WHERE keyword = 'Immunoglobulin' OR keyword LIKE '%antibody%';
         """
         rows = self.list_data(query)
         return rows
 
     def antibody_complex(self):
         query = """
-            SELECT * FROM view_antibody_complex;
+            SELECT * FROM view_pdb_uniprot
+            WHERE pdb_id IN(
+                SELECT DISTINCT pdb_id
+                FROM view_pdb_uniprot
+                WHERE keyword = 'Immunoglobulin' OR keyword LIKE '%antibody%'
+            );
         """
         rows = self.list_data(query)
         return rows

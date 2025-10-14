@@ -5,9 +5,12 @@ import os
 import numpy as np
 import pandas as pd
 
-# from src.process_pdb import ProcessPdb
+
 from .build_db import BuildDb
-from bioomics import Pdb, PullPdb, ParseDatRecord, ParseBlastXml
+from .query_complex import QueryComplex
+from ..PDB import Pdb, PullPdb
+from ..UniProt import ParseDatRecord
+from ..protein import ParseBlastXml, ParseIgblast
 
 class BuildComplex(BuildDb):
 
@@ -38,8 +41,8 @@ class BuildComplex(BuildDb):
     def insert_pdb(self):
         # insert data into table pdb
         table_name = 'pdb'
-        insert_query = """
-            INSERT INTO pdb (pdb_id, pdb_url, local_path, release_date, resolution, name)
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, pdb_url, local_path, release_date, resolution, name)
             VALUES (%s, %s, %s, %s, %s, %s)
         """
         self.insert(table_name, insert_query, self.record_pdb)
@@ -54,56 +57,64 @@ class BuildComplex(BuildDb):
         records = []
         for compound_no, cp in compound.items():
             compound_no = int(compound_no)
-            chain = cp.get('chain').replace(' ', '')
+            chains = cp.get('chain').replace(' ', '').upper()
             _text = []
             for _key, _value in cp.items():
                 if _key not in ('chain',) and _value:
                     _text.append(f"{_key}: {_value}")
             compound_text = ' ; '.join(_text)
-            rec = (pdb_id, compound_no, chain, compound_text)
+            rec = (pdb_id, compound_no, chains, compound_text)
             records.append(rec)
         return records
 
     def insert_compound(self) -> tuple:
         table_name = 'compound'
-        insert_query = """
-            INSERT INTO compound (pdb_id, compound_no, chain, compound_text)
-            VALUES (%s, %s, %s, %s)
-        """
+        insert_query = f"""INSERT INTO {table_name} 
+            (pdb_id, compound_no, chains, compound_text)
+            VALUES (%s, %s, %s, %s)"""
         self.insert(table_name, insert_query, self.record_compound)
 
     def record_chain(self, pdb_file):
         p = Pdb(pdb_file, None, self.verbose)
         p.load_structure()
-        chains = p.get_chains_seq()
         pdb_id = p.structure_id
-
         records = []
-        compound = p.structure.header['compound']
-        for compound_no, cp in compound.items():
-            compound_no = int(compound_no)
-            cp_chains = cp.get('chain').replace(' ', '').split(',')
-            for chain_id in cp_chains:
-                chain_id = chain_id.upper()
-                pro_seq = chains.get(chain_id)
-                rec = (pdb_id, compound_no, chain_id, pro_seq)
-                if rec not in records:
-                    records.append(rec)
+        for model_chains in p.get_chains():
+            model_no = int(model_chains['model_no'])
+            for chain in model_chains['chains']:
+                chain_no = chain['chain_no']
+                chain_id = f"{pdb_id}_{model_no}_{chain_no}"
+                pro_seq = chain['seq']
+                # the column pro_seq is not null
+                if pro_seq:
+                    rec = (chain_id, pdb_id, model_no, chain_no, pro_seq)
+                    if rec not in records:
+                        records.append(rec)
         return records
 
-    def insert_chain(self) -> tuple:
-        table_name = 'chain'
-        insert_query = """
-            INSERT INTO chain (pdb_id, compound_no, chain_id, pro_seq)
-            VALUES (%s, %s, %s, %s)
-        """
-        self.insert(table_name, insert_query, self.record_chain)
+    def record_check_chain(self, pdb_file:str, chain_ids:list):
+        checked_records = []
+        for rec in self.record_chain(pdb_file):
+            chain_id = rec[0]
+            if chain_id not in chain_ids:
+                checked_records.append(rec)
+        return checked_records
 
-    def record_pdb_keyword(self, pdb_file):
+    def insert_chain(self, check:bool=False) -> tuple:
+        table_name = 'chain'
+        insert_query = f"""INSERT INTO {table_name} 
+            (chain_id, pdb_id, model_no, chain_no, pro_seq)
+            VALUES (%s, %s, %s, %s, %s)"""
+        if check:
+            chain_ids = QueryComplex().get_unique_values(table_name, 'chain_id')
+            return self.insert(table_name, insert_query, self.record_check_chain, \
+                chain_ids=chain_ids)
+        return self.insert(table_name, insert_query, self.record_chain)
+
+    def record_keyword(self, pdb_file):
         p = Pdb(pdb_file, None, self.verbose)
         p.load_structure()
         pdb_id = p.structure_id
-
         records = []
         keywords = p.structure.header['keywords']
         keywords = keywords.split(', ')
@@ -112,13 +123,11 @@ class BuildComplex(BuildDb):
             records.append(rec)
         return records
 
-    def insert_pdb_keyword(self) -> tuple:
-        table_name = 'pdb_keyword'
-        insert_query = """
-            INSERT INTO pdb_keyword (pdb_id, keyword)
-            VALUES (%s, %s)
-        """
-        self.insert(table_name, insert_query, self.record_pdb_keyword, 500)
+    def insert_keyword(self) -> tuple:
+        table_name = 'keyword'
+        insert_query = f"""INSERT INTO {table_name} 
+            (pdb_id, keyword) VALUES (%s, %s)"""
+        self.insert(table_name, insert_query, self.record_keyword)
 
     def record_imgt_genelist(self, record:dict):
         names = ['Species', 'IMGT/GENE-DB', 'IMGT gene functionality', \
@@ -131,10 +140,9 @@ class BuildComplex(BuildDb):
 
     def insert_imgt_genelist(self) -> tuple:
         table_name = 'imgt_genelist'
-        insert_query = f"""
-            INSERT INTO {table_name} (species, gene_db, gene_function, \
-                gene_definition, number_alleles, chromosome, chromosomal_loc, \
-                ligm_db_ref_gene, ncbi_gene, chain, domain)
+        insert_query = f"""INSERT INTO {table_name}
+            (species, gene_db, gene_function, gene_definition, number_alleles, chromosome, \
+                chromosomal_loc, ligm_db_ref_gene, ncbi_gene, chain, domain)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         self.insert(table_name, insert_query, self.record_imgt_genelist)
@@ -147,10 +155,9 @@ class BuildComplex(BuildDb):
 
     def insert_uniprot(self) -> tuple:
         table_name = 'uniprot'
-        insert_query = f"""
-            INSERT INTO {table_name} (uniprot_acc, name, organism, pro_seq)
-            VALUES (%s, %s, %s, %s)
-        """
+        insert_query = f"""INSERT INTO {table_name}
+            (uniprot_acc, name, organism, pro_seq)
+            VALUES (%s, %s, %s, %s)"""
         self.insert(table_name, insert_query, self.record_uniprot)
 
     def record_uniprot_keyword(self, record):
@@ -165,10 +172,8 @@ class BuildComplex(BuildDb):
 
     def insert_uniprot_keyword(self) -> tuple:
         table_name = 'uniprot_keyword'
-        insert_query = f"""
-            INSERT INTO {table_name} (uniprot_acc, keyword)
-            VALUES (%s, %s)
-        """
+        insert_query = f"""INSERT INTO {table_name}
+            (uniprot_acc, keyword) VALUES (%s, %s)"""
         self.insert(table_name, insert_query, self.record_uniprot_keyword, 500)
 
     def record_uniprot_dbxrefs(self, record):
@@ -184,35 +189,75 @@ class BuildComplex(BuildDb):
 
     def insert_uniprot_dbxrefs(self) -> tuple:
         table_name = 'uniprot_dbxrefs'
-        insert_query = f"""
-            INSERT INTO {table_name} (uniprot_acc, db_name, db_acc)
-            VALUES (%s, %s, %s)
-        """
-        self.insert(table_name, insert_query, self.record_uniprot_dbxrefs, 1000)
+        insert_query = f"""INSERT INTO {table_name}
+            (uniprot_acc, db_name, db_acc)
+            VALUES (%s, %s, %s)"""
+        self.insert(table_name, insert_query, self.record_uniprot_dbxrefs)
 
-
-    def record_uniprot_align(self, aln_file):
+    def record_align_uniprot(self, aln_file):
         best_hits = ParseBlastXml(aln_file).best_hits()
         records = []
         for hit in best_hits:
-            pdb_id, model_id, chain_id = hit['query'].split('_')
+            chain_id = hit['query']
+            pdb_id = hit['query'].split('_')[0]
             uniprot_acc = hit['hit_desc'].split('|')[1]
-            rec = (pdb_id, int(model_id), chain_id.upper(), \
-                uniprot_acc, float(hit['evalue']), \
+            rec = (chain_id, pdb_id, uniprot_acc, float(hit['evalue']), \
                 int(hit['bit_score']), float(hit['identity']))
             if rec not in records:
                 records.append(rec)
         return records
 
-    def insert_uniprot_align(self) -> tuple:
-        table_name = 'uniprot_align'
-        insert_query = f"""
-            INSERT INTO {table_name} (pdb_id, model_id, chain_id, 
-                uniprot_acc, evalue, bit_score, identity)
+    def insert_align_uniprot(self) -> tuple:
+        table_name = 'align_uniprot'
+        insert_query = f"""INSERT INTO {table_name}
+            (chain_id, pdb_id, uniprot_acc, evalue, bit_score, identity)
+            VALUES (%s, %s, %s, %s, %s, %s)"""
+        self.insert(table_name, insert_query, self.record_align_uniprot)
+
+    def record_align_imgt(self, item:tuple):
+        aln_file, fa_file = item
+        pi = ParseIgblast(aln_file, fa_file, self.verbose)
+        records = []
+        for hit in pi.retrieve_hits():
+            chain_id = hit['query_id']
+            pdb_id = chain_id.split('_')[0]
+            allele_name = hit['allele_name'].split('|')[0]
+            evalue = float(hit['e-value'])
+            bit_score = float(hit['bits-score'])
+            rec = (chain_id, pdb_id, allele_name, hit['gene_name'],
+                hit['gene_family'], hit['isotype'], evalue, bit_score,)
+            if rec not in records:
+                records.append(rec)
+        return records
+
+    def insert_align_imgt(self) -> tuple:
+        table_name = 'align_imgt'
+        insert_query = f"""INSERT INTO {table_name} (chain_id, pdb_id,
+            allele_name, gene_name, gene_family, isotype, evalue, bit_score)
+            VALUES (%s, %s, %s, %s, %s, %s,%s, %s)
+        """
+        self.insert(table_name, insert_query, self.record_align_imgt, 10)
+
+    def record_align_vregion(self, item:tuple):
+        aln_file, fa_file = item
+        pi = ParseIgblast(aln_file, fa_file, self.verbose)
+        records = []
+        for region in pi.retrieve_regions():
+            chain_id = region['query_id']
+            pdb_id = chain_id.split('_')[0]
+            rec = (chain_id, region['region'], pdb_id, region['percent identity'],
+                region['from'], region['to'], region['seq'],)
+            if rec not in records:
+                records.append(rec)
+        return records
+
+    def insert_align_vregion(self) -> tuple:
+        table_name = 'align_vregion'
+        insert_query = f"""INSERT INTO {table_name}
+            (chain_id, region_name, pdb_id, identity, start, end, seq)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        self.insert(table_name, insert_query, self.record_uniprot_align)
-
+        self.insert(table_name, insert_query, self.record_align_vregion)
 
 #####################
 
@@ -223,10 +268,8 @@ class BuildComplex(BuildDb):
         cols = ['pdb_id', 'complex_type']
         df = self.data[cols].drop_duplicates()
         data = df.to_records(index=False)
-        insert_query = """
-            INSERT INTO complex (pdb_id, complex_type)
-            VALUES (%s, %s)
-        """
+        insert_query = """INSERT INTO complex
+            (pdb_id, complex_type) VALUES (%s, %s)"""
         self.insert_data(insert_query, data)
 
     def insert_abag(self):
@@ -243,10 +286,9 @@ class BuildComplex(BuildDb):
         # select
         cols = ['pdb_id', 'compound_no', 'chain_id', 'chain_type', 'fragment']
         data = df[cols].to_records(index=False)
-        insert_query = """
-            INSERT INTO abag(pdb_id, compound_no, chain_id, chain_type, fragment)
-            VALUES (%s, %s, %s, %s, %s)
-        """
+        insert_query = """INSERT INTO abag
+            (pdb_id, compound_no, chain_id, chain_type, fragment)
+            VALUES (%s, %s, %s, %s, %s)"""
         self.insert_data(insert_query, data)
 
 

@@ -17,15 +17,15 @@ from bioomics import PullPdb, BuildComplex, QueryComplex, \
 def build_pdb_tables(args):
     pdb_path_dict = PullPdb(args['pdb_dir']).get_raw_pdb()
     pdb_files = pdb_path_dict.values()
-    bc = BuildComplex(pdb_path_files, False)
+    bc = BuildComplex(pdb_files, args['verbose'])
     # table pdb
     bc.insert_pdb()
     # table compound
     bc.insert_compound()
     # table chain
     bc.insert_chain()
-    # table pdb_keyword
-    bc.insert_pdb_keyword()
+    # table keyword
+    bc.insert_keyword()
 
 def build_uniprot_tables(args):
     '''
@@ -33,26 +33,41 @@ def build_uniprot_tables(args):
     Don't recommend updates. Delete all rows before insertion 
     '''
     # table uniprot
-    # records_iter = Uniprot(args['uniprot_sprot_dat']).dat_iter()
-    # BuildComplex(records_iter, True).insert_uniprot()
+    records_iter = Uniprot(args['uniprot_sprot_dat']).dat_iter()
+    BuildComplex(records_iter, args['verbose']).insert_uniprot()
 
     # table uniprot_keyword
-    # records_iter = Uniprot(args['uniprot_sprot_dat']).dat_iter()
-    # BuildComplex(records_iter, True).insert_uniprot_keyword()
+    records_iter = Uniprot(args['uniprot_sprot_dat']).dat_iter()
+    BuildComplex(records_iter, args['verbose']).insert_uniprot_keyword()
 
     # table uniprot_dbxrefs
-    # records_iter = Uniprot(args['uniprot_sprot_dat']).dat_iter()
-    # BuildComplex(records_iter, True).insert_uniprot_dbxrefs()
+    records_iter = Uniprot(args['uniprot_sprot_dat']).dat_iter()
+    BuildComplex(records_iter, args['verbose']).insert_uniprot_dbxrefs()
 
-def build_blastp_table(args):
-    # table uniprot_aling
+def build_blast(args):
+    # table align_uniprot
     # collect aln files of which data not in DB
-    aln_iter = FilterDb(args['data_dir']).uniprot_align()
-    BuildComplex(aln_iter, True).insert_uniprot_align()
+    aln_iter = FilterDb(args['data_dir']).uniprot_align_iter()
+    bc = BuildComplex(aln_iter, args['verbose'])
+    bc.empty_table('align_uniprot')
+    bc.insert_align_uniprot()
 
+def build_igblast(args):
+    # table align_imgt
+    aln_fa_iter = FilterDb(args['data_dir']).igblastp_align_iter()
+    bc = BuildComplex(aln_fa_iter, args['verbose'])
+    bc.empty_table('align_imgt')
+    bc.insert_align_imgt()
+
+    # table align_vregion
+    aln_fa_iter = FilterDb(args['data_dir']).igblastp_align_iter()
+    bc = BuildComplex(aln_fa_iter, args['verbose'])
+    bc.empty_table('align_vregion')
+    bc.insert_align_vregion()
 
 if __name__ == "__main__":
     args = {
+        'verbose': True,
         'pdb_dir': '/home/yuan/data/pdb/rsync',
         'uniprot_sprot_dat': '/home/yuan/data/UniProt/uniprot_sprot.dat.gz',
         'data_dir': '/home/yuan/data/pdb/data',
@@ -60,11 +75,12 @@ if __name__ == "__main__":
     
     # scan pdb files
     # build_pdb_tables(args)
-    
-    # data are from *.dat
-    # build_uniprot_tables(args)
 
-    # 
-    build_blastp_table(args)
+    # alignments
+    # build_align_uniprot(args)
+
+    # data are from *.dat
+    # build_blast(args)
+    build_igblast(args)
     
     print("Done. Great\n\n")

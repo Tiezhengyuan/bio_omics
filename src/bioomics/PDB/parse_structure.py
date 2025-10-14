@@ -60,7 +60,7 @@ class ParseStructure:
         for residue in chain:
             if residue.resname in longer_names:
                 seq.append(longer_names[residue.resname])
-        return ''.join(seq)
+        return ''.join(seq).upper()
 
     def get_chains_seq(self) -> dict:
         '''
@@ -81,12 +81,12 @@ class ParseStructure:
         '''
         for model in self.structure:
             model_chains = {
-                'model_id': model.id,
+                'model_no': model.id,
                 'chains': [],
             }
             for chain in model:
                 _chain = {
-                    'chain_id': chain.id,
+                    'chain_no': chain.id.upper(),
                     'AA residues': len(chain),
                     'seq': self._chain_seq(chain)
                 }

@@ -11,6 +11,11 @@ class ProcessBlast:
         self.outdir = outdir
         self.verbose = verbose
 
+    def aln_iter(self, extension:str):
+        for path in Dir(self.outdir).recursive_files():
+            if path.endswith(extension):
+                yield path
+
     def build_blastp_db(self, fa_file:str, bin_dir:str=None):
         db_type = 'prot'
         return self._blast_db(fa_file, db_type, bin_dir)

@@ -38,6 +38,12 @@ class Uniprot:
                 for record in SeqIO.parse(f, 'swiss'):
                     yield record
 
+    def filter_dat_iter(self, ids:list):
+        record_iter = self.dat_iter()
+        for record in record_iter:
+            if str(record.id) not in ids:
+                yield record
+
     def xml_iter(self) -> Iterable:
         if self.infile.endswith('gz'):
             with gzip.open(self.infile, 'rt') as f:

@@ -3,7 +3,8 @@ from copy import deepcopy
 
 class UpdateDb:
 
-    def __init__(self, verbose:bool=False):
+    def __init__(self, data, verbose:bool=False):
+        self.data = data
         self.verbose = verbose
         self.config = {}
 

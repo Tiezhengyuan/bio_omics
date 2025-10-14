@@ -190,21 +190,24 @@ class Pdb(ParseStructure):
                 f.writelines(raw_table)
     
     def retrieve_sequence(self):
-        records = []
+        records = {}
         for model in self.structure:
+            model_no = model.id
             for chain in model:
+                chain_no = chain.id.upper()
                 seq = []
                 for residue in chain:
                     if residue.resname in longer_names:
                         seq.append(longer_names[residue.resname])
                 if seq:
-                    rec = SeqRecord(
+                    chain_id = f"{self.structure_id}_{model_no}_{chain_no}"
+                    records[chain_id] = SeqRecord(
                         Seq(''.join(seq)),
-                        id=f"{self.structure_id}_{model.id}_{chain.id}",
+                        id=chain_id,
                         description='',
                     )
-                    records.append(rec)
-        return records
+                    
+        return records.values()
 
     def export_fasta(self, outfile):
         '''

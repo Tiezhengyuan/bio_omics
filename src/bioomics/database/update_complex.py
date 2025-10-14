@@ -1,14 +1,17 @@
-from update_db import UpdateDb
+from .update_db import UpdateDb
+from .build_db import BuildDb
+from .build_complex import BuildComplex
+from .query_complex import QueryComplex
 
-class UpdateComplex(UpdateDb):
+class UpdateComplex(BuildDb):
 
-    def __init__(self, verbose:bool=False):
-        super().__init__(verbose)
+    def __init__(self, data, verbose:bool=False):
+        super().__init__(data, verbose)
         self.config = {
             'host': 'localhost',
             'user': 'admin',
             'password': 'strong_password',
-            'database': 'COMPLEX'
+            'database': 'COMPLEX2'
         }
 
     def update_compound(self, df, col_name:str):

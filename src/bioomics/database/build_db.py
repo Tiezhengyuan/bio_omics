@@ -65,21 +65,8 @@ class BuildDb:
         return None
 
     def drop_table(self, table_name):
-        try:
-            connection = mysql.connector.connect(**self.config)
-            cursor = connection.cursor(dictionary=True)
-            query = f"DROP TABLE {table_name};"
-            cursor.execute(query)
-            connection.commit()
-            return cursor
-        except Exception as e:
-            if self.verbose:
-                print(f"Error: {e}")
-        finally:
-            if 'connection' in locals() and connection.is_connected():
-                cursor.close()
-                connection.close()
-        return None
+        query = f"DROP TABLE {table_name};"
+        return self.execute_db_sql(query)
 
     def create_table(self, query):
         try:
@@ -96,6 +83,12 @@ class BuildDb:
                 cursor.close()
                 connection.close()
         return None
+
+    def empty_table(self, table_name):
+        if self.verbose:
+            print(f"Try to delete all records from table {table_name}...")
+        query = f"DELETE FROM {table_name};"
+        return self.execute_db_sql(query)
 
     def insert_records(self, insert_query, records):
         try:
@@ -125,18 +118,18 @@ class BuildDb:
                 m += 1
         print(f"table complex: total={len(data)}, succeed={n}, failed={m}")
 
-    def insert(self, table_name, insert_query, func, pool_size:int=None):
+    def insert(self, table_name, insert_query, func, pool_size:int=None, **kwargs):
         '''
         insert data into table
         '''
         pool_size = 200 if pool_size is None else pool_size
         print(f"\nTry to retrieve data and insert records into table {table_name}...")
         # get records: self.data is pdb paths
-        succeed, failed = 0, []
-        pool = []
+        succeed = 0
+        pool, recycle_pool = [], []
         for arg in self.data:
             # collect record: arg is pdb_file or dat_record
-            records = func(arg)
+            records = func(arg, **kwargs)
             pool.extend(records)
             # insert records into table
             if len(pool) >= pool_size:
@@ -144,15 +137,22 @@ class BuildDb:
                 if m:
                     succeed += len(pool)
                 else:
-                    failed.append(arg)
-                pool = []
+                    recycle_pool += pool
+                pool, recycle = [], []
         if pool:
             m = self.insert_records(insert_query, pool)
             if m:
                 succeed += len(pool)
             else:
-                failed.append(arg)
-            pool = []
+                recycle_pool += pool
+        # try again: insert one by one 
+        failed = []
+        for rec in recycle_pool:
+            m = self.insert_records(insert_query, [rec,])
+            if m:
+                succeed += 1
+            else:
+                failed.append(rec)
         print(f"failed:{len(failed)}, succeed={succeed}")
-        if failed:
-            print(f'Failure insertion into table {table_name}: {failed}')
+        return failed
+

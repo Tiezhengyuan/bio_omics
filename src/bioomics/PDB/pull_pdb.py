@@ -1,8 +1,9 @@
 '''
 process large number of PDB files 
 '''
-import os
 import json
+import os
+import re
 import requests
 import urllib
 from datetime import date
@@ -75,6 +76,15 @@ class PullPdb:
             print(e)
         return None
 
+    def pdb_id(self, path):
+        file_name = os.path.basename(path)
+        if path.endswith('.ent.gz'):
+            pdb_id = re.sub(r'^pdb|\.ent\.gz$', '', file_name).upper()
+            return pdb_id
+        elif path.endswith('.pdb'):
+            pdb_id = re.sub(r'\pdb$', '', file_name).upper()
+            return pdb_id
+        return file_name
     
     def iter_raw_pdb_args(self, args:dict):
         '''
@@ -82,8 +92,7 @@ class PullPdb:
         '''
         file_iter = Dir(self.pdb_dir).recursive_files()
         for path in file_iter:
-            file_name = os.path.basename(path)
-            pdb_id = file_name.replace('pdb', '').replace('.ent.gz', '').upper()
+            pdb_id = self.pdb_id(path)
             if pdb_id:
                 rec_args = dict(args)
                 rec_args.update({
@@ -99,8 +108,7 @@ class PullPdb:
         '''
         file_iter = Dir(self.pdb_dir).recursive_files()
         for path in file_iter:
-            file_name = os.path.basename(path)
-            pdb_id = file_name.replace('pdb', '').replace('.ent.gz', '').upper()
+            pdb_id = self.pdb_id(path)
             if pdb_id:
                 yield pdb_id, path
 
@@ -112,11 +120,13 @@ class PullPdb:
         return res
 
     def filter_out_raw_pdb(self, pdb_ids) -> dict:
-        res = {}
+        n, res = 0, {}
         file_iter = self.iter_raw_pdb()
         for pdb_id, path in file_iter:
+            n += 1
             if pdb_id not in pdb_ids: 
                 res[pdb_id] = path
+        print(f"Scan {n} PDB files in {self.pdb_dir}. Detect unknown {len(res)} PDB.")
         return res
 
     def filter_in_raw_pdb(pdb_ids):

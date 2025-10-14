@@ -7,16 +7,15 @@ from Bio.Seq import Seq
 from Bio.Align import PairwiseAligner
 from Bio import SeqIO
 
-from .common.utils import Utils
-from .common.process_json import ProcessJson
-from .common.parse_text import ParseText
+from ..common import Utils, ProcessJson, ParseText
 from .process_seq import ProcessSeq
 
 class ParseIgblast:
 
-    def __init__(self, aln_file:str, fa_file:str=None):
+    def __init__(self, aln_file:str, fa_file:str=None, verbose:bool=None):
         self.aln_file = aln_file
         self.fa_file = fa_file
+        self.verbose = verbose if verbose else False
 
     def iter_pairwise(self):
         iter1 = self.iter_query()
@@ -46,7 +45,7 @@ class ParseIgblast:
             if rec:
                 yield rec
 
-    def analyze_aln(self, specie):
+    def analyze_aln(self, specie=None):
         data = []
         info = {
             'specie': specie,
@@ -55,40 +54,44 @@ class ParseIgblast:
             'pairwise': 0,
         }
         n = 0
-        print(specie, ':')
+        if self.verbose:
+            print(specie, ':')
         for record, block in self.iter_pairwise():
             info['pairwise'] += 1
             try:
                 query_seq = str(record.seq)
-                alignment = self.alignment_summary(block, query_seq)
                 rec = {
                     'record_id': record.id,
                     'query_id': self.query_id(block),
                     'query_length': self.query_length(block),
                     'significant': self.sig_alignment(block),
-                    'alignment': alignment,
                 }
-                # annote CDR based on query seq
-                rec['query'] = self.integrate_cdr(query_seq, alignment)
-                # annote CDR based on alignment seq
-                alignment_seq = self.alignment_seq(query_seq, alignment)
-                rec['alignment'] = self.integrate_cdr(alignment_seq, alignment)
-                # gapped seq based on aligned seq
-                region, aln_seq, pos = self.alignments(block)
-                rec['gap'] = self.gap_seq(region, aln_seq, pos)
+                alignment = self.alignment_summary(block, query_seq)
+                if alignment:
+                    rec['alignment'] = alignment
+                    # annote CDR based on query seq
+                    rec['query'] = self.integrate_cdr(query_seq, alignment)
+                    # annote CDR based on alignment seq
+                    alignment_seq = self.alignment_seq(query_seq, alignment)
+                    rec['alignment'] = self.integrate_cdr(alignment_seq, alignment)
+                    # gapped seq based on aligned seq
+                    region, aln_seq, pos = self.alignments(block)
+                    rec['gap'] = self.gap_seq(region, aln_seq, pos)
                 # update data
                 data.append(rec)
                 n += 1
-                if n % 10_000 == 0:
+                if self.verbose and n % 10_000 == 0:
                     print(n, end=',')
             except Exception as e:
-                print(block[0], e)
+                if self.verbose:
+                    print(block[0], e)
         
         # save data to .json
         prefix = self.aln_file.replace('.aln', '')
         ProcessJson.save_json(data, f'{prefix}.json')
         info['json'] = len(data)
-        print(f'{prefix}.json')
+        if self.verbose:
+            print(f'Analyze igblastp result and export to {prefix}.json')
         return info
     
     def build_label_text(self):
@@ -133,6 +136,48 @@ class ParseIgblast:
         data.to_csv(outfile, index=False)
         print(f'output: {outfile}')
 
+    def retrieve_hits(self):
+        '''
+        database is IMGT V-REGION
+        prepare records for db insertion
+        '''
+        hits = []
+        for record, block in self.iter_pairwise():
+            sig_hits = self.sig_alignment(block)
+            if sig_hits:
+                sig = sig_hits[0]
+                if float(sig['bits-score']) >= 100 and float(sig['e-value']) <= 1e-10:
+                    sig['query_id'] = self.query_id(block)
+                    sig['query_seq'] = self.query_seq(record)
+                    hits.append(sig)
+        return hits
+
+    def retrieve_regions(self):
+        '''
+        database is IMGT V-REGION
+        prepare records for db insertion
+        '''
+        hit_regions = []
+        names = ['from', 'to', 'length', 'matches', 'mismatches', 'gaps', 'percent identity']
+        for record, block in self.iter_pairwise():
+            sig_hits = self.sig_alignment(block)
+            if sig_hits:
+                sig = sig_hits[0]
+                if float(sig['bits-score']) >= 100 and float(sig['e-value']) <= 1e-10:
+                    query_id = self.query_id(block)
+                    query_seq = self.query_seq(record)
+                    alignment = self.alignment_summary(block, query_seq)
+                    for region_name, items in alignment.items():
+                        rec = {
+                            'query_id': query_id,
+                            'region': region_name,
+                        }
+                        rec.update(items)
+                        hit_regions.append(rec)
+        return hit_regions
+
+    def query_seq(self, record):
+        return str(record.seq).upper()
 
     def query_id(self, block):
         for line in block:
@@ -170,8 +215,6 @@ class ParseIgblast:
                 sig.append(rec)
         return sig
 
-
-
     def alignment_summary(self, block, query_seq:str=None):
         columns, alignment = None, {}
         for line in block:
@@ -186,8 +229,11 @@ class ParseIgblast:
                         val = [0 if i=='N/A' else int(float(i)) for i in items[1:]]
                         alignment[key] = {a:b for a,b in zip(columns, val)}
                         try:
-                            start, end = alignment[key]['from'] -1, alignment[key]['to']
-                            alignment[key]['seq'] = query_seq[start:end]
+                            if key == 'Total':
+                                alignment[key]['seq'] = query_seq if query_seq else ''
+                            else:
+                                start, end = alignment[key]['from'] -1, alignment[key]['to']
+                                alignment[key]['seq'] = query_seq[start:end] if query_seq else ''
                         except Exception as e:
                             pass
                     else:
@@ -241,9 +287,10 @@ class ParseIgblast:
                 pos.append(start)
             if end > 0:
                 pos.append(end)
-        start, end = min(pos) - 1, max(pos)
-        return seq[start:end]
-
+        if pos:
+            start, end = min(pos) - 1, max(pos)
+            return seq[start:end]
+        return ''
 
     def alignments(self, block):
         '''
@@ -268,6 +315,9 @@ class ParseIgblast:
         '''
         get gap seq
         '''
+        if not pos:
+            return {}
+
         res = {
             'start': min(pos) -1,
             'end': max(pos),

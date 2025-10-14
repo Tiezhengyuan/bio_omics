@@ -17,168 +17,189 @@ from bioomics import BuildComplex
 
 # PDB data
 create_pdb = """
-    CREATE TABLE pdb(
-        pdb_id VARCHAR(10),
-        pdb_url VARCHAR(50),
-        local_path VARCHAR(100),
-        release_date DATE,
-        resolution float,
-        name VARCHAR(500),
-        CONSTRAINT pk_pdb PRIMARY KEY (pdb_id)
-    );
+CREATE TABLE pdb(
+    pdb_id          VARCHAR(10),
+    pdb_url         VARCHAR(50),
+    local_path      VARCHAR(100),
+    release_date    DATE,
+    resolution      float,
+    name            VARCHAR(500),
+    CONSTRAINT pk_pdb PRIMARY KEY (pdb_id)
+);
 """
 
 create_compound = """
-    CREATE TABLE compound(
-        pdb_id VARCHAR(10),
-        compound_no INT,
-        chain VARCHAR(200),
-        compound_text Text,
-        CONSTRAINT pk_compound PRIMARY KEY (pdb_id, compound_no),
-        CONSTRAINT fk_compound_pdb FOREIGN KEY (pdb_id)
-            REFERENCES pdb(pdb_id)  ON DELETE CASCADE
-    );
+CREATE TABLE compound(
+    pdb_id          VARCHAR(10),
+    compound_no     INT,
+    chains          VARCHAR(200),
+    compound_text   Text,
+    CONSTRAINT pk_compound PRIMARY KEY (pdb_id, compound_no),
+    CONSTRAINT fk_compound_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+);
 """
 
 create_chain = """
-    CREATE TABLE chain(
-        pdb_id VARCHAR(10),
-        compound_no INT,
-        chain_id VARCHAR(10),
-        pro_seq Text,
-        CONSTRAINT pk_chain PRIMARY KEY (pdb_id, compound_no, chain_id),
-        CONSTRAINT fk_chain_pdb FOREIGN KEY (pdb_id)
-            REFERENCES pdb(pdb_id)  ON DELETE CASCADE,
-        CONSTRAINT fk_chain_compound FOREIGN KEY (pdb_id, compound_no)
-            REFERENCES compound(pdb_id, compound_no)  ON DELETE CASCADE
-    );
+CREATE TABLE chain(
+    chain_id        VARCHAR(20),
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    chain_no        VARCHAR(5),
+    pro_seq         Text NOT NULL,
+    CONSTRAINT pk_chain PRIMARY KEY (chain_id),
+    CONSTRAINT fk_chain_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+);
 """
 
-create_pdb_keyword = """
-    CREATE TABLE pdb_keyword(
-        pdb_id VARCHAR(10),
-        keyword VARCHAR(50),
-        UNIQUE (pdb_id, keyword),
-        CONSTRAINT fk_pdb_keyword_pdb FOREIGN KEY (pdb_id)
-            REFERENCES pdb(pdb_id) ON DELETE CASCADE
-    );
+create_keyword = """
+CREATE TABLE keyword(
+    pdb_id          VARCHAR(10),
+    keyword         VARCHAR(200),
+    UNIQUE (pdb_id, keyword),
+    CONSTRAINT fk_pdb_keyword_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
 """
 
 # uniprot data: accession primary key
 create_uniprot = """
-    CREATE TABLE uniprot (
-        uniprot_acc VARCHAR(20),
-        name VARCHAR(100),
-        organism VARCHAR(200),
-        pro_seq TEXT,
-        CONSTRAINT pk_uniprot PRIMARY KEY (uniprot_acc)
-    );
+CREATE TABLE uniprot (
+    uniprot_acc     VARCHAR(20),
+    name            VARCHAR(100),
+    organism        VARCHAR(200),
+    pro_seq         TEXT,
+    CONSTRAINT pk_uniprot PRIMARY KEY (uniprot_acc)
+);
 """
 
 # uniprot data: keywords for aggregating data
 create_uniprot_keyword = """
-    CREATE TABLE uniprot_keyword (
-        uniprot_acc VARCHAR(20),
-        keyword VARCHAR(100),
-        UNIQUE (uniprot_acc, keyword),
-        CONSTRAINT fk_uniprot_keyword_uniprot FOREIGN KEY (uniprot_acc)
-            REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
-    );
+CREATE TABLE uniprot_keyword (
+    uniprot_acc     VARCHAR(20),
+    keyword         VARCHAR(100),
+    UNIQUE (uniprot_acc, keyword),
+    CONSTRAINT fk_uniprot_keyword_uniprot FOREIGN KEY (uniprot_acc)
+        REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
+);
 """
 
 # uniprot data: set links between uniprot and other database
 create_uniprot_dbxrefs = """
-    CREATE TABLE uniprot_dbxrefs (
-        uniprot_acc VARCHAR(20),
-        db_name VARCHAR(50),
-        db_acc VARCHAR(50),
-        UNIQUE (uniprot_acc, db_name, db_acc),
-        CONSTRAINT fk_uniprot_dbxrefs_uniprot FOREIGN KEY (uniprot_acc)
-            REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
-    );
+CREATE TABLE uniprot_dbxrefs (
+    uniprot_acc     VARCHAR(20),
+    db_name         VARCHAR(50),
+    db_acc          VARCHAR(50),
+    UNIQUE (uniprot_acc, db_name, db_acc),
+    CONSTRAINT fk_uniprot_dbxrefs_uniprot FOREIGN KEY (uniprot_acc)
+        REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
+);
 """
 
 # blastp of pdb chains on uniprot_sprot
-create_uniprot_align = """
-    CREATE TABLE uniprot_align(
-        id          INT AUTO_INCREMENT PRIMARY KEY,
-        pdb_id      VARCHAR(10),
-        model_id    INT,
-        chain_id    VARCHAR(5),
-        uniprot_acc VARCHAR(20),
-        evalue      DOUBLE,
-        bit_score   INT,
-        identity    FLOAT
+create_align_uniprot = """
+CREATE TABLE align_uniprot(
+    chain_id        VARCHAR(20),
+    pdb_id          VARCHAR(10),
+    uniprot_acc     VARCHAR(20),
+    evalue          DOUBLE,
+    bit_score       INT,
+    identity        FLOAT,
+    CONSTRAINT pk_align_uniprot PRIMARY KEY (chain_id)
+);
+"""
+
+# igblastp of pdb chains on IMGT V-region
+create_align_imgt = """
+CREATE TABLE align_imgt(
+    chain_id        VARCHAR(20),
+    pdb_id          VARCHAR(10),
+    allele_name     VARCHAR(20),
+    gene_name       VARCHAR(20),
+    gene_family     VARCHAR(20),
+    isotype         VARCHAR(10),
+    evalue          DOUBLE,
+    bit_score       INT,
+    CONSTRAINT pk_align_imgt PRIMARY KEY (chain_id)
+);
+"""
+
+# FR and CDR idetity in v-region
+create_align_vregion = """
+CREATE TABLE align_vregion (
+    chain_id        VARCHAR(20),
+    region_name     VARCHAR(20),
+    pdb_id          VARCHAR(10),
+    identity        FLOAT,
+    start           INT,
+    end             INT,
+    seq             TEXT,
+    CONSTRAINT pk_align_vregion PRIMARY KEY (chain_id, region_name)
+);
+"""
+
+
+# views
+view_pdb = ["""
+DROP VIEW IF EXISTS view_pdb_uniprot;
+CREATE VIEW view_pdb_uniprot AS
+    SELECT A.chain_id, A.pdb_id, A.uniprot_acc, B.name, C.keyword, D.chain_no, D.pro_seq
+    FROM align_uniprot A
+    LEFT JOIN uniprot B
+    ON A.uniprot_acc = B.uniprot_acc
+    LEFT JOIN uniprot_keyword C
+    ON A.uniprot_acc = C.uniprot_acc
+    LEFT JOIN chain D
+    ON A.chain_id = D.chain_id
+    WHERE A.bit_score > 100 AND A.evalue < 1e-10
+        AND D.model_no = 0 AND D.pro_seq IS NOT NULL;
+
+DROP VIEW IF EXISTS view_antibody;
+CREATE VIEW view_antibody AS
+    SELECT * FROM view_pdb_uniprot
+    WHERE keyword = 'Immunoglobulin' OR keyword LIKE '%antibody%';
+
+DROP VIEW IF EXISTS view_antibody_complex;
+CREATE VIEW view_antibody_complex AS
+    SELECT * FROM view_pdb_uniprot
+    WHERE pdb_id IN(
+        SELECT DISTINCT pdb_id
+        FROM view_pdb_uniprot
+        WHERE keyword = 'Immunoglobulin' OR keyword LIKE '%antibody%'
     );
 """
-# views
-view_pdb_uniprot = """
-    CREATE VIEW view_pdb_uniprot AS
-        SELECT A.pdb_id, A.chain_id, B.uniprot_acc, B.name, C.keyword, D.pro_seq
-        FROM uniprot_align A
-        LEFT JOIN uniprot B
-        ON A.uniprot_acc = B.uniprot_acc
-        LEFT JOIN uniprot_keyword C
-        ON A.uniprot_acc = C.uniprot_acc
-        LEFT JOIN chain D
-        on A.pdb_id = D.pdb_id AND A.chain_id = D.chain_id
-        WHERE A.model_id = 0 AND bit_score > 100 AND evalue < 1e-10
-            AND D.pro_seq IS NOT NULL;
-"""
 
-view_antibody = """
-    CREATE VIEW view_antibody AS
-        SELECT A.pdb_id, A.chain_id, B.uniprot_acc, B.name, C.keyword, D.pro_seq
-        FROM uniprot_align A
-        LEFT JOIN uniprot B
-        ON A.uniprot_acc = B.uniprot_acc
-        LEFT JOIN uniprot_keyword C
-        ON A.uniprot_acc = C.uniprot_acc
-        LEFT JOIN chain D
-        on A.pdb_id = D.pdb_id AND A.chain_id = D.chain_id
-        WHERE A.model_id = 0 AND A.bit_score > 100 AND A.evalue < 1e-10
-            AND C.keyword REGEXP 'immunoglobulin|antibody'
-            AND D.pro_seq IS NOT NULL;
-"""
 
-view_antibody_complex = """
-    CREATE VIEW view_antibody_complex AS
-        SELECT DISTINCT pdb_id, chain_id, name, pro_seq
-        FROM view_pdb_uniprot
-        where pdb_id IN (
-            SELECT DISTINCT pdb_id
-            FROM view_antibody
-        );
-"""
 
 # igblastp of pdb chains on V-gene
 create_abag = """
-    CREATE TABLE abag (
-        pdb_id VARCHAR(10),
-        compound_no INT,
-        chain_id VARCHAR(10),
-        chain_type VARCHAR(30),
-        fragment VARCHAR(30),
-        CONSTRAINT pk_abag PRIMARY KEY (pdb_id, chain_id),
-        CONSTRAINT fk_abag_compound FOREIGN KEY (pdb_id, compound_no)
-            REFERENCES compound(pdb_id, compound_no) ON DELETE CASCADE
-    );
+CREATE TABLE abag (
+    pdb_id VARCHAR(10),
+    compound_no INT,
+    chain_id VARCHAR(10),
+    chain_type VARCHAR(30),
+    fragment VARCHAR(30),
+    CONSTRAINT pk_abag PRIMARY KEY (pdb_id, chain_id),
+    CONSTRAINT fk_abag_compound FOREIGN KEY (pdb_id, compound_no)
+        REFERENCES compound(pdb_id, compound_no) ON DELETE CASCADE
+);
 """
 
 create_imgt_genelist = """
-    CREATE TABLE imgt_genelist (
-        species VARCHAR(50),
-        gene_db VARCHAR(20),
-        gene_function VARCHAR(20),
-        gene_definition VARCHAR(200),
-        number_alleles VARCHAR(5),
-        chromosome VARCHAR(5),
-        chromosomal_loc VARCHAR(20),
-        ligm_db_ref_gene VARCHAR(100),
-        ncbi_gene VARCHAR(20),
-        chain VARCHAR(10),
-        domain VARCHAR(5)
-    );
+CREATE TABLE imgt_genelist (
+    species VARCHAR(50),
+    gene_db VARCHAR(20),
+    gene_function VARCHAR(20),
+    gene_definition VARCHAR(200),
+    number_alleles VARCHAR(5),
+    chromosome VARCHAR(5),
+    chromosomal_loc VARCHAR(20),
+    ligm_db_ref_gene VARCHAR(100),
+    ncbi_gene VARCHAR(20),
+    chain VARCHAR(10),
+    domain VARCHAR(5)
+);
 """
 
 
@@ -203,12 +224,14 @@ if __name__ == "__main__":
     meta = [
         # pdb determined
         ('pdb', create_pdb),
-        ('pdb_keyword', create_pdb_keyword),
+        ('keyword', create_keyword),
         ('compound', create_compound),
         ('chain', create_chain),
         # pdb related
         ('abag', create_abag),
-        ('uniprot_align', create_uniprot_align),
+        ('align_uniprot', create_align_uniprot),
+        ('align_imgt', create_align_imgt),
+        ('align_vregion', create_align_vregion),
         # other db
         ('uniprot', create_uniprot),
         ('uniprot_keyword', create_uniprot_keyword),
