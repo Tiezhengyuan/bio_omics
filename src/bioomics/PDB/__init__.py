@@ -4,3 +4,4 @@ from .parse_structure import ParseStructure
 from .calculate_sasa import *
 from .calculate_dist import *
 from .collect_contacts import *
+from .atom_select import *

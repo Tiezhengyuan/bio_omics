@@ -75,6 +75,14 @@ class ParseStructure:
                     res[chain_id] = seq
         return res
 
+    def get_chain_no(self) -> list:
+        chains = []
+        for model in self.structure:
+            for chain in model:
+                if chain.id not in chains:
+                    chains.append(chain.id)
+        return chains
+
     def get_chains(self):
         '''
         update self.chains

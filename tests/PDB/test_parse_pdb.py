@@ -3,10 +3,9 @@ from unittest import TestCase
 from ddt import ddt, data, unpack
 from pprint import pprint
 
+from ..helper import *
 from src.bioomics import Pdb
 
-TESTS_DIR = os.path.dirname(os.path.dirname(__file__))
-DATA_DIR = os.path.join(TESTS_DIR, 'data', 'PDB')
 
 @ddt
 class TestParsePdb(TestCase):
@@ -14,11 +13,9 @@ class TestParsePdb(TestCase):
     def setUp(self):
         self.c = {}
         for file_name in ['7S8L.pdb',]:
+            pdb_file = os.path.join(DATA_DIR, 'PDB', file_name)
             pdb_id = os.path.splitext(file_name)[0]
-            args = {
-                'pdb_file': os.path.join(DATA_DIR, file_name)
-            }
-            self.c[pdb_id] = Pdb(args)
+            self.c[pdb_id] = Pdb(pdb_file, RESULTS_DIR, True)
     
     @data(
         ['7S8L', {
@@ -52,26 +49,39 @@ class TestParsePdb(TestCase):
         assert result == expect
 
     @data(
-        ['7S8L', [{'model_id': 0, 'chains': [{'chain_id': 'R', 'AA residues': 250, 'seq': 'KETLIPVFLILFIALVGLVGNGFVLWLLGFRMRR' + \
-            'NAFSVYVLSLAGADFLFLCFQIINCLVYLSNFFCSISINFPSFFTTVMTCAYLAGLSMLSTVSTERCLSVLWPIWYRCRRPRHLSAVVCVLLWALSLLLSILEGKFCGFLFS' + \
-            'DGDSGWCQTFDFITAAWLIFLFMVLCGSSLALLVRILCGLTRLYLTILLTVLVFLLCGLPFGIQWFLILWIWDVLFCHIHPVSVVLSSLNSSANPIIYFFVGSF'}, 
-            {'chain_id': 'A', 'AA residues': 6, 'seq': 'KNFFWK'}, {'chain_id': 'B', 'AA residues': 221, 'seq': 'VSAEDKAAAERSK' + \
-                'MIDKNLREDGEKARRTLRLLLLGADNSGKSTIVKGIFETKFQVDKVNFHMFDVGRRKWIQCFNDVTAIIFVVDSSDYNRLQEALNDFKSIWNNRWLRTISVILFLNKQ' + \
-                'DLLAEKVLAGKSKIEDYFPEFARYTTPEDATPEPGEDPRVTRAKYFIRKEFVDISTASGDGRHICYPHFTCAVDTENARRIFNDCKDIILQMNLREYNLV'}, 
-            {'chain_id': 'C', 'AA residues': 337, 'seq': 'LDQLRQEAEQLKNQIRDARKACADATLSQITNNIDPVGRIQMRTRRTLRGHLAKIYAMHWGTDSRLL' + \
-                'VSASQDGKLIIWDSYTTNKVHAIPLRSSWVMTCAYAPSGNYVACGGLDNICSIYNLKTREGNVRVSRELAGHTGYLSCCRFLDDNQIVTSSGDTTCALWDIETGQQTT' + \
-                'TFTGHTGDVMSLSLAPDTRLFVSGACDASAKLWDVREGMCRQTFTGHESDINAICFFPNGNAFATGSDDATCRLFDLRADQELMTYSHDNIICGITSVSFSKSGRLLL' + \
-                'AGYDDFNCNVWDALKADRAGVLAGHDNRVSCLGVTDDGMAVATGSWDSFLKIWN'}, 
-            {'chain_id': 'D', 'AA residues': 51, 'seq': 'QARKLVEQLKMEANIDRIKVSKAAADLMAYCEAHAKEDPLLTPVPASENPF'}, 
-            {'chain_id': 'E', 'AA residues': 231, 'seq': 'VQLVESGGGLVQPGGSRKLSCSASGFAFSSFGMHWVRQAPEKGLEWVAYISSGSGTIYYADTVKGRF' + \
-                'TISRDDPKNTLFLQMTSLRSEDTAMYYCVRSIYYYGSSPFDFWGQGTTLTVSSDIVMTQATSSVPVTPGESVSISCRSSKSLLHSNGNTYLYWFLQRPGQSPQLLIYR' + \
-                'MSNLASGVPDRFSGSGSGTAFTLTISRLEAEDVGVYYCMQHLEYPLTFGAGTKLEL'}]}]],
+        ['7S8L', [{'model_no': 0, 'chains': [
+            {'chain_no': 'R', 'AA residues': 250, 'seq': 'KETLIPVFLILFIALVGLVGNGFVLWLLGFRMRRNAFSVYVLSLAGADF'+\
+                'LFLCFQIINCLVYLSNFFCSISINFPSFFTTVMTCAYLAGLSMLSTVSTERCLSVLWPIWYRCRRPRHLSAVVCVLLWALSLLLSILEGK'+\
+                'FCGFLFSDGDSGWCQTFDFITAAWLIFLFMVLCGSSLALLVRILCGLTRLYLTILLTVLVFLLCGLPFGIQWFLILWIWDVLFCHIHPVS'+\
+                'VVLSSLNSSANPIIYFFVGSF'}, 
+            {'chain_no': 'A', 'AA residues': 6, 'seq': 'KNFFWK'}, {'chain_no': 'B', 'AA residues': 221, 
+                'seq': 'VSAEDKAAAERSKMIDKNLREDGEKARRTLRLLLLGADNSGKSTIVKGIFETKFQVDKVNFHMFDVGRRKWIQCFNDVTAIIF'+\
+                'VVDSSDYNRLQEALNDFKSIWNNRWLRTISVILFLNKQDLLAEKVLAGKSKIEDYFPEFARYTTPEDATPEPGEDPRVTRAKYFIRKEFV'+\
+                'DISTASGDGRHICYPHFTCAVDTENARRIFNDCKDIILQMNLREYNLV'}, 
+            {'chain_no': 'C', 'AA residues': 337, 'seq': 'LDQLRQEAEQLKNQIRDARKACADATLSQITNNIDPVGRIQMRTRRTLR'+\
+                'GHLAKIYAMHWGTDSRLLVSASQDGKLIIWDSYTTNKVHAIPLRSSWVMTCAYAPSGNYVACGGLDNICSIYNLKTREGNVRVSRELAGHT'+\
+                'GYLSCCRFLDDNQIVTSSGDTTCALWDIETGQQTTTFTGHTGDVMSLSLAPDTRLFVSGACDASAKLWDVREGMCRQTFTGHESDINAICF'+\
+                'FPNGNAFATGSDDATCRLFDLRADQELMTYSHDNIICGITSVSFSKSGRLLLAGYDDFNCNVWDALKADRAGVLAGHDNRVSCLGVTDDGM'+\
+                'AVATGSWDSFLKIWN'}, 
+            {'chain_no': 'D', 'AA residues': 51, 'seq': 'QARKLVEQLKMEANIDRIKVSKAAADLMAYCEAHAKEDPLLTPVPASENPF'}, 
+            {'chain_no': 'E', 'AA residues': 231, 'seq': 'VQLVESGGGLVQPGGSRKLSCSASGFAFSSFGMHWVRQAPEKGLEWVAYI'+\
+                'SSGSGTIYYADTVKGRFTISRDDPKNTLFLQMTSLRSEDTAMYYCVRSIYYYGSSPFDFWGQGTTLTVSSDIVMTQATSSVPVTPGESVSI'+\
+                'SCRSSKSLLHSNGNTYLYWFLQRPGQSPQLLIYRMSNLASGVPDRFSGSGSGTAFTLTISRLEAEDVGVYYCMQHLEYPLTFGAGTKLEL'}]}]
+        ],
     )
     @unpack
     def test_get_chains(self, input, expect):
         result = self.c[input].get_chains()
         assert result == expect
 
+    @data(
+        ['7S8L', ['R', 'A', 'B', 'C', 'D', 'E'],],
+    )
+    @unpack
+    def test_chain_no(self, input, expect):
+        result = self.c[input].get_chain_no()
+        print(result)
+        assert result == expect
 
     '''
     @data(

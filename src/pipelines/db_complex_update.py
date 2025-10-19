@@ -139,5 +139,5 @@ if __name__ == "__main__":
     # alignment
     # update_align_uniprot(args)
     # update_align_imgt(args)
-    update_align_vregion(args)
+    # update_align_vregion(args)
 

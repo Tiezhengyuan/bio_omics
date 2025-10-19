@@ -1,6 +1,6 @@
 '''
 example: 
-    - parallel -j8 python /home/yuan/bio/bio_omics/src/pipelines/pdb_analyze.py \
+    - parallel -j4 python /home/yuan/bio/bio_omics/src/pipelines/pdb_analyze.py \
         ::: /home/yuan/data/pdb/_list/pdb_*.json
     - python /home/yuan/bio/bio_omics/src/pipelines/pdb_analyze.py \
         /home/yuan/data/pdb/_list/pdb_46.json
@@ -74,6 +74,14 @@ def vregion_igblastp(args, meta):
     else:
         meta[key]['null'] += 1
 
+def to_chain_fasta(args, meta):
+    p = Pdb(args['pdb_file'], args['outdir'], args['verbose'])
+    p.export_chains_fasta(args['overwrite'])
+
+def to_chain_pdb(args, meta):
+    p = Pdb(args['pdb_file'], args['outdir'], args['verbose'])
+    p.split_by_chain(args['overwrite'])
+
 
 if __name__ == "__main__":
     status = ['succeed', 'skip', 'null', 'na', 'fail']
@@ -87,16 +95,18 @@ if __name__ == "__main__":
     args_pool = ProcessJson.load_json(json_file)
     for args in args_pool:
         args['verbose'] = True
-        args['overwrite'] = True
+        args['overwrite'] = False
         
         # export chain sequences in fasta
         # to_fasta(args, meta)
+        # to_chain_fasta(args, meta)
+        to_chain_pdb(args, meta)
         
         # blastp against uniprot 
         # args['db_uniprot'] = '/home/yuan/data/UniProt/db/uniprot_sprot'
         # uniprot_blastp(args, meta)
         
         # igblastp agaist IMGT V-region
-        args['db_vregion'] = '/home/yuan/data/IMGT/GENE-DB/AA-WithoutGaps-F+ORF+inframeP/region_igblastdb/V-REGION'
-        vregion_igblastp(args, meta)
+        # args['db_vregion'] = '/home/yuan/data/IMGT/GENE-DB/AA-WithoutGaps-F+ORF+inframeP/region_igblastdb/V-REGION'
+        # vregion_igblastp(args, meta)
     print(meta)

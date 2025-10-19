@@ -17,29 +17,40 @@ class TestParsePdb(TestCase):
         for file_name in ['7S8L.pdb',]:
             pdb_id = os.path.splitext(file_name)[0]
             pdb_file = os.path.join(DATA_DIR, file_name)
-            self.c[pdb_id] = Pdb(pdb_file)
+            self.c[pdb_id] = Pdb(pdb_file, RESULTS_DIR, True)
     
     @data(
-        ['7S8L', 6],
+        ['7S8L', 'succeed'],
     )
     @unpack
     def test_export_fasta(self, pdb_id, expect):
-        file_name = pdb_id + '.fa'
-        result = self.c[pdb_id].export_fasta(file_name, RESULTS_DIR)
-        outfile = os.path.join(RESULTS_DIR, file_name)
-        assert result[0] == outfile
-        assert len(result[1]) == expect
+        fa_file = os.path.join(RESULTS_DIR, pdb_id + '.fa')
+        result = self.c[pdb_id].export_fasta(fa_file)
+        assert result == expect
 
     @data(
-        ['7S8L', '/home/yuan/bio/bio_omics/tests/results/7S8L_pdb.pickle', '7S8L'],
+        ['7S8L',],
     )
     @unpack
-    def test_pdb_obj(self, pdb_id, expect_outfile, structure_id):
-        pdb_file = os.path.join(DATA_DIR, f'{pdb_id}.pdb')
-        pfile = Pdb.build_pdb_obj(pdb_file, RESULTS_DIR)
-        assert pfile == expect_outfile
-        result = Pdb.load_pdb_obj(pfile)
-        assert result.structure_id == structure_id
+    def test_export_chains_fasta(self, pdb_id):
+        result = self.c[pdb_id].export_chains_fasta()
+
+    @data(
+        ['7S8L', ['R',], os.path.join(RESULTS_DIR, '7S8L_R.pdb')],
+        ['7S8L', ['E', 'C'], os.path.join(RESULTS_DIR, '7S8L_E_C.pdb')],
+    )
+    @unpack
+    def test_export_chain_pdb(self, pdb_id, chain_ids, expect):
+        result = self.c[pdb_id].export_chain_pdb(chain_ids, overwrite=True)
+        assert result == expect
+
+    @data(
+        ['7S8L', '',],
+    )
+    @unpack
+    def test_split_by_chain(self, pdb_id, expect):
+        result = self.c[pdb_id].split_by_chain(overwrite=True)
+        # print(result)
 
 
     '''
@@ -47,7 +58,7 @@ class TestParsePdb(TestCase):
         ['7S8L', '',],
     )
     @unpack
-    def test_(self, input, expect):
-
+    def test_(self, pdb_id, expect):
+        result = self.c[pdb_id].export_chain_pdb(chain_ids, overwrite=True)
         assert result == expect
     '''

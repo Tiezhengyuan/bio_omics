@@ -1,5 +1,6 @@
 venv/
 tests/data/
+tests/results/
 src/bioomics/database/*.csv
 data/
 
