@@ -6,12 +6,9 @@ import gzip
 from itertools import combinations
 import json
 import os
-import re
-from pprint import pprint
-from Bio.PDB import PDBIO, PDBParser, MMCIFParser, Select
+from Bio.PDB import PDBIO, PDBParser, MMCIFParser
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from Bio import SeqIO
 from biosequtils import Dir
 
 # Filter out the specific warning
@@ -22,7 +19,6 @@ warnings.simplefilter("ignore", PDBConstructionWarning)
 from .atom_select import *
 from .parse_structure import ParseStructure
 from ..constants.amino_acids import longer_names
-from ..common.process_pickle import ProcessPickle
 from ..protein.process_fasta import ProcessFasta
 
 # from .download import Download
@@ -41,7 +37,7 @@ class Pdb(ParseStructure):
         self.annot = {}
         self.info = []
         # load structure
-        self.load_structure()
+        # self.load_structure()
 
     def get_parser(self):
         '''

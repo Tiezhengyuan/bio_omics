@@ -7,6 +7,7 @@ Comprehensive Databases
 Protein
 - UniProt: protein database, https://www.expasy.org/resources/uniprotkb-swiss-prot
 - PDB: protein structure bank, https://www.rcsb.org/
+- AlphaFold Protein Structure Database, https://alphafold.ebi.ac.uk/
 
 RNA
 - miRBase: mircoRNA database, https://www.mirbase.org/

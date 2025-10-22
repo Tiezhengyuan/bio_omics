@@ -21,14 +21,17 @@ class ProcessIgblast:
         # print information
         self.verbose = verbose
 
-    def build_prot_db(self, fa_file:str):
+    def build_prot_db(self, fa_file:str, bin_dir:str=None):
+        exe = 'makeblastdb' if bin_dir is None else \
+            os.path.join(bin_dir, 'makeblastdb')
         outdir = self.outdir if self.outdir else os.path.dirname(fa_file)
         prefix = os.path.splitext(os.path.basename(fa_file))[0]
         outprefix = os.path.join(outdir, prefix)
-        cmd = ['makeblastdb', '-parse_seqids', '-dbtype', 'prot', \
+        cmd = [exe, '-parse_seqids', '-dbtype', 'prot', \
             '-in', fa_file, '-out', outprefix,]
         try:
             if self.verbose:
+                os.system(f"{exe} -version")
                 print('build igblastp database: ', ' '.join(cmd))
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             if self.verbose:

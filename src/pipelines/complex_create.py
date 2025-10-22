@@ -1,11 +1,10 @@
 #!/usr/bin/python
 '''
-example: python src/pipelines/db_complex_create.py
+example: python src/pipelines/complex_create.py
 functions:
     - build database known as complex2
     - build tables
 '''
-from Bio import SeqIO
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
@@ -22,7 +21,7 @@ CREATE TABLE pdb(
     pdb_url         VARCHAR(50),
     local_path      VARCHAR(100),
     release_date    DATE,
-    resolution      float,
+    resolution      FLOAT,
     name            VARCHAR(500),
     CONSTRAINT pk_pdb PRIMARY KEY (pdb_id)
 );
@@ -33,7 +32,7 @@ CREATE TABLE compound(
     pdb_id          VARCHAR(10),
     compound_no     INT,
     chains          VARCHAR(200),
-    compound_text   Text,
+    compound_text   TEXT,
     CONSTRAINT pk_compound PRIMARY KEY (pdb_id, compound_no),
     CONSTRAINT fk_compound_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)  ON DELETE CASCADE
@@ -46,7 +45,7 @@ CREATE TABLE chain(
     pdb_id          VARCHAR(10),
     model_no        INT,
     chain_no        VARCHAR(5),
-    pro_seq         Text NOT NULL,
+    pro_seq         TEXT NOT NULL,
     CONSTRAINT pk_chain PRIMARY KEY (chain_id),
     CONSTRAINT fk_chain_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)  ON DELETE CASCADE
@@ -118,6 +117,7 @@ CREATE TABLE align_imgt(
     allele_name     VARCHAR(20),
     gene_name       VARCHAR(20),
     gene_family     VARCHAR(20),
+    chain_type      VARCHAR(10),
     isotype         VARCHAR(10),
     evalue          DOUBLE,
     bit_score       INT,
@@ -129,8 +129,8 @@ CREATE TABLE align_imgt(
 create_align_vregion = """
 CREATE TABLE align_vregion (
     chain_id        VARCHAR(20),
-    region_name     VARCHAR(20),
     pdb_id          VARCHAR(10),
+    region_name     VARCHAR(20),
     identity        FLOAT,
     start           INT,
     end             INT,
@@ -139,21 +139,61 @@ CREATE TABLE align_vregion (
 );
 """
 
+create_imgt_genelist = """
+CREATE TABLE imgt_genelist (
+    species             VARCHAR(50),
+    gene_db             VARCHAR(20),
+    gene_function       VARCHAR(20),
+    gene_definition     VARCHAR(200),
+    number_alleles      VARCHAR(5),
+    chromosome          VARCHAR(5),
+    chromosomal_loc     VARCHAR(20),
+    ligm_db_ref_gene    VARCHAR(100),
+    ncbi_gene           VARCHAR(20),
+    chain               VARCHAR(10),
+    domain              VARCHAR(5)
+);
+"""
+
+create_imgt_gene = """
+CREATE TABLE imgt_gene (
+    germline_id         INT,
+    specie              VARCHAR(100),
+    isotype             VARCHAR(10),
+    chain_type          VARCHAR(10),
+    gene_name           VARCHAR(20),
+    allele_name         VARCHAR(20),
+    region_name         VARCHAR(10),
+    CONSTRAINT pk_imgt_gene PRIMARY KEY (germline_id)
+);
+"""
+
+create_imgt_geneseq = """
+CREATE TABLE imgt_geneseq (
+    germline_id     INT,
+    seq_type        VARCHAR(100),
+    seq             TEXT,
+    UNIQUE (germline_id, seq_type),
+    CONSTRAINT fk_imgt_genseq_gene FOREIGN KEY (germline_id)
+    REFERENCES imgt_gene(germline_id) ON DELETE CASCADE
+);
+"""
 
 # views
 view_pdb = ["""
 DROP VIEW IF EXISTS view_pdb_uniprot;
 CREATE VIEW view_pdb_uniprot AS
-    SELECT A.chain_id, A.pdb_id, A.uniprot_acc, B.name, C.keyword, D.chain_no, D.pro_seq
+    SELECT A.chain_id, A.pdb_id, A.uniprot_acc, U.name, K.keyword, 
+        C.chain_no, C.pro_seq
     FROM align_uniprot A
-    LEFT JOIN uniprot B
-    ON A.uniprot_acc = B.uniprot_acc
-    LEFT JOIN uniprot_keyword C
-    ON A.uniprot_acc = C.uniprot_acc
-    LEFT JOIN chain D
-    ON A.chain_id = D.chain_id
+    LEFT JOIN uniprot U
+        ON A.uniprot_acc = U.uniprot_acc
+    LEFT JOIN uniprot_keyword K
+        ON A.uniprot_acc = K.uniprot_acc
+    LEFT JOIN chain C
+        ON A.chain_id = C.chain_id
     WHERE A.bit_score > 100 AND A.evalue < 1e-10
-        AND D.model_no = 0 AND D.pro_seq IS NOT NULL;
+        AND C.model_no = 0 AND C.pro_seq IS NOT NULL;
 
 DROP VIEW IF EXISTS view_antibody;
 CREATE VIEW view_antibody AS
@@ -168,8 +208,18 @@ CREATE VIEW view_antibody_complex AS
         FROM view_pdb_uniprot
         WHERE keyword = 'Immunoglobulin' OR keyword LIKE '%antibody%'
     );
-"""
 
+DROP VIEW IF EXISTS view_antibody_imgt;
+CREATE VIEW view_antibody_imgt AS
+    SELECT A.chain_id, A.pdb_id, A.uniprot_acc, A.name, I.allele_name, 
+        I.gene_name, I.gene_family, I.chain_type, I.isotype, A.pro_seq
+    FROM view_antibody A, pdb P, align_imgt I
+    where A.pdb_id = P.pdb_id AND A.chain_id = I.chain_id
+        AND LENGTH(A.pro_seq) > 60
+        AND P.resolution <= 5
+        AND I.evalue <= 1e-10 AND bit_score >= 100;
+
+"""
 
 
 # igblastp of pdb chains on V-gene
@@ -185,24 +235,6 @@ CREATE TABLE abag (
         REFERENCES compound(pdb_id, compound_no) ON DELETE CASCADE
 );
 """
-
-create_imgt_genelist = """
-CREATE TABLE imgt_genelist (
-    species VARCHAR(50),
-    gene_db VARCHAR(20),
-    gene_function VARCHAR(20),
-    gene_definition VARCHAR(200),
-    number_alleles VARCHAR(5),
-    chromosome VARCHAR(5),
-    chromosomal_loc VARCHAR(20),
-    ligm_db_ref_gene VARCHAR(100),
-    ncbi_gene VARCHAR(20),
-    chain VARCHAR(10),
-    domain VARCHAR(5)
-);
-"""
-
-
 
 #####################################################################################
 def initialize_tables(meta):
@@ -232,6 +264,10 @@ if __name__ == "__main__":
         ('align_uniprot', create_align_uniprot),
         ('align_imgt', create_align_imgt),
         ('align_vregion', create_align_vregion),
+        # imgt
+        ('imgt_genelist', create_imgt_genelist),
+        ('imgt_gene', create_imgt_gene),
+        ('imgt_geneseq', create_imgt_geneseq),
         # other db
         ('uniprot', create_uniprot),
         ('uniprot_keyword', create_uniprot_keyword),

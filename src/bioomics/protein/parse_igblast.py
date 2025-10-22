@@ -143,13 +143,15 @@ class ParseIgblast:
         '''
         hits = []
         for record, block in self.iter_pairwise():
+            sig = {
+                'query_id': self.query_id(block),
+                'query_seq': self.query_seq(record),
+            }
             sig_hits = self.sig_alignment(block)
+            # only import the top one hit for each record
             if sig_hits:
-                sig = sig_hits[0]
-                if float(sig['bits-score']) >= 100 and float(sig['e-value']) <= 1e-10:
-                    sig['query_id'] = self.query_id(block)
-                    sig['query_seq'] = self.query_seq(record)
-                    hits.append(sig)
+                sig.update(sig_hits[0])
+            hits.append(sig)
         return hits
 
     def retrieve_regions(self):
@@ -160,20 +162,22 @@ class ParseIgblast:
         hit_regions = []
         names = ['from', 'to', 'length', 'matches', 'mismatches', 'gaps', 'percent identity']
         for record, block in self.iter_pairwise():
+            query_id = self.query_id(block)
+            query_seq = self.query_seq(record)
             sig_hits = self.sig_alignment(block)
             if sig_hits:
-                sig = sig_hits[0]
-                if float(sig['bits-score']) >= 100 and float(sig['e-value']) <= 1e-10:
-                    query_id = self.query_id(block)
-                    query_seq = self.query_seq(record)
-                    alignment = self.alignment_summary(block, query_seq)
-                    for region_name, items in alignment.items():
-                        rec = {
-                            'query_id': query_id,
-                            'region': region_name,
-                        }
-                        rec.update(items)
-                        hit_regions.append(rec)
+                alignment = self.alignment_summary(block, query_seq)
+                for region_name, items in alignment.items():
+                    rec = {
+                        'query_id': query_id,
+                        'region': region_name,
+                    }
+                    rec.update(items)
+                    hit_regions.append(rec)
+            else:
+                rec = {'query_id': query_id,}
+                if rec not in hit_regions:
+                    hit_regions.append(rec)
         return hit_regions
 
     def query_seq(self, record):

@@ -1,6 +1,6 @@
 #!/usr/bin/python
 '''
-example: python src/pipelines/db_complex_insert.py
+example: python src/pipelines/complex_insert.py
 function: build table pdb and insert data into table pdb
 '''
 import os
@@ -9,9 +9,7 @@ src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-
-from bioomics import PullPdb, BuildComplex, QueryComplex, \
-    QueryDb, FilterDb, Uniprot, Dir
+from bioomics import PullPdb, BuildComplex, FilterDb, Uniprot
 
 
 def build_pdb_tables(args):
@@ -74,13 +72,13 @@ if __name__ == "__main__":
     }
     
     # scan pdb files
-    # build_pdb_tables(args)
+    build_pdb_tables(args)
 
     # alignments
-    # build_align_uniprot(args)
+    build_align_uniprot(args)
 
     # data are from *.dat
-    # build_blast(args)
+    build_blast(args)
     build_igblast(args)
     
     print("Done. Great\n\n")

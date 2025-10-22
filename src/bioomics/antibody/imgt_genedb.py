@@ -21,17 +21,11 @@ fasta files:
     open reading frame and in-frame pseudogene genes and alleles, without IMGT gaps.
 '''
 from Bio import SeqIO
-from copy import deepcopy
 import re
 import os
-import numpy as np
 import pandas as pd
-import requests
-import subprocess
-import sys
 
 from .imgt import Imgt
-from .process_data import ProcessData
 from ..protein.process_igblast import ProcessIgblast
 from ..common.dir import Dir
 
@@ -43,8 +37,39 @@ class ImgtGenedb(Imgt):
         # keys: specie, gene_name, region_name
         self.data = {}
     
-    def build_specie_genelist(self):
-        # gene list
+    def build_gene_records(self):
+        # read fasta and integrate sequences to self.data
+        self.data = {}
+        self.parse_fasta()
+
+        germline_id, records, seq_records = 0, [], []
+        for specie, sub1 in self.data.items():
+            for gene_name, sub2 in sub1.items():
+                for region_name, sub3 in sub2.items():
+                    for allele_name, sub4 in sub3.items():
+                        germline_id += 1
+                        rec = {
+                            'germline_id': germline_id,
+                            'specie': specie,
+                            'isotype': gene_name[:2].upper(),
+                            'chain_type': gene_name[2].upper(),
+                            'gene_name': gene_name,
+                            'allele_name': allele_name,
+                            'region_name': region_name,
+                        }
+                        records.append(rec)
+                        for k,v in sub4['seq'].items():
+                            seq_rec = {
+                                'germline_id': germline_id,
+                                'seq_type': k,
+                                'seq': v,
+                            }
+                            seq_records.append(seq_rec)
+        return records, seq_records
+
+    def build_specie_genelist_json(self):
+        self.data = {}
+        # parse gene list to self.data
         df = self.parse_genelist(True)
         g = df.groupby(['Species', 'IMGT/GENE-DB'])
         for (specie, gene_name), sub in g:
@@ -54,8 +79,7 @@ class ImgtGenedb(Imgt):
                 self.data[specie][gene_name] = {}
             sub = sub.to_dict(orient='records')
             self.data[specie][gene_name]['genelist'] = sub
-        
-        # read fasta and integrate sequences
+        # read fasta and integrate sequences to self.data
         self.parse_fasta()
 
         # save data
@@ -64,7 +88,8 @@ class ImgtGenedb(Imgt):
         for specie, data1 in self.data.items():
             json_file = os.path.join(outdir, f"{specie}.json")
             self.save_json(data1, json_file)
-        print('Export genes to ', outdir)
+        if self.verbose:
+            print('Export genes to ', outdir)
     
     def parse_genelist(self, to_df=False):
         '''
@@ -86,7 +111,6 @@ class ImgtGenedb(Imgt):
         with open(infile, 'r') as f:
             header = next(f).rstrip()
             header = header.split(';')
-            # print(len(header), header)
             for line in f:
                 line = line.rstrip()
                 items = line.split(';')
@@ -207,6 +231,8 @@ class ImgtGenedb(Imgt):
                 outfile = self.region_fasta_file(postfix, region_name)
                 with open(outfile, 'w') as f:
                     SeqIO.write(records, f, 'fasta')
+                if self.verbose:
+                    print(outfile)
 
     def build_igblastp_region(self, bin_dir=None):
         '''
@@ -221,7 +247,8 @@ class ImgtGenedb(Imgt):
         regions = ['V-REGION', 'D-REGION', 'J-REGION', 'C-REGION']
         meta = {r:[] for r in regions}
         for region in regions:
-            fa_file = self.region_fasta_file(postfix, region)
+            fa_file = self.region_fasta_file(ref_type, region)
+            # build database of igblastp
             result = p.build_prot_db(fa_file, bin_dir)
             meta[region].append(result)
         return meta

@@ -8,17 +8,17 @@ import pandas as pd
 
 from .build_db import BuildDb
 from .query_complex import QueryComplex
-from ..PDB import Pdb, PullPdb
+from ..PDB import Pdb
 from ..UniProt import ParseDatRecord
 from ..protein import ParseBlastXml, ParseIgblast
 
 class BuildComplex(BuildDb):
 
-    def __init__(self, data:list=None, verbose:bool=False):
+    def __init__(self, data:list=None, verbose:bool=False, chunk_size:int=None):
         '''
         args: data is iterable of pdb_file, or dat_record
         '''
-        super().__init__(data, verbose)
+        super().__init__(data, verbose, chunk_size)
         self.config = {
             'host': 'localhost',
             'user': 'admin',
@@ -140,12 +140,35 @@ class BuildComplex(BuildDb):
 
     def insert_imgt_genelist(self) -> tuple:
         table_name = 'imgt_genelist'
-        insert_query = f"""INSERT INTO {table_name}
-            (species, gene_db, gene_function, gene_definition, number_alleles, chromosome, \
+        insert_query = f"""INSERT INTO {table_name} (species, gene_db, 
+                gene_function, gene_definition, number_alleles, chromosome,
                 chromosomal_loc, ligm_db_ref_gene, ncbi_gene, chain, domain)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
         self.insert(table_name, insert_query, self.record_imgt_genelist)
+
+    def record_imgt_gene(self, record:dict):
+        names = ['germline_id', 'specie', 'isotype', 'chain_type', \
+            'gene_name', 'allele_name', 'region_name']
+        rec = [record.get(i, '') for i in names]
+        return [rec,]
+
+    def insert_imgt_gene(self) -> tuple:
+        table_name = 'imgt_gene'
+        insert_query = f"""INSERT INTO {table_name} (germline_id, specie,
+                isotype, chain_type, gene_name, allele_name, region_name)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+        self.insert(table_name, insert_query, self.record_imgt_gene)
+
+    def record_imgt_geneseq(self, record:dict):
+        names = ['germline_id', 'seq_type', 'seq']
+        rec = [record.get(i, '') for i in names]
+        return [rec,]
+
+    def insert_imgt_geneseq(self) -> tuple:
+        table_name = 'imgt_geneseq'
+        insert_query = f"""INSERT INTO {table_name}
+            (germline_id, seq_type, seq) VALUES (%s, %s, %s)"""
+        self.insert(table_name, insert_query, self.record_imgt_geneseq)
 
 ########################
     def record_uniprot(self, record):
@@ -195,16 +218,27 @@ class BuildComplex(BuildDb):
         self.insert(table_name, insert_query, self.record_uniprot_dbxrefs)
 
     def record_align_uniprot(self, aln_file):
-        best_hits = ParseBlastXml(aln_file).best_hits()
         records = []
+        best_hits = ParseBlastXml(aln_file).best_hits()
         for hit in best_hits:
-            chain_id = hit['query']
+            chain_id = hit['query'].upper()
             pdb_id = hit['query'].split('_')[0]
-            uniprot_acc = hit['hit_desc'].split('|')[1]
-            rec = (chain_id, pdb_id, uniprot_acc, float(hit['evalue']), \
-                int(hit['bit_score']), float(hit['identity']))
-            if rec not in records:
-                records.append(rec)
+            rec0 = (chain_id, pdb_id)
+            if 'hit_desc' in hit:
+                uniprot_acc = hit['hit_desc'].split('|')[1]
+                rec = rec0 + (
+                    uniprot_acc,
+                    float(hit['evalue']),
+                    int(hit['bit_score']),
+                    float(hit['identity'])
+                )
+                if rec not in records:
+                    records.append(rec)
+            else:
+                # insert null if not hits detected
+                rec0 += (None,) * 4
+                if rec0 not in records:
+                    records.append(rec0)
         return records
 
     def insert_align_uniprot(self) -> tuple:
@@ -221,22 +255,34 @@ class BuildComplex(BuildDb):
         for hit in pi.retrieve_hits():
             chain_id = hit['query_id']
             pdb_id = chain_id.split('_')[0]
-            allele_name = hit['allele_name'].split('|')[0]
-            evalue = float(hit['e-value'])
-            bit_score = float(hit['bits-score'])
-            rec = (chain_id, pdb_id, allele_name, hit['gene_name'],
-                hit['gene_family'], hit['isotype'], evalue, bit_score,)
-            if rec not in records:
-                records.append(rec)
+            rec0 = (chain_id, pdb_id)
+            if 'allele_name' in hit:
+                rec = rec0 + (
+                    hit['allele_name'].split('|')[0],
+                    hit['gene_name'],
+                    hit['gene_family'],
+                    hit['chain_type'].upper(),
+                    hit['isotype'].upper(), 
+                    float(hit['e-value']),
+                    float(hit['bits-score']),
+                )
+                if rec not in records:
+                    records.append(rec)
+            else:
+                # insert null if not hits detected
+                rec0 += (None,) * 7
+                if rec0 not in records:
+                    records.append(rec0)
         return records
 
     def insert_align_imgt(self) -> tuple:
         table_name = 'align_imgt'
-        insert_query = f"""INSERT INTO {table_name} (chain_id, pdb_id,
-            allele_name, gene_name, gene_family, isotype, evalue, bit_score)
-            VALUES (%s, %s, %s, %s, %s, %s,%s, %s)
+        insert_query = f"""INSERT INTO {table_name} (chain_id,
+            pdb_id, allele_name, gene_name, gene_family,
+            chain_type, isotype, evalue, bit_score)
+            VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s)
         """
-        self.insert(table_name, insert_query, self.record_align_imgt, 10)
+        self.insert(table_name, insert_query, self.record_align_imgt)
 
     def record_align_vregion(self, item:tuple):
         aln_file, fa_file = item
@@ -245,16 +291,28 @@ class BuildComplex(BuildDb):
         for region in pi.retrieve_regions():
             chain_id = region['query_id']
             pdb_id = chain_id.split('_')[0]
-            rec = (chain_id, region['region'], pdb_id, region['percent identity'],
-                region['from'], region['to'], region['seq'],)
-            if rec not in records:
-                records.append(rec)
+            rec0 = (chain_id, pdb_id,)
+            if 'percent identity' in region:
+                rec = rec0 + (
+                    region['region'],
+                    region['percent identity'],
+                    region['from'],
+                    region['to'],
+                    region['seq'],
+                )
+                if rec not in records:
+                    records.append(rec)
+            else:
+                # region name is composite primary key
+                rec0 += ('UN', None, None, None, None)
+                if rec0 not in records:
+                    records.append(rec0)
         return records
 
     def insert_align_vregion(self) -> tuple:
         table_name = 'align_vregion'
         insert_query = f"""INSERT INTO {table_name}
-            (chain_id, region_name, pdb_id, identity, start, end, seq)
+            (chain_id, pdb_id, region_name, identity, start, end, seq)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         self.insert(table_name, insert_query, self.record_align_vregion)

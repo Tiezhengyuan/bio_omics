@@ -81,6 +81,24 @@ class QueryComplex(QueryDb):
                         rec['antibody'].append(_rec)
             yield rec
 
+    def get_heavy_seq(self):
+        query = f"""
+            SELECT DISTINCT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq
+            FROM view_antibody_imgt
+            WHERE chain_type = 'H';
+        """
+        rows = self.list_data(query)
+        return rows
+
+    def get_light_seq(self):
+        query = f"""
+            SELECT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq
+            FROM view_antibody_imgt
+            WHERE chain_type IN ('L', 'K');
+        """
+        rows = self.list_data(query)
+        return rows
+
     def get_seq(self):
         query = """
             select A.pdb_id, A.compound_no, A.chain_id, A.chain_type, B.pro_seq

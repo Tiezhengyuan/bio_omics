@@ -1,37 +1,76 @@
 '''
 example: python src/pipelines/process_imgt.py
-functions: sequence alignment
+functions:
+    - build table imgt_genelist
+    - retrieve v-region sequence in fasta
 '''
-from Bio import SeqIO
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-from bioomics import ProcessBlast, ImgtGenedb, BuildComplex
+from bioomics import ImgtGenedb, BuildComplex
+
+def build_genedb_json(args):
+    ig = ImgtGenedb(args['imgt_dir'], args['verbose'])
+    print('\nRetrieve from gene list to json by spcies')
+    ig.build_specie_genelist_json()
+
+def build_region_fasta(args):
+    ig = ImgtGenedb(args['imgt_dir'], args['verbose'])
+
+    print("\nRetrieve AA sequences to fasta by v-regions")
+    ig.build_region_fasta()
+    print("Build igblastp database given region fasta ")
+    ig.build_igblastp_region(args['igblast_dir'])
+
+def build_organism_fasta(args):
+    ig = ImgtGenedb(args['imgt_dir'], args['verbose'])
+    print("\nBuild fa and db by organism+spcie")
+    ig.build_organism_fasta()
+    print("Build igblastp database given organism fasta ")
+    ig.build_igblastp_organism(args['igblast_dir'])
+
+def build_table_imgt_genelist(args):
+    ig = ImgtGenedb(args['imgt_dir'], args['verbose'])
+    genelist = ig.parse_genelist(to_df=True)
+    records = genelist.to_dict(orient='records')
+
+    table_name = 'imgt_genelist'
+    print(f"Try to insert genelist into table {table_name}")
+    BuildComplex(records, args['verbose']).insert_imgt_genelist()
+
+def build_table_imgt_gene(args):
+    table_name = 'imgt_gene'
+    print(f"Try to insert genes into table {table_name}")
+    ig = ImgtGenedb(args['imgt_dir'], args['verbose'])
+    records, seq_records = ig.build_gene_records()
+
+    bc = BuildComplex(records, args['verbose'])
+    table_name = 'imgt_gene'
+    print(f"Try to insert genelist into table {table_name}")
+    bc.empty_table(table_name)
+    bc.insert_imgt_gene()
+
+    table_name = 'imgt_geneseq'
+    print(f"Try to insert genelist into table {table_name}")
+    bc.empty_table(table_name)
+    bc.insert_imgt_geneseq()
 
 
 if __name__ == "__main__":
     args = {
+        'verbose':True,
         'data_dir': '/home/yuan/data/pdb/data',
         'collect_dir': '/home/yuan/data/pdb/collect',
         'db_uniprot': '/home/yuan/data/UniProt/db/uniprot_sprot',
         'imgt_dir': '/home/yuan/data/IMGT',
+        'igblast_dir': '/home/yuan/data/ncbi-igblast-1.22.0/bin',
     }
-    ig = ImgtGenedb(args['imgt_dir'], True)
 
-    # from gene list to json by spcies
-    ig.build_specie_genelist()
-    # insert genelist into table imgt_genelist
-    genelist = ig.parse_genelist(True)
-    records = genelist.to_dict(orient='records')
-    BuildComplex(records, True).insert_imgt_genelist()
-
-    # # build fa and db by region
-    # ig.build_region_fasta()
-    # ig.build_igblastp_region()
-
-    # # build fa and db by organism+spcie
-    # ig.build_organism_fasta()
-    # ig.build_igblastp_organism()
+    # build_genedb_json(args)
+    # build_region_fasta(args)
+    # build_organism_fasta(args)
+    # build_table_imgt_genelist(args)
+    build_table_imgt_gene(args)

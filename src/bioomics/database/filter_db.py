@@ -36,28 +36,19 @@ class FilterDb:
                     yield path
 
     def igblastp_align_iter(self) -> Iterable:
-        dir_iter = Dir(self.data_dir).recursive_dirs()
-        for dir_path in dir_iter:
-            aln_file, fa_file = None, None
-            for file_name in os.listdir(dir_path):
-                if file_name == 'chain_sequences.vregion.igblastp3':
-                    aln_file = os.path.join(dir_path, file_name)
-                elif file_name == 'chain_sequences.faa':
-                    fa_file = os.path.join(dir_path, file_name)
-            if aln_file and fa_file:
-                yield aln_file, fa_file
+        file_iter = Dir(self.data_dir).recursive_files()
+        for path in file_iter:
+            if path.endswith('chain_sequences.vregion.igblastp3'):
+                _dir = os.path.dirname(path)
+                fa_file = os.path.join(_dir, 'chain_sequences.faa')
+                if os.path.isfile(fa_file):
+                    yield path, fa_file
 
     def igblastp_align_check_iter(self, table_name:str) -> Iterable:
         pdb_ids = QueryComplex().get_unique_values(table_name, 'pdb_id')
-        dir_iter = Dir(self.data_dir).recursive_dirs()
-        for dir_path in dir_iter:
-            pdb_id = os.path.basename(dir_path)
+        align_iter = self.igblastp_align_iter()
+        for aln_file, fa_file in align_iter:
+            pdb_id = os.path.basename(os.path.dirname(aln_file))
             if pdb_id not in pdb_ids:
-                aln_file, fa_file = None, None
-                for file_name in os.listdir(dir_path):
-                    if file_name == 'chain_sequences.vregion.igblastp3':
-                        aln_file = os.path.join(dir_path, file_name)
-                    elif file_name == 'chain_sequences.faa':
-                        fa_file = os.path.join(dir_path, file_name)
-                if aln_file and fa_file:
-                    yield aln_file, fa_file
+                yield aln_file, fa_file
+      

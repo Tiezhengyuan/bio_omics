@@ -8,14 +8,13 @@ functions:
     - retrieve pdb to fasta
     - blastp against uniprot_sprot
 '''
-from Bio import SeqIO
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-from bioomics import PullPdb, Pdb, ProcessJson, ProcessBlast, ProcessIgblast
+from bioomics import Pdb, ProcessJson, ProcessBlast, ProcessIgblast
 
 def to_fasta(args, meta):
     key = 'to_fasta'
@@ -89,6 +88,7 @@ if __name__ == "__main__":
     meta = {
         'json_file': json_file,
         'to_fasta': {i:0 for i in status},
+        'blastp_uniprot': {i:0 for i in status},
         'vregion.igblastp': {i:0 for i in status},
     }
 
@@ -98,15 +98,15 @@ if __name__ == "__main__":
         args['overwrite'] = False
         
         # export chain sequences in fasta
-        # to_fasta(args, meta)
-        # to_chain_fasta(args, meta)
+        to_fasta(args, meta)
+        to_chain_fasta(args, meta)
         to_chain_pdb(args, meta)
         
         # blastp against uniprot 
-        # args['db_uniprot'] = '/home/yuan/data/UniProt/db/uniprot_sprot'
-        # uniprot_blastp(args, meta)
+        args['db_uniprot'] = '/home/yuan/data/UniProt/db/uniprot_sprot'
+        uniprot_blastp(args, meta)
         
         # igblastp agaist IMGT V-region
-        # args['db_vregion'] = '/home/yuan/data/IMGT/GENE-DB/AA-WithoutGaps-F+ORF+inframeP/region_igblastdb/V-REGION'
-        # vregion_igblastp(args, meta)
+        args['db_vregion'] = '/home/yuan/data/IMGT/GENE-DB/AA-WithoutGaps-F+ORF+inframeP/region_igblastdb/V-REGION'
+        vregion_igblastp(args, meta)
     print(meta)

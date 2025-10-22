@@ -4,12 +4,15 @@ import io
 import re
 import numpy as np
 import pandas as pd
-
+import subprocess
 
 from Bio.Seq import Seq
 
 
 class AlignSeq:
+
+    def __init__(self, verbose:bool=False):
+        self.verbose = verbose
 
     @staticmethod    
     def pairwise_align(seq_dict):
@@ -48,3 +51,21 @@ class AlignSeq:
                 print(pairwise2.format_alignment(*alignment))
                 break
 
+    def muscle(self, fa_file:str, outfile:str, large_msa:bool=None):
+        # alignment
+        method = '-super5' if large_msa else '-align'
+        cmd = ['muscle', method, fa_file, '-output', outfile,]
+        cmd = ' '.join(cmd)
+        try:
+            if self.verbose:
+                print('MUSCLE for multiple sequence alignment: ', cmd)
+            result = subprocess.run(cmd, shell=True, \
+                capture_output=True, text=True, check=True)
+            if self.verbose:
+                print("Command output:", result.stdout.strip())
+            return 'succeed'
+        except subprocess.CalledProcessError as e:
+            if self.verbose:
+                print(f"Command failed with error: {e}")
+                print(f"Stderr: {e.stderr}")
+        return 'fail'

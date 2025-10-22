@@ -2,9 +2,10 @@ import mysql.connector
 
 class BuildDb:
 
-    def __init__(self, data:list=None, verbose:bool=False):
+    def __init__(self, data:list=None, verbose:bool=False, chunk_size:int=None):
         self.data = data
         self.verbose = verbose
+        self.chunk_size = int(chunk_size) if chunk_size else 200
         self.config = {}
 
     def execute_sql(self, query):
@@ -122,12 +123,15 @@ class BuildDb:
         '''
         insert data into table
         '''
-        pool_size = 200 if pool_size is None else pool_size
-        print(f"\nTry to retrieve data and insert records into table {table_name}...")
+        pool_size = self.chunk_size if pool_size is None else int(pool_size)
+        print(f"\nBegin to insert records into {table_name}. Scan Data...", end='')
         # get records: self.data is pdb paths
-        succeed = 0
+        n, succeed = 0, 0
         pool, recycle_pool = [], []
         for arg in self.data:
+            n += 1
+            if n % 1_000 == 0:
+                print(n, end='..')
             # collect record: arg is pdb_file or dat_record
             records = func(arg, **kwargs)
             pool.extend(records)
@@ -138,14 +142,14 @@ class BuildDb:
                     succeed += len(pool)
                 else:
                     recycle_pool += pool
-                pool, recycle = [], []
+                pool, recycle_pool = [], []
         if pool:
             m = self.insert_records(insert_query, pool)
             if m:
                 succeed += len(pool)
             else:
                 recycle_pool += pool
-        # try again: insert one by one 
+        print(f"\nTry again: insert one by one...")
         failed = []
         for rec in recycle_pool:
             m = self.insert_records(insert_query, [rec,])
@@ -153,6 +157,6 @@ class BuildDb:
                 succeed += 1
             else:
                 failed.append(rec)
-        print(f"failed:{len(failed)}, succeed={succeed}")
+        print(f"failed:{len(failed)}, succeed={succeed}.\n")
         return failed
 

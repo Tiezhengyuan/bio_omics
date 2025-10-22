@@ -14,17 +14,20 @@ class ParseBlastXml:
     def best_hits(self):
         results = []
         for record in self.record_iter():
+            query = {
+                'query': record.query,
+                'query_len': record.query_length,
+            }
             alignments = self.alignments(record)
             if alignments:
                 df = pd.DataFrame(alignments)
                 df = df.sort_values('evalue')
                 res = df.iloc[0].to_dict()
-                res.update({
-                    'query': record.query,
-                    'query_len': record.query_length,
-                })
+                res.update(query)
                 if res not in results:
                     results.append(res)
+            else:
+                results.append(query)
         return results
 
     def record_iter(self):
