@@ -1,5 +1,5 @@
 '''
-example: python src/pipelines/pdb_wrap.py
+example: python src/pipelines/pdb_rsync.py
 functions:
  - download the latest pdb files
  - wrap the commands for running pipelines in multi-rocessing
@@ -26,7 +26,8 @@ def wrap_args(args):
     outprefix = os.path.join(args_dir, 'pdb')
     file_list = ProcessJson.iter_to_json(pdb_iter, outprefix, chunk_size=5_000)
     print('\n\n')
-    print(f"parallel -j6 python src/pipelines/pdb_analyze.py ::: {args_dir}/pdb_*.json")
+    for script in ('pdb_outfile.py', 'pdb_blast.py', 'pdb_igblastp.py',):
+        print(f"parallel -j6 python src/pipelines/{script} ::: {args_dir}/pdb_*.json")
     print('\n\n')
 
 if __name__ == "__main__":

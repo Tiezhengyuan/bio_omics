@@ -1,6 +1,4 @@
-import os
 import pandas as pd
-from copy import deepcopy
 
 from .query_db import QueryDb
 
@@ -53,34 +51,6 @@ class QueryComplex(QueryDb):
         res = self.list_data(query)
         return pd.DataFrame(res)
 
-    def scan_abag(self):
-        query = f"""
-            SELECT A.pdb_id, A.compound_no, A.chain_type, B.chain, C.local_path
-            FROM abag A, compound B, pdb C
-            WHERE A.pdb_id = B.pdb_id
-                AND A.compound_no = B.compound_no
-                AND A.pdb_id = C.pdb_id
-            ORDER BY A.pdb_id, A.compound_no;
-        """
-        res = self.list_data(query)
-        g = pd.DataFrame(res).groupby(['pdb_id', 'local_path'])
-        for (pdb_id, local_path), sub in g:
-            rec = {
-                'pdb_id': pdb_id,
-                'pdb_file': local_path,
-                'antibody': [],
-                'antigen': [],
-            }
-            for item in sub.to_dict(orient='records'):
-                chain_type = item['chain_type']
-                for chain_id in item['chain'].split(','):
-                    _rec = (chain_type, chain_id.upper())
-                    if chain_type == 'antigen':
-                        rec['antigen'].append(_rec)
-                    else:
-                        rec['antibody'].append(_rec)
-            yield rec
-
     def get_heavy_seq(self):
         query = f"""
             SELECT DISTINCT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq
@@ -99,6 +69,47 @@ class QueryComplex(QueryDb):
         rows = self.list_data(query)
         return rows
 
+    def get_antibody_seq(self, chain_type:str):
+        query = f"""
+            SELECT chain_id AS id, pdb_id, pro_seq As seq
+            FROM view_antibody_imgt
+            WHERE chain_type IN {chain_type};
+        """
+        rows = self.list_data(query)
+        return rows
+
+    def get_germline_seq(self, chain_type:str):
+        query = f"""
+            SELECT G.allele_name AS id, S.seq AS seq
+            FROM imgt_gene G, imgt_geneseq S
+            WHERE G.germline_id = S.germline_id
+                AND G.specie = 'Homo_sapiens'
+                AND G.isotype = 'IG'
+                AND G.chain_type IN {chain_type}
+                AND G.region_name = 'V-REGION'
+                AND S.seq_type = 'AA-WithoutGaps-F+ORF+inframeP';
+        """
+        rows = self.list_data(query)
+        return rows
+
+    def germline_human_vregion(self, pdb_ids:list):
+        records_pool = {}
+        pool = [
+            ["H", "('H')"],
+            ["K", "('K')"],
+            ["L", "('L')"],
+            ["KL", "('K', 'L')"],
+        ]
+        for chain_type, cond in pool:
+            records_pool[chain_type] = []
+            germlines = self.get_germline_seq(cond)
+            abs = self.get_antibody_seq(cond)
+            for ab in abs:
+                if ab['pdb_id'] in pdb_ids:
+                    item = (ab, germlines)
+                    records_pool[chain_type].append(item)
+        return records_pool
+    
     def get_seq(self):
         query = """
             select A.pdb_id, A.compound_no, A.chain_id, A.chain_type, B.pro_seq
@@ -157,3 +168,19 @@ class QueryComplex(QueryDb):
         rows = self.list_data(query)
         return rows
 
+    def parse_modelling(self):
+        query = """
+            SELECT A.chain_id, A.pdb_id, A.uniprot_acc, U.pdb_path
+            FROM align_uniprot A, uniprot_structure U
+            WHERE A.uniprot_acc = U.uniprot_acc
+                AND A.chain_id LIKE "%_0_%"
+                AND A.evalue <= 1e-10 AND A.bit_score >= 100
+                AND A.chain_id NOT IN (
+                    SELECT distinct chain_id
+                    FROM uniprot_rmsd
+                    WHERE ca_rmsd is NOT NULL
+                );
+        """
+        rows = self.list_data(query)
+        return rows
+    

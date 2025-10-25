@@ -1,5 +1,6 @@
 from .encode_aa import EncodeAA
 from .align_seq import AlignSeq
+from .cal_phylo import CalPhylo
 
 from .parse_blast_xml import ParseBlastXml
 from .parse_igblast import ParseIgblast

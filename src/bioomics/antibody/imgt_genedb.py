@@ -62,7 +62,7 @@ class ImgtGenedb(Imgt):
                             seq_rec = {
                                 'germline_id': germline_id,
                                 'seq_type': k,
-                                'seq': v,
+                                'seq': v.upper(),
                             }
                             seq_records.append(seq_rec)
         return records, seq_records

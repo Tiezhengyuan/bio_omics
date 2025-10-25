@@ -1,7 +1,6 @@
 '''
 insert data into empty table
 '''
-import os
 import numpy as np
 import pandas as pd
 
@@ -170,6 +169,17 @@ class BuildComplex(BuildDb):
             (germline_id, seq_type, seq) VALUES (%s, %s, %s)"""
         self.insert(table_name, insert_query, self.record_imgt_geneseq)
 
+    def record_uniprot_structure(self, record:dict):
+        names = ['uniprot_acc', 'model', 'pdb_path']
+        rec = [record.get(i, '') for i in names]
+        return [rec,]
+
+    def insert_uniprot_structure(self) -> tuple:
+        table_name = 'uniprot_structure'
+        insert_query = f"""INSERT INTO {table_name}
+            (uniprot_acc, model, pdb_path) VALUES (%s, %s, %s)"""
+        self.insert(table_name, insert_query, self.record_uniprot_structure)
+
 ########################
     def record_uniprot(self, record):
         p = ParseDatRecord(record)
@@ -316,6 +326,15 @@ class BuildComplex(BuildDb):
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         self.insert(table_name, insert_query, self.record_align_vregion)
+
+    def insert_uniprot_rmsd(self, record):
+        table_name = 'uniprot_rmsd'
+        insert_query = f"""INSERT INTO {table_name}
+            (chain_id, native_pdb, uniprot_acc, model_pdb, ca_rmsd)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        records = [record,]
+        self.insert_records(insert_query, records)
 
 #####################
 

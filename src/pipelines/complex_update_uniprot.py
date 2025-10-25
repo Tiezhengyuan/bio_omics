@@ -1,5 +1,5 @@
 '''
-example: python src/pipelines/db_complex_update.py
+example: python src/pipelines/complex_uniprot_update.py
 synchronize PDB/UniProt/alignments with data in database COMPLEX.
 '''
 import os
@@ -45,12 +45,10 @@ def update_uniprot_dbxrefs(args):
 if __name__ == "__main__":
     args = {
         'verbose': True,
-        'pdb_dir': '/home/yuan/data/pdb/rsync',
         'uniprot_sprot_dat': '/home/yuan/data/UniProt/uniprot_sprot.dat.gz',
-        'data_dir': '/home/yuan/data/pdb/data',
     }
 
-    # needed when new uniprot data is available
+    # needed when new uniprot_sprot.dat is downloaded
     # uniprot related tables
     update_uniprot(args)
     update_uniprot_keyword(args)

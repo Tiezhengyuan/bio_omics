@@ -9,49 +9,19 @@ src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-from bioomics import PullPdb, BuildComplex, FilterDb, Uniprot
+from bioomics import Dir, BuildComplex, FilterDb
 
 
-def build_pdb_tables(args):
-    pdb_path_dict = PullPdb(args['pdb_dir']).get_raw_pdb()
-    pdb_files = pdb_path_dict.values()
-    bc = BuildComplex(pdb_files, args['verbose'])
-    # table pdb
-    bc.insert_pdb()
-    # table compound
-    bc.insert_compound()
-    # table chain
-    bc.insert_chain()
-    # table keyword
-    bc.insert_keyword()
-
-def build_uniprot_tables(args):
-    '''
-    Data comes from one dat file.
-    Don't recommend updates. Delete all rows before insertion 
-    '''
-    # table uniprot
-    records_iter = Uniprot(args['uniprot_sprot_dat']).dat_iter()
-    BuildComplex(records_iter, args['verbose']).insert_uniprot()
-
-    # table uniprot_keyword
-    records_iter = Uniprot(args['uniprot_sprot_dat']).dat_iter()
-    BuildComplex(records_iter, args['verbose']).insert_uniprot_keyword()
-
-    # table uniprot_dbxrefs
-    records_iter = Uniprot(args['uniprot_sprot_dat']).dat_iter()
-    BuildComplex(records_iter, args['verbose']).insert_uniprot_dbxrefs()
-
+# table align_uniprot
 def build_blast(args):
-    # table align_uniprot
     # collect aln files of which data not in DB
     aln_iter = FilterDb(args['data_dir']).uniprot_align_iter()
     bc = BuildComplex(aln_iter, args['verbose'])
     bc.empty_table('align_uniprot')
     bc.insert_align_uniprot()
 
+# table align_imgt
 def build_igblast(args):
-    # table align_imgt
     aln_fa_iter = FilterDb(args['data_dir']).igblastp_align_iter()
     bc = BuildComplex(aln_fa_iter, args['verbose'])
     bc.empty_table('align_imgt')
@@ -63,22 +33,35 @@ def build_igblast(args):
     bc.empty_table('align_vregion')
     bc.insert_align_vregion()
 
+def build_modelling(args):
+    records = []
+    indir = os.path.join(args['alphafold_model'], 'swissprot_pdb_v6')
+    file_iter = Dir(indir).recursive_files()
+    for path in file_iter:
+        file_name = os.path.basename(path)
+        uniprot_acc = file_name.split('-')[1]
+        rec = {
+            'uniprot_acc': uniprot_acc,
+            'model': 'alphafold',
+            'pdb_path': path,
+        }
+        records.append(rec)
+
+    bc = BuildComplex(records, args['verbose'])
+    table_name = 'uniprot_structure'
+    bc.empty_table(table_name)
+    bc.insert_uniprot_structure()
+
 if __name__ == "__main__":
     args = {
         'verbose': True,
-        'pdb_dir': '/home/yuan/data/pdb/rsync',
-        'uniprot_sprot_dat': '/home/yuan/data/UniProt/uniprot_sprot.dat.gz',
         'data_dir': '/home/yuan/data/pdb/data',
+        'alphafold_model': '/home/yuan/rawdata/alphafold.ebi.ac.uk',
     }
+    # build_blast(args)
+    # build_igblast(args)
     
-    # scan pdb files
-    build_pdb_tables(args)
+    # alphafold database should be downloaded
+    build_modelling(args)
 
-    # alignments
-    build_align_uniprot(args)
-
-    # data are from *.dat
-    build_blast(args)
-    build_igblast(args)
-    
     print("Done. Great\n\n")

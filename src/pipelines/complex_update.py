@@ -1,6 +1,11 @@
 '''
 example: python src/pipelines/complex_update.py
 synchronize PDB/UniProt/alignments with data in database COMPLEX.
+Note: those scripts should be executed precdently.
+    - pdb_blast.py
+    - pdb_igblast.py
+    - complex_pdb_insert.py
+    - complex_uniprot_insert.py
 '''
 import os
 import sys
@@ -8,56 +13,9 @@ src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-from bioomics import QueryComplex,  BuildComplex, PullPdb, FilterDb
+from bioomics import BuildComplex, FilterDb
 
 ##################################
-def update_pdb(args):
-    qc = QueryComplex(args['verbose'])
-    table_name = 'pdb'
-    db_pdb_ids = qc.get_unique_values(table_name, 'pdb_id')
-    pdb_path_dict = PullPdb(args['pdb_dir']).filter_out_raw_pdb(db_pdb_ids)
-    pdb_files = pdb_path_dict.values()
-    if pdb_files:
-        print(f"Try to insert {len(pdb_files)} PDB data into table {table_name}...")
-        BuildComplex(pdb_files, args['verbose']).insert_pdb()
-    else:
-        print(f'Synchronization of PDB with {table_name} is good.')
-
-def update_compound(args):
-    qc = QueryComplex(args['verbose'])
-    table_name = 'compound'
-    db_pdb_ids = qc.get_unique_values(table_name, 'pdb_id')
-    pdb_path_dict = PullPdb(args['pdb_dir']).filter_out_raw_pdb(db_pdb_ids)
-    pdb_files = pdb_path_dict.values()
-    if pdb_files:
-        print(f"Try to insert {len(pdb_files)} PDB data into table {table_name}...")
-        BuildComplex(pdb_files, args['verbose']).insert_compound()
-    else:
-        print(f'Synchronization of PDB with {table_name} is good.')
-
-def update_chain(args):
-    qc = QueryComplex(args['verbose'])
-    table_name = 'chain'
-    db_pdb_ids = qc.get_unique_values(table_name, 'pdb_id')
-    pdb_path_dict = PullPdb(args['pdb_dir']).filter_out_raw_pdb(db_pdb_ids)
-    pdb_files = pdb_path_dict.values()
-    if pdb_files:
-        print(f"Try to insert {len(pdb_files)} PDB data into table {table_name}...")
-        BuildComplex(pdb_files, args['verbose']).insert_chain(check=True)
-    else:
-        print(f'Synchronization of PDB with {table_name} is good.')
-
-def update_keyword(args):
-    qc = QueryComplex(args['verbose'])
-    table_name = 'keyword'
-    db_pdb_ids = qc.get_unique_values(table_name, 'pdb_id')
-    pdb_path_dict = PullPdb(args['pdb_dir']).filter_out_raw_pdb(db_pdb_ids)
-    pdb_files = pdb_path_dict.values()
-    if pdb_files:
-        print(f"Try to insert {len(pdb_files)} PDB data into table {table_name}...")
-        BuildComplex(pdb_files, args['verbose']).insert_keyword()
-    else:
-        print(f'Synchronization of PDB with {table_name} is good.')
 
 def update_align_uniprot(args):
     table_name = 'align_uniprot'
@@ -91,19 +49,12 @@ if __name__ == "__main__":
     args = {
         'verbose': True,
         'pdb_dir': '/home/yuan/data/pdb/rsync',
-        'uniprot_sprot_dat': '/home/yuan/data/UniProt/uniprot_sprot.dat.gz',
         'data_dir': '/home/yuan/data/pdb/data',
         'chunk_size': 20,
     }
-    # needed when new PDB data available
-    # pdb related tables
-    # update_pdb(args)
-    # update_compound(args)
-    # update_chain(args)
-    # update_keyword(args)
-
-    # needed when pdb_analyze.py is executed
-    # update_align_uniprot(args)
-    # update_align_imgt(args)
+    # update blastp results
+    update_align_uniprot(args)
+    # update igblastp results
+    update_align_imgt(args)
     update_align_vregion(args)
 

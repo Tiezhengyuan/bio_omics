@@ -109,6 +109,31 @@ CREATE TABLE align_uniprot(
 );
 """
 
+
+create_uniprot_structure = """
+CREATE TABLE uniprot_structure (
+    uniprot_acc     VARCHAR(20),
+    model           VARCHAR(20),
+    pdb_path        VARCHAR(200),
+    CONSTRAINT fk_structure_uniprot FOREIGN KEY (uniprot_acc)
+    REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
+);
+"""
+
+
+create_uniprot_rmsd = """
+CREATE TABLE uniprot_rmsd (
+    chain_id        VARCHAR(20),
+    native_pdb      VARCHAR(200),
+    uniprot_acc     VARCHAR(20),
+    model_pdb       VARCHAR(200),
+    ca_rmsd         FLOAT,
+    UNIQUE (chain_id, uniprot_acc)
+);
+"""
+
+
+
 # igblastp of pdb chains on IMGT V-region
 create_align_imgt = """
 CREATE TABLE align_imgt(
@@ -173,11 +198,12 @@ CREATE TABLE imgt_geneseq (
     germline_id     INT,
     seq_type        VARCHAR(100),
     seq             TEXT,
-    UNIQUE (germline_id, seq_type),
+    UNIQUE (germline_id),
     CONSTRAINT fk_imgt_genseq_gene FOREIGN KEY (germline_id)
     REFERENCES imgt_gene(germline_id) ON DELETE CASCADE
 );
 """
+
 
 # views
 view_pdb = ["""
@@ -222,32 +248,21 @@ CREATE VIEW view_antibody_imgt AS
 """
 
 
-# igblastp of pdb chains on V-gene
-create_abag = """
-CREATE TABLE abag (
-    pdb_id VARCHAR(10),
-    compound_no INT,
-    chain_id VARCHAR(10),
-    chain_type VARCHAR(30),
-    fragment VARCHAR(30),
-    CONSTRAINT pk_abag PRIMARY KEY (pdb_id, chain_id),
-    CONSTRAINT fk_abag_compound FOREIGN KEY (pdb_id, compound_no)
-        REFERENCES compound(pdb_id, compound_no) ON DELETE CASCADE
-);
-"""
-
 #####################################################################################
 def initialize_tables(meta):
+    db_name = 'COMPLEX2'
     b = BuildComplex(verbose=True)
 
     # drop tables
     for table_name, create_query in meta[::-1]:
         res = b.drop_table(table_name)
         print(f'Try to drop table {table_name}:', res)
-    b.drop_database()
+    # drop database
+    b.drop_database(db_name)
 
+    # create database
+    b.create_database(db_name)
     # create tables
-    b.create_database()
     for table_name, create_query in meta:
         res = b.create_table(create_query)
         print(f'Try to create table {table_name}:', res)
@@ -272,6 +287,7 @@ if __name__ == "__main__":
         ('uniprot', create_uniprot),
         ('uniprot_keyword', create_uniprot_keyword),
         ('uniprot_dbxrefs', create_uniprot_dbxrefs),
+        ('uniprot_structure', create_uniprot_structure), 
         # view
         ('view_pdb_uniprot', view_pdb_uniprot),
     ]

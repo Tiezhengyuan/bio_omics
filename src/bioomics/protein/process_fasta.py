@@ -1,13 +1,4 @@
-import gzip
-import json
-import os
-import re
-from pprint import pprint
-from Bio.PDB import PDBIO, PDBParser, MMCIFParser, Select
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
 from Bio import SeqIO
-from biosequtils import Dir
 
 
 class ProcessFasta:
@@ -25,4 +16,15 @@ class ProcessFasta:
         except Exception as e:
             if self.verbose:
                 print(f"Failure: Can't write to {self.fa_file}, error={e}")
-            return 'fail'
+        return 'fail'
+
+    def load_fasta(self):
+        try:
+            with open(self.fa_file, 'r') as f:
+                parser = SeqIO.parse(f, 'fasta')
+                records = [rec for rec in parser]
+                return records
+        except Exception as e:
+            if self.verbose:
+                print(f"Failure: Can't write to {self.fa_file}, error={e}")
+        return None

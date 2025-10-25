@@ -86,7 +86,7 @@ class Pdb(ParseStructure):
                 print('outputs dir: ', cascade_outdir)
             return cascade_outdir
         return None
-
+    
     def init_chains_outdir(self, pdb_id:str=None):
         if pdb_id is None:
             pdb_id = self.structure_id
@@ -201,12 +201,13 @@ class Pdb(ParseStructure):
         if records:
             records = records.values()
             return ProcessFasta(outfile, self.verbose).to_fasta(records)
-        return 'na'
+        return 'null'
        
     def export_chains_fasta(self, overwrite:bool=False):
         '''
         retrieve sequence by chains from pdb
         '''
+        status = 'null'
         pdb_id = self.structure_id
         cascade_dir = self.init_chains_outdir(pdb_id)
         # retrieve sequences
@@ -218,8 +219,11 @@ class Pdb(ParseStructure):
             if seq not in seq_pool:
                 outfile = os.path.join(cascade_dir, f"{model_no}_{chain_no}.faa")
                 if overwrite or not os.path.isfile(outfile):
-                    ProcessFasta(outfile, self.verbose).to_fasta(record)
+                    status = ProcessFasta(outfile, self.verbose).to_fasta(record)
+                else:
+                    status = 'skip'
                 seq_pool.append(seq)
+        return status
 
     def export_chain_pdb(self, chain_ids:list, outdir:str=None, overwrite:bool=False):
         """
@@ -262,7 +266,7 @@ class Pdb(ParseStructure):
         if not chain_no_pool:
             if self.verbose:
                 print(f"Skip: No chains are detected in {self.pdb_file}.")
-            return None
+            return 'null'
         chain_no_pool.sort()
 
         pdb_id = self.structure_id
@@ -271,7 +275,8 @@ class Pdb(ParseStructure):
         outfiles = []
         for combo in (1, 2,):
             for _ids in combinations(chain_no_pool, combo):
-                outfile = self.export_chain_pdb(list(_ids), \
-                    cascade_dir, overwrite)
+                outfile = self.export_chain_pdb(list(_ids), cascade_dir, overwrite)
                 outfiles.append(outfile)
-        return outfiles
+        if outfiles:
+            return 'succeed'
+        return 'fail'

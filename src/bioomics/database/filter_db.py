@@ -24,16 +24,13 @@ class FilterDb:
     def uniprot_align_check_iter(self, table_name:str) -> Iterable:
         # collect aln files of which data not in DB
         pdb_ids = QueryComplex().get_unique_values(table_name, 'pdb_id')
-        file_iter = Dir(self.data_dir).recursive_files()
-        for path in file_iter:
+        align_iter = self.uniprot_align_iter()
+        for path in align_iter:
             pdb_id = os.path.basename(os.path.dirname(path))
             if pdb_id not in pdb_ids:
-                file_name = os.path.basename(path)
-                # outfmt=5
-                if file_name == 'chain_sequences.uniprot.blastp5':
-                    if self.verbose:
-                        print(f"Try to parse {pdb_id}:{path} for the table {table_name}...")
-                    yield path
+                if self.verbose:
+                    print(f"Try to parse {pdb_id}:{path} for table {table_name}...")
+                yield path
 
     def igblastp_align_iter(self) -> Iterable:
         file_iter = Dir(self.data_dir).recursive_files()
@@ -50,5 +47,7 @@ class FilterDb:
         for aln_file, fa_file in align_iter:
             pdb_id = os.path.basename(os.path.dirname(aln_file))
             if pdb_id not in pdb_ids:
+                if self.verbose:
+                    print(f"Try to parse {pdb_id}:{aln_file} and {fa_file} for table {table_name}...")
                 yield aln_file, fa_file
       
