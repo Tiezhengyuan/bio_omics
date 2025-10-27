@@ -1,6 +1,10 @@
 from pyrosetta import pyrosetta, io, rosetta
 
+
 class AnalyzeModel:
+
+    def __init__(self, data_dir):
+        self.data_dir = data_dir
 
     @staticmethod
     def rmsd(native_pdb, model_pdb):
@@ -14,4 +18,4 @@ class AnalyzeModel:
             return rmsd
         except Exception as e:
             pass
-
+    

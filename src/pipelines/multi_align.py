@@ -45,8 +45,9 @@ def align_germline(args:dict, pdb_ids:dict):
             if not os.path.isfile(aln_file):
                 AlignSeq(args['verbose']).muscle(fa_file, aln_file, large_msa=True)
 
-            print('Try to calculate phylogentic distance...')
-            if os.path.isfile(aln_file):
+            pfile = outprefix + '.habs.pkl'
+            if os.path.isfile(aln_file) and (not os.path.isfile(pfile)):
+                print('Try to calculate phylogentic distance...')
                 data = CalPhylo().msa_distance(aln_file)
                 if data:
                     data.update({
@@ -56,7 +57,6 @@ def align_germline(args:dict, pdb_ids:dict):
                         'fa_file': fa_file,
                         'pdb_file': pdb_file,
                     })
-                    pfile = outprefix + '.habs.pkl'
                     ProcessPickle(pfile).save_pickle(data)
                     if args['verbose']:
                         print('Export phylogentic distiance to ', pfile)

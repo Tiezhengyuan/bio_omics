@@ -102,6 +102,30 @@ class ParseStructure:
             self.chains.append(model_chains)
         return self.chains
 
+    def c_atom_iter(self):
+        # alpha C-atom
+        for model, chain, residues in self.ca_residue_iter():
+            c_atoms = []
+            for residue in residues:
+                for atom in residue:
+                    if atom.id == 'CA':
+                        c_atoms.append(atom)
+            yield model, chain, c_atoms
+            
+
+    def ca_residue_iter(self):
+        '''
+        Get all alpha atoms from monomer
+        '''
+        for model in self.structure:
+            for chain in model:
+                ca_residues = []
+                for residue in chain:
+                    # Check if residue has a alpha atom
+                    if "CA" in residue: 
+                        ca_residues.append(residue)
+                yield model, chain, ca_residues
+    
     def parse_alpha_atoms(self, chain_id:str):
         '''
         Get all alpha atoms from Chain A

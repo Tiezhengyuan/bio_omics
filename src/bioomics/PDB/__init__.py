@@ -6,3 +6,5 @@ from .calculate_dist import *
 from .collect_contacts import *
 from .atom_select import *
 from .analyze_model import *
+from .calculate_plddt import *
+from .calculate_pae import *

@@ -45,11 +45,14 @@ def uniprot_alphafold(args):
         return 'null'
 
     # calculate RMSD
-    rmsd = AnalyzeModel.rmsd(native_pdb, model_pdb)
-    if rmsd:
-        rec = (chain_id, native_pdb, args['uniprot_acc'], model_pdb, rmsd)
-        BuildComplex(verbose=args['verbose']).insert_uniprot_rmsd(rec)
-        return 'succeed'
+    try:
+        rmsd = AnalyzeModel.rmsd(native_pdb, model_pdb)
+        if rmsd:
+            rec = (chain_id, native_pdb, args['uniprot_acc'], model_pdb, rmsd)
+            BuildComplex(verbose=args['verbose']).insert_uniprot_rmsd(rec)
+            return 'succeed'
+    except Exception as e:
+        pass
     return 'fail'
 
 

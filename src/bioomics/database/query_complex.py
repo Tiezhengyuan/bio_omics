@@ -184,3 +184,5 @@ class QueryComplex(QueryDb):
         rows = self.list_data(query)
         return rows
     
+    def get_chain_ids(self, pdb_id):
+        pass
