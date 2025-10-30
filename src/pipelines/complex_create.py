@@ -18,17 +18,27 @@ from bioomics import BuildComplex
 create_pdb = """
 CREATE TABLE pdb(
     pdb_id          VARCHAR(10),
-    pdb_url         VARCHAR(50),
-    local_path      VARCHAR(100),
-    release_date    DATE,
-    resolution      FLOAT,
-    name            VARCHAR(500),
+    pdb_url         VARCHAR(50) NOT NULL,
+    local_path      VARCHAR(100) NOT NULL,
+    release_date    DATE NOT NULL,
+    name            VARCHAR(500) NOT NULL,
     CONSTRAINT pk_pdb PRIMARY KEY (pdb_id)
 );
 """
 
-create_compound = """
-CREATE TABLE compound(
+create_pdb_method = """
+CREATE TABLE pdb_method(
+    pdb_id              VARCHAR(10),
+    structure_method    VARCHAR(100),
+    resolution          FLOAT,
+    CONSTRAINT pk_method PRIMARY KEY (pdb_id),
+    CONSTRAINT fk_method_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+);
+"""
+
+create_pdb_compound = """
+CREATE TABLE pdb_compound(
     pdb_id          VARCHAR(10),
     compound_no     INT,
     chains          VARCHAR(200),
@@ -39,26 +49,49 @@ CREATE TABLE compound(
 );
 """
 
-create_chain = """
-CREATE TABLE chain(
-    chain_id        VARCHAR(20),
-    pdb_id          VARCHAR(10),
-    model_no        INT,
-    chain_no        VARCHAR(5),
-    pro_seq         TEXT NOT NULL,
-    CONSTRAINT pk_chain PRIMARY KEY (chain_id),
-    CONSTRAINT fk_chain_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
-);
-"""
-
-create_keyword = """
-CREATE TABLE keyword(
+create_pdb_keyword = """
+CREATE TABLE pdb_keyword(
     pdb_id          VARCHAR(10),
     keyword         VARCHAR(200),
     UNIQUE (pdb_id, keyword),
     CONSTRAINT fk_pdb_keyword_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+"""
+
+
+create_pdb_chain = """
+CREATE TABLE pdb_chain(
+    chain_id        VARCHAR(20),
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    chain_no        VARCHAR(5),
+    chain_seq       TEXT,
+    CONSTRAINT pk_chain_pdb PRIMARY KEY (chain_id),
+    CONSTRAINT fk_chain_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+);
+"""
+
+create_pdb_bfactor = """
+CREATE TABLE pdb_bfactor(
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    chain_no        VARCHAR(5),
+    avg_bfactor     FLOAT,
+    CONSTRAINT fk_bfactor_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
+);
+"""
+
+create_pdb_secondary = """
+CREATE TABLE pdb_secondary(
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    chain_no        VARCHAR(5),
+    dssp_seq       TEXT,
+    CONSTRAINT fk_secondary_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
 );
 """
 
@@ -207,6 +240,14 @@ CREATE TABLE imgt_geneseq (
 
 # views
 view_pdb = ["""
+DROP VIEW IF EXISTS view_pdb;
+CREATE VIEW view_pdb AS
+    SELECT P.pdb_id, P.pdb_url, P.local_path, P.release_date, P.name,
+        M.structure_method, M.resolution
+    FROM pdb P, pdb_method M
+    WHERE P.pdb_id = M.pdb_id
+        AND M.resolution < 10;
+
 DROP VIEW IF EXISTS view_pdb_uniprot;
 CREATE VIEW view_pdb_uniprot AS
     SELECT A.chain_id, A.pdb_id, A.uniprot_acc, U.name, K.keyword, 
@@ -271,10 +312,12 @@ if __name__ == "__main__":
     meta = [
         # pdb determined
         ('pdb', create_pdb),
+        ('pdb_method', create_pdb_method),
         ('keyword', create_keyword),
         ('compound', create_compound),
         ('chain', create_chain),
         # pdb related
+        ('pdb_bfactor', create_pdb_bfactor),
         ('abag', create_abag),
         ('align_uniprot', create_align_uniprot),
         ('align_imgt', create_align_imgt),

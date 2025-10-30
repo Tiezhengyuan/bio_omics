@@ -33,24 +33,6 @@ def build_igblast(args):
     bc.empty_table('align_vregion')
     bc.insert_align_vregion()
 
-def build_modelling(args):
-    records = []
-    indir = os.path.join(args['alphafold_model'], 'swissprot_pdb_v6')
-    file_iter = Dir(indir).recursive_files()
-    for path in file_iter:
-        file_name = os.path.basename(path)
-        uniprot_acc = file_name.split('-')[1]
-        rec = {
-            'uniprot_acc': uniprot_acc,
-            'model': 'alphafold',
-            'pdb_path': path,
-        }
-        records.append(rec)
-
-    bc = BuildComplex(records, args['verbose'])
-    table_name = 'uniprot_structure'
-    bc.empty_table(table_name)
-    bc.insert_uniprot_structure()
 
 if __name__ == "__main__":
     args = {
@@ -61,7 +43,6 @@ if __name__ == "__main__":
     # build_blast(args)
     # build_igblast(args)
     
-    # alphafold database should be downloaded
-    build_modelling(args)
 
     print("Done. Great\n\n")
+

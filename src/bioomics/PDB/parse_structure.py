@@ -2,16 +2,8 @@
 process PDB
 1. renumber chains
 '''
-import gzip
-import json
-import os
 import re
-from pprint import pprint
 from Bio.PDB import PDBIO, PDBParser, MMCIFParser, Select
-from Bio.Seq import Seq
-from Bio.SeqRecord import SeqRecord
-from Bio import SeqIO
-from biosequtils import Dir
 
 # Filter out the specific warning
 import warnings
@@ -33,6 +25,45 @@ class ParseStructure:
     def __init__(self):
         self.structure = None
         self.chains = []
+
+    def header_values(self, key):
+        try:
+            return self.structure.header[key]
+        except Exception as e:
+            pass
+        return None
+
+    @property
+    def name(self):
+        return self.header_values('name')
+    
+    @property
+    def resolution(self):
+        res = self.header_values('resolution')
+        if res:
+            return float(res)
+
+    @property
+    def structure_method(self):
+        res = self.header_values('structure_method')
+        if res in (None, 'unknown'):
+            return None
+        return res
+
+    @property
+    def compound(self):
+        return self.header_values('compound')
+
+    @property
+    def keywords(self):
+        res= self.header_values('keywords')
+        if res:
+            return re.split(r',\s*', res)
+        return None
+
+    @property
+    def source(self):
+        return self.header_values('source')
 
     def get_header(self):
         header = {
@@ -94,7 +125,7 @@ class ParseStructure:
             }
             for chain in model:
                 _chain = {
-                    'chain_no': chain.id.upper(),
+                    'chain_no': chain.id,
                     'AA residues': len(chain),
                     'seq': self._chain_seq(chain)
                 }

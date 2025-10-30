@@ -51,3 +51,17 @@ class FilterDb:
                     print(f"Try to parse {pdb_id}:{aln_file} and {fa_file} for table {table_name}...")
                 yield aln_file, fa_file
       
+    def chain_iter(self, table_name:str=None, pdb_ids:list=None):
+        qc = QueryComplex()
+        ready_chain_ids = qc.unique_values(table_name, 'chain_id')
+        chain_ids_pool = qc.get_chain_ids(pdb_ids)
+        chain_ids = set(chain_ids_pool).difference(set(ready_chain_ids))
+        if self.verbose:
+            print(f"{len(chain_ids)} chains are not in {table_name}.")
+        for chain_id in list(chain_ids):
+            pdb_id, model_no, chain_no = chain_id.split('_')
+            chains_dir = os.path.join(self.data_dir, pdb_id[:2], pdb_id, 'chains')
+            faa_file = os.path.join(chains_dir, f'{model_no}_{chain_no}.faa')
+            pdb_file = os.path.join(chains_dir, f'{pdb_id}_{chain_no}.pdb')
+            if os.path.isfile(faa_file) and os.path.isfile(pdb_file):
+                yield pdb_id, faa_file, pdb_file

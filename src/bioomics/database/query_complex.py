@@ -20,19 +20,6 @@ class QueryComplex(QueryDb):
         res = self.list_data(query, False)
         return res[0]['date']
 
-    def get_unique_values(self, table_name, col_name:str) -> list:
-        query = f"""
-            SELECT DISTINCT {col_name}
-            FROM {table_name}
-            WHERE {col_name} is NOT NULL;
-        """
-        rows = self.list_data(query, True)
-        if self.verbose:
-            print(f"Detect {len(rows)} records in {table_name}.{col_name}.")
-        if len(rows) > 0:
-            return list(rows[col_name])
-        return []
-
     def delete_pdb_ids(self, table_name:str):
         query = f"""
             DELETE FROM {table_name}
@@ -184,5 +171,39 @@ class QueryComplex(QueryDb):
         rows = self.list_data(query)
         return rows
     
-    def get_chain_ids(self, pdb_id):
-        pass
+    def get_chain_ids(self, pdb_ids:list=None):
+        # return all chain ids
+        if pdb_ids is None:
+            return self.unique_values('chain', 'chain_id')
+
+        chain_ids = []
+        # select chain_id belonging to pbd_ids set
+        query = """
+            SELECT DISTINCT pdb_id, chain_id
+            FROM chain
+            WHERE chain_id IS NOT NULL;
+        """
+        rows = self.list_data(query)
+        for row in rows:
+            if row['pdb_id'] in pdb_ids:
+                if row['chain_id'] not in chain_ids:
+                    chain_ids.append(row['chain_id'])
+        return chain_ids
+
+    def newly_pdb_ids(self, table_name:str):
+        '''
+        args: table_name could be compount, chain, keyword, or pdb_method
+        pdb_id is foreign key in those tables
+        '''
+        query = f"""
+            SELECT pdb_id, local_path AS pdb_file
+            FROM pdb
+            WHERE pdb_id NOT IN (
+                SELECT DISTINCT pdb_id
+                FROM {table_name}
+            );
+        """
+        rows = self.list_data(query)
+        if rows:
+             return rows
+        return []

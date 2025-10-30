@@ -132,7 +132,8 @@ class Pdb(ParseStructure):
         # save
         if self.annot:
             outfile = os.path.join(self.outdir, 'meta.json')
-            print(f"Save annotation of {self.structure_id}: {outfile}")
+            if self.verbose:
+                print(f"Save annotation of {self.structure_id}: {outfile}")
             with open(outfile, 'w') as f:
                 json.dump(self.annot, f, indent=4)            
 

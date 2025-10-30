@@ -7,9 +7,11 @@ import pandas as pd
 
 from .build_db import BuildDb
 from .query_complex import QueryComplex
+from .build_records import BuildRecords
 from ..PDB import Pdb
 from ..UniProt import ParseDatRecord
 from ..protein import ParseBlastXml, ParseIgblast
+
 
 class BuildComplex(BuildDb):
 
@@ -24,110 +26,66 @@ class BuildComplex(BuildDb):
             'password': 'strong_password',
             'database': 'COMPLEX2'
         }
+        self.recorder = BuildRecords(verbose)
     
-    def record_pdb(self, pdb_file):
-        p = Pdb(pdb_file, None, self.verbose)
-        p.load_structure()
-        pdb_id = p.structure_id
-
-        pdb_url = f"https://www.rcsb.org/structure/{pdb_id}"
-        release_date = p.structure.header['release_date']
-        name = p.structure.header['name']
-        resolution = p.structure.header['resolution']
-        rec = (pdb_id, pdb_url, pdb_file, release_date, resolution, name)
-        return [rec,]
-
     def insert_pdb(self):
         # insert data into table pdb
         table_name = 'pdb'
         insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, pdb_url, local_path, release_date, resolution, name)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        self.insert(table_name, insert_query, self.record_pdb)
+            (pdb_id, pdb_url, local_path, release_date, name)
+            VALUES (%s, %s, %s, %s, %s)"""
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+    
+    def insert_pdb_method(self):
+        # insert data into table pdb
+        table_name = 'pdb_method'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, structure_method, resolution)
+            VALUES (%s, %s, %s)"""
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
 
-    def record_compound(self, pdb_file):
-        # records
-        p = Pdb(pdb_file, None, self.verbose)
-        p.load_structure()
-        pdb_id = p.structure_id
-
-        compound = p.structure.header['compound']
-        records = []
-        for compound_no, cp in compound.items():
-            compound_no = int(compound_no)
-            chains = cp.get('chain').replace(' ', '').upper()
-            _text = []
-            for _key, _value in cp.items():
-                if _key not in ('chain',) and _value:
-                    _text.append(f"{_key}: {_value}")
-            compound_text = ' ; '.join(_text)
-            rec = (pdb_id, compound_no, chains, compound_text)
-            records.append(rec)
-        return records
-
-    def insert_compound(self) -> tuple:
-        table_name = 'compound'
+    def insert_pdb_compound(self) -> tuple:
+        table_name = 'pdb_compound'
         insert_query = f"""INSERT INTO {table_name} 
             (pdb_id, compound_no, chains, compound_text)
             VALUES (%s, %s, %s, %s)"""
-        self.insert(table_name, insert_query, self.record_compound)
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
 
-    def record_chain(self, pdb_file):
-        p = Pdb(pdb_file, None, self.verbose)
-        p.load_structure()
-        pdb_id = p.structure_id
-        records = []
-        for model_chains in p.get_chains():
-            model_no = int(model_chains['model_no'])
-            for chain in model_chains['chains']:
-                chain_no = chain['chain_no']
-                chain_id = f"{pdb_id}_{model_no}_{chain_no}"
-                pro_seq = chain['seq']
-                # the column pro_seq is not null
-                if pro_seq:
-                    rec = (chain_id, pdb_id, model_no, chain_no, pro_seq)
-                    if rec not in records:
-                        records.append(rec)
-        return records
-
-    def record_check_chain(self, pdb_file:str, chain_ids:list):
-        checked_records = []
-        for rec in self.record_chain(pdb_file):
-            chain_id = rec[0]
-            if chain_id not in chain_ids:
-                checked_records.append(rec)
-        return checked_records
-
-    def insert_chain(self, check:bool=False) -> tuple:
-        table_name = 'chain'
+    def insert_pdb_chain(self) -> tuple:
+        table_name = 'pdb_chain'
         insert_query = f"""INSERT INTO {table_name} 
-            (chain_id, pdb_id, model_no, chain_no, pro_seq)
+            (chain_id, pdb_id, model_no, chain_no, chain_seq)
             VALUES (%s, %s, %s, %s, %s)"""
-        if check:
-            chain_ids = QueryComplex().get_unique_values(table_name, 'chain_id')
-            return self.insert(table_name, insert_query, self.record_check_chain, \
-                chain_ids=chain_ids)
-        return self.insert(table_name, insert_query, self.record_chain)
+        func = getattr(self.recorder, table_name)
+        return self.insert(table_name, insert_query, func)
 
-    def record_keyword(self, pdb_file):
-        p = Pdb(pdb_file, None, self.verbose)
-        p.load_structure()
-        pdb_id = p.structure_id
-        records = []
-        keywords = p.structure.header['keywords']
-        keywords = keywords.split(', ')
-        for keyword in keywords:
-            rec = (pdb_id, keyword)
-            records.append(rec)
-        return records
-
-    def insert_keyword(self) -> tuple:
-        table_name = 'keyword'
+    def insert_pdb_keyword(self) -> tuple:
+        table_name = 'pdb_keyword'
         insert_query = f"""INSERT INTO {table_name} 
             (pdb_id, keyword) VALUES (%s, %s)"""
-        self.insert(table_name, insert_query, self.record_keyword)
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
 
+    def insert_pdb_bfactor(self) -> tuple:
+        table_name = 'pdb_bfactor'
+        insert_query = f"""INSERT INTO {table_name} 
+            (pdb_id, model_no, chain_no, avg_bfactor)
+            VALUES (%s, %s, %s, %s)"""
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func, 10)
+
+    def insert_pdb_secondary(self) -> tuple:
+        table_name = 'pdb_secondary'
+        insert_query = f"""INSERT INTO {table_name} 
+            (pdb_id, model_no, chain_no, dssp_seq)
+            VALUES (%s, %s, %s, %s)"""
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func, 1)
+
+######################
     def record_imgt_genelist(self, record:dict):
         names = ['Species', 'IMGT/GENE-DB', 'IMGT gene functionality', \
             'IMGT and HGNC gene definition', 'Number of alleles', \
@@ -231,7 +189,7 @@ class BuildComplex(BuildDb):
         records = []
         best_hits = ParseBlastXml(aln_file).best_hits()
         for hit in best_hits:
-            chain_id = hit['query'].upper()
+            chain_id = hit['query']
             pdb_id = hit['query'].split('_')[0]
             rec0 = (chain_id, pdb_id)
             if 'hit_desc' in hit:
@@ -358,7 +316,7 @@ class BuildComplex(BuildDb):
         df = self.data.where(pd.notnull(self.data), None)
         # column: chain_id
         df = df.assign(chain_id=df['chain'].str.split(',')).explode('chain_id')
-        df['chain_id'] = df['chain_id'].str.upper()
+        df['chain_id'] = df['chain_id'].str
 
         # select
         cols = ['pdb_id', 'compound_no', 'chain_id', 'chain_type', 'fragment']
@@ -386,3 +344,22 @@ class BuildComplex(BuildDb):
             )
             yield pdb_id, [rec,]
 
+
+    
+    def record_check_chain(self, pdb_file:str, chain_ids:list):
+        checked_records = []
+        for rec in self.record_chain(pdb_file):
+            chain_id = rec[0]
+            if chain_id not in chain_ids:
+                checked_records.append(rec)
+        return checked_records
+
+    def insert_check_chain(self) -> tuple:
+        table_name = 'chain'
+        insert_query = f"""INSERT INTO {table_name} 
+            (chain_id, pdb_id, model_no, chain_no, pro_seq)
+            VALUES (%s, %s, %s, %s, %s)"""
+        chain_ids = QueryComplex().unique_values(table_name, 'chain_id')
+        return self.insert(table_name, insert_query, self.record_check_chain, \
+            chain_ids=chain_ids)
+    

@@ -1,8 +1,6 @@
 from ..helper import *
 from src.bioomics import CalculatePlddt
 
-print(DATA_DIR)
-
 @ddt
 class TestCalculatePlddt(TestCase):
 
@@ -20,6 +18,8 @@ class TestCalculatePlddt(TestCase):
         ['2OX8_A.pdb', 28.79],
         ['7S8L.pdb', 59.14],
         ['AF-Q181Q7-F1-model_v6.pdb', 95.05],
+        ['AF-Q8W3K0-F1-model_v6.pdb', 82.89],
+        ['AF-Q8T2T7-F1-model_v6.pdb', 86.92],
     )
     @unpack
     def test_plddt_statistics(self, input, expect_avg_plddt):

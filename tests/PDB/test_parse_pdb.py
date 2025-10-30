@@ -1,8 +1,3 @@
-import os
-from unittest import TestCase
-from ddt import ddt, data, unpack
-from pprint import pprint
-
 from ..helper import *
 from src.bioomics import Pdb
 
@@ -12,11 +7,62 @@ class TestParsePdb(TestCase):
 
     def setUp(self):
         self.c = {}
-        for file_name in ['7S8L.pdb',]:
+        pool = [('7S8L', '7S8L.pdb'), ('2OX8_A', '2OX8_A.pdb'), ('1HG8', 'pdb1hg8.ent.gz')]
+        for key, file_name in pool:
             pdb_file = os.path.join(DATA_DIR, 'PDB', file_name)
-            pdb_id = os.path.splitext(file_name)[0]
-            self.c[pdb_id] = Pdb(pdb_file, RESULTS_DIR, True)
-    
+            obj = Pdb(pdb_file, RESULTS_DIR, False)
+            obj.load_structure()
+            self.c[key] = obj
+
+    @data(
+        ['7S8L', 'cryoem structure of gq-coupled mrgprx2 with peptide agonist cortistatin-14'],
+        ['2OX8_A', 'human scavenger receptor c-type lectin carbohydrate-recognition domain.'],
+        ['1HG8', 'endopolygalacturonase from the phytopathogenic fungus fusarium moniliforme'],
+    )
+    @unpack
+    def test_get_name(self, input, expect):
+        result = self.c[input].name
+        assert result == expect
+
+    @data(
+        ['7S8L', 2.45],
+        ['2OX8_A', None],
+        ['1HG8', 1.73],
+    )
+    @unpack
+    def test_get_resolution(self, input, expect):
+        result = self.c[input].resolution
+        assert result == expect
+
+    @data(
+        ['7S8L', 'electron microscopy'],
+        ['2OX8_A', None],
+        ['1HG8', 'x-ray diffraction'],
+    )
+    @unpack
+    def test_get_structure_method(self, input, expect):
+        result = self.c[input].structure_method
+        assert result == expect
+
+    @data(
+        ['7S8L', ['gpcr', 'signaling protein']],
+        ['2OX8_A', None],
+        ['1HG8', ['hydrolase', 'pectin degradation']],
+    )
+    @unpack
+    def test_get_keywords(self, input, expect):
+        result = self.c[input].keywords
+        assert result == expect
+
+    @data(
+        ['7S8L',],
+        ['2OX8_A',],
+        ['1HG8',],
+    )
+    @unpack
+    def test_get_source(self, input):
+        self.c[input].source
+
     @data(
         ['7S8L', {
             '1': {'misc': '', 'molecule': 'mas-related g-protein coupled receptor member x2', 'chain': 'r', 'engineered': 'yes'}, 
@@ -30,9 +76,11 @@ class TestParsePdb(TestCase):
         }],
     )
     @unpack
-    def test_get_header(self, input, expect_compound):
+    def test_get_compound(self, input, expect_compound):
         result = self.c[input].get_header()
         assert result['compound'] == expect_compound
+        result = self.c[input].compound
+        assert result == expect_compound
 
     @data(
         ['7S8L', {0: {'R': 250, 'A': 6, 'B': 221, 'C': 337, 'D': 51, 'E': 231}}],
@@ -80,7 +128,6 @@ class TestParsePdb(TestCase):
     @unpack
     def test_chain_no(self, input, expect):
         result = self.c[input].get_chain_no()
-        print(result)
         assert result == expect
 
     '''

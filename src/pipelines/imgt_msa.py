@@ -1,8 +1,8 @@
 '''
 example: 
-    - parallel -j4 python /home/yuan/bio/bio_omics/src/pipelines/multi_align.py \
+    - parallel -j4 python /home/yuan/bio/bio_omics/src/pipelines/imgt_msa.py \
         ::: /home/yuan/data/pdb/_list/pdb_*.json
-    - python /home/yuan/bio/bio_omics/src/pipelines/multi_align.py \
+    - python /home/yuan/bio/bio_omics/src/pipelines/imgt_msa.py \
         /home/yuan/data/pdb/_list/pdb_46.json
 
 functions: collect data from tables and perform MSA

@@ -24,7 +24,7 @@ class QueryDb:
             if 'connection' in locals() and connection.is_connected():
                 cursor.close()
                 connection.close()
-        return None
+        return []
 
     def table_names(self):
         query = "SHOW TABLES;"
@@ -32,14 +32,16 @@ class QueryDb:
         res = pd.DataFrame(res).iloc[:,0]
         return tuple(res)
 
-    def unique_values(self, table_name:str, col_name:str) -> list:
+    def unique_values(self, table_name, col_name:str) -> list:
         query = f"""
             SELECT DISTINCT {col_name}
-            FROM {table_name};
+            FROM {table_name}
+            WHERE {col_name} IS NOT NULL;
         """
-        rows = self.list_data(query)
-        if rows:
-            res = pd.DataFrame(rows).iloc[:,0]
-            return list(res)
+        rows = self.list_data(query, True)
+        if self.verbose:
+            print(f"Detect {len(rows)} records in {table_name}.{col_name}.")
+        if len(rows) > 0:
+            return list(rows[col_name])
         return []
 

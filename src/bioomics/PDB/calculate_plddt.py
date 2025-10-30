@@ -15,10 +15,89 @@ import os
 from .pdb import Pdb
 
 class CalculatePlddt(Pdb):
-    def __init__(self, pdb_file:str=None):
-        super().__init__(pdb_file)
-        self.load_structure()
+    def __init__(self, pdb_file:str=None, outdir:str=None):
+        super().__init__(pdb_file, outdir)
 
+    def complex_ca_bfactor(self) -> dict:
+        '''
+        scan all models and chains
+        '''
+        data = {
+            'pdb_id': self.structure_id,
+            'pdb_file': self.pdb_file,
+            'bfactor': [],
+        }
+        ca_iter = self.c_atom_iter()
+        for model, chain, atoms in ca_iter:
+            bfactors = []
+            for atom in atoms:
+                residue_number = int(atom.full_id[3][1])
+                # b-factor is not assay data but determined by refinement process
+                bfactor = float(atom.get_bfactor())
+                bfactors.append((residue_number, bfactor))
+            if bfactors:
+                df = pd.DataFrame(bfactors, columns=['residue_number', 'bfactor'])
+                stats = self.bfactor_statistics(df)
+                item = {
+                    'model': model,
+                    'chain': chain,
+                    'bfactor': df,
+                    'stats':stats,
+                }
+                data['bfactor'].append(item)
+        return data
+
+    def bfactor_statistics(self, df:pd.DataFrame, res_start:int=None, res_end:int=None) -> dict:
+        """
+        Calculate B-factor statistics
+            low bfactor: more stable, ordered, or rigid part of structure
+            high bfactor: greater aomic displacement and disorder.
+        """
+        if res_start:
+            df=df[(df['residue_number']>=res_start)]
+        if res_end:
+            df=df[(df['residue_number']<=res_end)]
+        num_ca = len(df)
+        if num_ca > 1:
+            scores = df['bfactor']
+            stats = {
+                'mean': np.mean(scores),
+                'median': np.median(scores),
+                'std': np.std(scores),
+                'min': np.min(scores),
+                'max': np.max(scores),
+            }
+            return stats
+        return {}
+        
+    def complex_ca_plddt(self) -> dict:
+        '''
+        scan all models and chains
+        '''
+        data = {
+            'pdb_id': self.structure_id,
+            'pdb_file': self.pdb_file,
+            'pLDDT': [],
+        }
+        ca_iter = self.c_atom_iter()
+        for model, chain, atoms in ca_iter:
+            plddt = []
+            for atom in atoms:
+                residue_number = int(atom.full_id[3][1])
+                bfactor = float(atom.get_bfactor())
+                plddt.append((residue_number, bfactor))
+            if plddt:
+                plddt = pd.DataFrame(plddt, columns=['residue_number', 'pLDDT'])
+                stats = self.plddt_statistics(plddt)
+                item = {
+                    'model': model,
+                    'chain': chain,
+                    'plddt': plddt,
+                    'stats':stats,
+                }
+                data['pLDDT'].append(item)
+        return data
+        
     def monomer_ca_plddt(self) -> pd.DataFrame:
         '''
         only retrieve the first one or that is monomer

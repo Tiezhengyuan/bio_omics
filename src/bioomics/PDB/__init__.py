@@ -1,10 +1,13 @@
-from .pull_pdb import PullPdb
-from .pdb import Pdb
-from .parse_structure import ParseStructure
-from .calculate_sasa import *
-from .calculate_dist import *
+from .pull_pdb import *
+from .pdb import *
+from .parse_structure import *
 from .collect_contacts import *
 from .atom_select import *
-from .analyze_model import *
+
+from .calculate_sasa import *
+from .calculate_dist import *
 from .calculate_plddt import *
 from .calculate_pae import *
+
+from .analyze_model import *
+from .analyze_dssp import *

@@ -70,6 +70,11 @@ class Dir:
                 if os.path.isfile(out_file) and out_file.find('/.') == -1:
                     yield out_file
 
+    def filter_recursive_files(self, extension:str):
+        for path in self.recursive_files():
+            if path.endswith(extension):
+                yield path
+
     def recursive_dirs(self): 
         '''
         list all directories with a given directory and sub directories
