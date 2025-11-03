@@ -75,7 +75,7 @@ class CalculatePlddt(Pdb):
         scan all models and chains
         '''
         data = {
-            'pdb_id': self.structure_id,
+            'structure_id': self.structure_id,
             'pdb_file': self.pdb_file,
             'pLDDT': [],
         }

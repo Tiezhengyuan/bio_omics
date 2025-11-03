@@ -4,6 +4,7 @@ records reday for table insertion
 import os
 from ..common import ProcessPickle
 from ..PDB import AnalyzeDssp, Pdb
+from ..protein import ParseBlastXml, ParseIgblast
 
 class BuildRecords:
 
@@ -18,7 +19,7 @@ class BuildRecords:
         pdb_url = f"https://www.rcsb.org/structure/{pdb_id}"
         release_date = p.structure.header['release_date']
         name = p.structure.header['name']
-        rec = (pdb_id, pdb_url, pdb_file, release_date, name)
+        rec = (pdb_id, pdb_url, release_date, name)
         return [rec,]
 
     def pdb_compound(self, args):
@@ -53,30 +54,18 @@ class BuildRecords:
                 records.append(rec)
         return records
             
-    def pdb_chain(self, args):
-        pdb_id = args['pdb_id']
-        pdb_file = args['pdb_file']
+    def pdb_chain(self, pdb_file):
         p = Pdb(pdb_file, None, self.verbose)
         p.load_structure()
         records = []
-        chain_ver = {}
-        for model_chains in p.get_chains():
-            model_no = int(model_chains['model_no'])
-            for chain in model_chains['chains']:
-                # chain.id is identical in some PDB.
-                chain_no = chain['chain_no']
-                chain_id_prefix = f"{pdb_id}_{model_no}_{chain_no}"
-                key = chain_id_prefix.upper()
-                if key not in chain_ver:
-                    chain_ver[key] = 0
-                else:
-                    chain_ver[key] += 1
-                chain_id = f"{chain_id_prefix}_{chain_ver[key]}"
-                # the column pro_seq is not null
-                chain_seq = chain.get('seq')
-                if chain_seq:
-                    rec = (chain_id, pdb_id, model_no, chain_no, chain_seq)
-                    records.append(rec)
+        for chain_id, pdb_id, model_no, chain_no, chain in p.parse_chains():
+            # the column pro_seq is not null
+            chain_seq = p._chain_seq(chain)
+            if chain_seq:
+                rec = (chain_id, pdb_id, model_no, chain_no, chain_seq)
+                records.append(rec)
+        if self.verbose:
+            print(f"Warning: no chains {pdb_id} are detectin in {pdb_file}")
         return records
 
     def pdb_method(self, args):
@@ -113,14 +102,131 @@ class BuildRecords:
     def pdb_secondary(self, args):
         pdb_id = args['pdb_id']
         pdb_file = args['pdb_file']
-        ad = AnalyzeDssp(pdb_file)
-
         records = []
-        for model, dssp_data in ad.dssp_iter():
-            model_no = model.id
-            for chain_no, dssp in dssp_data.items():
-                dssp_seq = ''.join([i['dssp_code'] for i in dssp])
-                rec = (pdb_id, model_no, chain_no, dssp_seq)
+        try:
+            ad = AnalyzeDssp(pdb_file)
+            for model, dssp_data in ad.dssp_iter():
+                model_no = model.id
+                for chain_no, dssp in dssp_data.items():
+                    dssp_seq = ''.join([i['dssp_code'] for i in dssp])
+                    rec = (pdb_id, model_no, chain_no, dssp_seq)
+                    if rec not in records:
+                        records.append(rec)
+        except Exception as e:
+            print(f"ERROR: Fail in pdb_secondary(). error={e}")
+        if records == []:
+            records = [(pdb_id, None, None, None),]
+        return records
+
+    def align_uniprot(self, args):
+        pdb_id = args['pdb_id']
+        aln_file = args['aln_file']
+        records = []
+        best_hits = ParseBlastXml(aln_file).best_hits()
+        for hit in best_hits:
+            chain_id = hit['query']
+            rec0 = (chain_id, pdb_id)
+            if 'hit_desc' in hit:
+                uniprot_acc = hit['hit_desc'].split('|')[1]
+                rec = rec0 + (
+                    uniprot_acc,
+                    float(hit['evalue']),
+                    int(hit['bit_score']),
+                    float(hit['identity'])
+                )
                 if rec not in records:
                     records.append(rec)
+            else:
+                # insert null if not hits detected
+                rec0 += (None,) * 4
+                if rec0 not in records:
+                    records.append(rec0)
         return records
+
+    def uniprot_alphafold_plddt(self, pLDDT_data):
+        uniprot_acc = pLDDT_data['uniprot_acc']
+        pfile = pLDDT_data['pfile']
+        records = []
+        for item in pLDDT_data['pLDDT']:
+            model_no = item['model'].id
+            chain_no = item['chain'].id
+            avg_plddt = item['stats'].get('mean_plddt')
+            rec = (uniprot_acc, model_no, chain_no, avg_plddt, pfile)
+            records.append(rec)
+        return records
+
+    def align_imgt(self, args:dict):
+        pdb_id = args['pdb_id']
+        faa_file = args['faa_file']
+        aln_file = args['aln_file']
+        pi = ParseIgblast(aln_file, faa_file, self.verbose)
+        records = []
+        for hit in pi.retrieve_hits():
+            chain_id = hit['query_id']
+            rec0 = (chain_id, pdb_id)
+            if 'allele_name' in hit:
+                rec = rec0 + (
+                    hit['allele_name'].split('|')[0],
+                    hit['gene_name'],
+                    hit['gene_family'],
+                    hit['chain_type'].upper(),
+                    hit['isotype'].upper(), 
+                    float(hit['e-value']),
+                    float(hit['bits-score']),
+                )
+                if rec not in records:
+                    records.append(rec)
+            else:
+                # insert null if not hits detected
+                rec0 += (None,) * 7
+                if rec0 not in records:
+                    records.append(rec0)
+        return records
+
+    def align_vregion(self, args:dict):
+        pdb_id = args['pdb_id']
+        faa_file = args['faa_file']
+        aln_file = args['aln_file']
+    
+        pi = ParseIgblast(aln_file, faa_file, self.verbose)
+        records = []
+        for region in pi.retrieve_regions():
+            chain_id = region['query_id']
+            pdb_id = chain_id.split('_')[0]
+            rec0 = (chain_id, pdb_id,)
+            if 'percent identity' in region:
+                rec = rec0 + (
+                    region['region'],
+                    region['percent identity'],
+                    region['from'],
+                    region['to'],
+                    region['seq'],
+                )
+                if rec not in records:
+                    records.append(rec)
+            else:
+                # region name is composite primary key
+                rec0 += ('UN', None, None, None, None)
+                if rec0 not in records:
+                    records.append(rec0)
+        return records
+
+    def imgt_genelist(self, record:dict):
+        names = ['Species', 'IMGT/GENE-DB', 'IMGT gene functionality', \
+            'IMGT and HGNC gene definition', 'Number of alleles', \
+            'Chromosome', 'Chromosomal localization', \
+            'IMGT/LIGM-DB reference sequence(s) for allele *01', \
+            'NCBI Gene', 'chain', 'domain']
+        rec = [record.get(i, '') for i in names]
+        return [rec,]
+
+    def imgt_gene(self, record:dict):
+        names = ['germline_id', 'specie', 'isotype', 'chain_type', \
+            'gene_name', 'allele_name', 'region_name']
+        rec = [record.get(i, '') for i in names]
+        return [rec,]
+
+    def imgt_geneseq(self, record:dict):
+        names = ['germline_id', 'seq_type', 'seq']
+        rec = [record.get(i, '') for i in names]
+        return [rec,]

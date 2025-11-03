@@ -2,6 +2,7 @@
 process PDB
 1. renumber chains
 '''
+from collections import defaultdict
 import gzip
 from itertools import combinations
 import json
@@ -169,115 +170,139 @@ class Pdb(ParseStructure):
                 raw_table = self.get_table()
                 f.writelines(raw_table)
     
-    def retrieve_sequence(self) -> dict:
-        records = {}
-        for model in self.structure:
-            model_no = model.id
-            for chain in model:
-                chain_no = chain.id.upper()
-                seq = []
-                for residue in chain:
-                    if residue.resname in longer_names:
-                        seq.append(longer_names[residue.resname])
-                if seq:
-                    key = (model_no, chain_no)
-                    records[key] = SeqRecord(
-                        Seq(''.join(seq)),
-                        id=f"{self.structure_id}_{model_no}_{chain_no}",
+    def export_fasta(self, meta:defaultdict=None, overwrite:bool=False):
+        '''
+        retrieve sequence by chains from pdb
+        '''
+        cascade_dir = self.init_cascade_outdir()
+        outfile = os.path.join(cascade_dir, 'chain_sequences.faa')
+        pdb_id = self.structure_id
+
+        # prepare records
+        unique_seq = []
+        if overwrite or (not os.path.isfile(outfile)):
+            records = []
+            for chain_id, _pdb_id, model_no, chain_no, chain in self.parse_chains():
+                chain_seq = self._chain_seq(chain)
+                # only export unique sequences to chain_sequences.faa
+                if chain_seq not in unique_seq:
+                    record = SeqRecord(
+                        Seq(chain_seq),
+                        id=chain_id,
                         description='',
                     )
-        return records
+                    records.append(record)
+                    unique_seq.append(chain_seq)
+            # save to fasta
+            if records:
+                status = ProcessFasta(outfile, self.verbose).to_fasta(records)
+                meta[status] += 1
+            else:
+                meta['null'] += 1
 
-    def export_fasta(self, outfile:str):
+        if os.path.isfile(outfile):
+            return (pdb_id, outfile)
+        return None
+
+      
+    def export_chain_faa(self, meta:defaultdict=None, overwrite:bool=False):
         '''
         retrieve sequence by chains from pdb
         '''
-        # retrieve sequences
-        sequences = self.retrieve_sequence()
-        records = {}
-        for _, record in sequences.items():
-            seq = str(record.seq)
-            if seq not in records:
-                records[seq] = record
-        if records:
-            records = records.values()
-            return ProcessFasta(outfile, self.verbose).to_fasta(records)
-        return 'null'
-       
-    def export_chains_fasta(self, overwrite:bool=False):
-        '''
-        retrieve sequence by chains from pdb
-        '''
-        status = 'null'
+        db_records = []
+        if meta is None:
+            meta = defaultdict(int)
         pdb_id = self.structure_id
         cascade_dir = self.init_chains_outdir(pdb_id)
-        # retrieve sequences
-        sequences = self.retrieve_sequence()
-        seq_pool = []
-        for key, record in sequences.items():
-            model_no, chain_no = key
-            seq = str(record.seq)
-            if seq not in seq_pool:
-                outfile = os.path.join(cascade_dir, f"{model_no}_{chain_no}.faa")
-                if overwrite or not os.path.isfile(outfile):
+        # retrieve chains
+        chains = self.parse_chains()
+        for chain_id, _pdb_id, model_no, chain_no, chain in chains:
+            outfile = os.path.join(cascade_dir, f"{chain_id}.faa")
+            if overwrite or (not os.path.isfile(outfile)):
+                chain_seq = self._chain_seq(chain)
+                record = SeqRecord(
+                    Seq(chain_seq),
+                    id=chain_id,
+                    description='',
+                )
+                if chain_seq:
                     status = ProcessFasta(outfile, self.verbose).to_fasta(record)
+                    meta[status] += 1
                 else:
-                    status = 'skip'
-                seq_pool.append(seq)
-        return status
+                    meta['null'] += 1
+            else:
+                meta['skip'] += 1
+            if os.path.isfile(outfile):
+                db_records.append((chain_id, outfile))
+        return db_records
 
-    def export_chain_pdb(self, chain_ids:list, outdir:str=None, overwrite:bool=False):
-        """
-        Save chain while preserving original header information
-        """
-        file_name = '_'.join(chain_ids)
-        if outdir is None or not os.path.isdir(outdir):
-            outdir = self.outdir
-        outfile = os.path.join(outdir, f"{self.structure_id}_{file_name}.pdb")
-        if overwrite is False and os.path.isfile(outfile):
-            if self.verbose:
-                print(f"Skip: {outfile} exists")
-            return None
 
-        # Write output with header
-        io = PDBIO()
-        io.set_structure(self.structure)
-        # selector
-        _ids = ''.join(chain_ids)
-        atom_selector = ChainAtomSelect
-        if '-' in _ids:
-            atom_selector = LigandAtomSelect
-        elif '+' in _ids:
-            atom_selector = AllAtomSelect
-
-        # Copy header from original file
-        header_lines = self.header_lines()
-        with open(outfile, "w") as f:
-            f.writelines(header_lines)
-            io.save(f, atom_selector(chain_ids))
-        if self.verbose:
-            print(f"Saved chain {chain_ids} to {outfile}")
-        return outfile
-
-    def split_by_chain(self, overwrite:bool=False):
+    def export_chain_pdb(self, meta:defaultdict=None, overwrite:bool=False):
         """
         export by single chain, and two chains combinations
         """
+        if meta is None:
+            meta = defaultdict(int)
+        meta['pdb'] += 1
+
         chain_no_pool = self.get_chain_no()
         if not chain_no_pool:
             if self.verbose:
                 print(f"Skip: No chains are detected in {self.pdb_file}.")
-            return 'null'
-        chain_no_pool.sort()
+            meta['null'] += 1
+            return None
 
         pdb_id = self.structure_id
         cascade_dir = self.init_chains_outdir(pdb_id)
         # export single/pairwise chain pdb
-        outfiles = []
-        for combo in (1, 2,):
-            for _ids in combinations(chain_no_pool, combo):
-                outfile = self.export_chain_pdb(list(_ids), cascade_dir, overwrite)
-                outfiles.append(outfile)
-        if outfiles:
-            return 'succeed'
-        return 'fail'
+        outfiles, fail = [], []
+        records = []
+        for model_no, _pool in chain_no_pool.items():
+            outprefix = os.path.join(cascade_dir, f"{pdb_id}_{model_no}_")
+            _pool.sort()
+            for combo in (1, 2,):
+                for _ids in combinations(_pool, combo):
+                    chain_combo = '-'.join(list(_ids))
+                    outfile = outprefix + chain_combo + '.pdb'
+                    if overwrite is True or not os.path.isfile(outfile):
+                        status = self.export_chain_pdb(list(_ids), outfile)
+                        if status:
+                            outfiles.append(outfile)
+                        else:
+                            fail.append(outfile)
+                    else:
+                        meta['skip_build_faa'] += 1
+                    rec = (pdb_id, model_no, chain_combo, outfile)
+                    records.append(rec)
+        meta['succeessful_faa'] += len(outfiles)
+        meta['fail_faa'] += len(fail)
+        return records
+
+
+    def to_chain_pdb(self, chain_ids:list, outfile):
+        """
+        Save chain while preserving original header information
+        """
+        try:
+            # Write output with header
+            io = PDBIO()
+            io.set_structure(self.structure)
+            # selector
+            _ids = ''.join(chain_ids)
+            atom_selector = ChainAtomSelect
+            if '-' in _ids:
+                atom_selector = LigandAtomSelect
+            elif '+' in _ids:
+                atom_selector = AllAtomSelect
+
+            # Copy header from original file
+            header_lines = self.header_lines()
+            with open(outfile, "w") as f:
+                f.writelines(header_lines)
+                io.save(f, atom_selector(chain_ids))
+            if self.verbose:
+                print(f"Saved chain {chain_ids} to {outfile}")
+            return True
+        except Exception as e:
+            pass
+        return False

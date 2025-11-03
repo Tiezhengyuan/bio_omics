@@ -5,7 +5,7 @@ class BuildDb:
     def __init__(self, data:list=None, verbose:bool=False, chunk_size:int=None):
         self.data = data
         self.verbose = verbose
-        self.chunk_size = int(chunk_size) if chunk_size else 200
+        self.chunk_size = int(chunk_size) if chunk_size else 100
         self.config = {}
 
     def execute_sql(self, query):

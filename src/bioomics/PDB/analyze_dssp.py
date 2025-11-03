@@ -1,4 +1,4 @@
-
+import pandas as pd
 from Bio.PDB.DSSP import DSSP
 from .pdb import Pdb
 
@@ -9,13 +9,13 @@ DSSP_KEYS = ['dssp_index', 'residue_name', 'dssp_code', 'Relative_ASA',
 
 DSSP_CODES ={'H': 'alpha helix', 'B': 'isolated beta bridge',
     'E': 'beta sheet', 'G': '310 helix', 'I': 'Pi helix',
-    'T': 'hydrogen-bonded turn', 'S': 'bend', 'C': 'coil or unstructured region',
+    'T': 'hydrogen-bonded turn', 'S': 'bend', 
+    'C': 'coil or unstructured region',
     '-': 'loop',} 
 
 class AnalyzeDssp(Pdb):
 
     def __init__(self, pdb_file:str, outdir:str=None, verbose:bool=False):
-        print(pdb_file)
         super().__init__(pdb_file, outdir, verbose)
         self.load_structure()
     
@@ -41,4 +41,36 @@ class AnalyzeDssp(Pdb):
             item['residue_id'] = key[1][1]
             res[chain_id].append(item)
         return res
-    
+
+    @staticmethod
+    def parse_dssp_seq(dssp_seq):
+        idx = 0
+        last_code = dssp_seq[idx]
+        res = {
+            'W': [[0, len(dssp_seq)],],
+            last_code: [[idx,],],
+        }
+        for i in range(idx, len(dssp_seq)):
+            if dssp_seq[i] == last_code:
+                res[last_code][-1].append(i)
+            else:
+                last_code = dssp_seq[i]
+                if last_code not in res:
+                    res[last_code] = []
+                res[last_code].append([i,])
+        # format
+        ft = []
+        for dssp_code, pos_pool in res.items():
+            for pos in pos_pool:
+                item = {
+                    'code': dssp_code,
+                    'structure': DSSP_CODES.get(dssp_code),
+                    'start': pos[0],
+                    'end': pos[-1] + 1,
+                    'length': pos[-1] - pos[0] + 1,
+                }
+                if dssp_code == 'w':
+                    item['structure'] = 'whole chain'
+                ft.append(item)
+        ft = pd.DataFrame(ft)
+        return ft

@@ -1,12 +1,9 @@
 from .update_db import UpdateDb
-from .build_db import BuildDb
-from .build_complex import BuildComplex
-from .query_complex import QueryComplex
 
-class UpdateComplex(BuildDb):
+class UpdateComplex(UpdateDb):
 
-    def __init__(self, data, verbose:bool=False):
-        super().__init__(data, verbose)
+    def __init__(self, verbose:bool=False):
+        super().__init__(verbose)
         self.config = {
             'host': 'localhost',
             'user': 'admin',

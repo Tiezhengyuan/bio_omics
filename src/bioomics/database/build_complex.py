@@ -8,9 +8,8 @@ import pandas as pd
 from .build_db import BuildDb
 from .query_complex import QueryComplex
 from .build_records import BuildRecords
-from ..PDB import Pdb
 from ..UniProt import ParseDatRecord
-from ..protein import ParseBlastXml, ParseIgblast
+from ..protein import ParseIgblast
 
 
 class BuildComplex(BuildDb):
@@ -32,11 +31,12 @@ class BuildComplex(BuildDb):
         # insert data into table pdb
         table_name = 'pdb'
         insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, pdb_url, local_path, release_date, name)
-            VALUES (%s, %s, %s, %s, %s)"""
+            (pdb_id, pdb_url, release_date, name)
+            VALUES (%s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
-    
+
+
     def insert_pdb_method(self):
         # insert data into table pdb
         table_name = 'pdb_method'
@@ -54,6 +54,13 @@ class BuildComplex(BuildDb):
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
+    def insert_pdb_keyword(self) -> tuple:
+        table_name = 'pdb_keyword'
+        insert_query = f"""INSERT INTO {table_name} 
+            (pdb_id, keyword) VALUES (%s, %s)"""
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
     def insert_pdb_chain(self) -> tuple:
         table_name = 'pdb_chain'
         insert_query = f"""INSERT INTO {table_name} 
@@ -62,20 +69,20 @@ class BuildComplex(BuildDb):
         func = getattr(self.recorder, table_name)
         return self.insert(table_name, insert_query, func)
 
-    def insert_pdb_keyword(self) -> tuple:
-        table_name = 'pdb_keyword'
+    def insert_pdb_proseq(self) -> tuple:
+        table_name = 'pdb_proseq'
         insert_query = f"""INSERT INTO {table_name} 
-            (pdb_id, keyword) VALUES (%s, %s)"""
-        func = getattr(self.recorder, table_name)
-        self.insert(table_name, insert_query, func)
-
+            (chunk_no, pro_seq) VALUES (%s, %s)"""
+        func = lambda rec: [rec,]
+        return self.insert(table_name, insert_query, func)
+    
     def insert_pdb_bfactor(self) -> tuple:
         table_name = 'pdb_bfactor'
         insert_query = f"""INSERT INTO {table_name} 
             (pdb_id, model_no, chain_no, avg_bfactor)
             VALUES (%s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
-        self.insert(table_name, insert_query, func, 10)
+        self.insert(table_name, insert_query, func)
 
     def insert_pdb_secondary(self) -> tuple:
         table_name = 'pdb_secondary'
@@ -83,60 +90,93 @@ class BuildComplex(BuildDb):
             (pdb_id, model_no, chain_no, dssp_seq)
             VALUES (%s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
-        self.insert(table_name, insert_query, func, 1)
+        self.insert(table_name, insert_query, func)
+
+    def insert_align_uniprot(self) -> tuple:
+        table_name = 'align_uniprot'
+        insert_query = f"""INSERT INTO {table_name}
+            (chain_id, pdb_id, uniprot_acc, evalue, bit_score, identity)
+            VALUES (%s, %s, %s, %s, %s, %s)"""
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func, 2)
+
+########################
+    def insert_meta_pdb(self):
+        table_name = 'meta_pdb'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, pdb_file, pdb_group)
+            VALUES (%s, %s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_meta_faa(self):
+        table_name = 'meta_faa'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, faa_file) VALUES (%s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_meta_chain_faa(self):
+        table_name = 'meta_chain_faa'
+        insert_query = f"""INSERT INTO {table_name}
+            (chain_id, faa_file) VALUES (%s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_meta_chain_pdb(self):
+        table_name = 'meta_chain_pdb'
+        # chain_no is case sensitive in PDB
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, model_no, chain_combo, pdb_file)
+            VALUES (%s, %s, %s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_meta_blastp5(self):
+        table_name = 'meta_blastp5'
+        # chain_no is case sensitive in PDB
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, aln_file) VALUES (%s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_meta_pdb_igblastp(self):
+        table_name = 'meta_pdb_igblastp'
+        # chain_no is case sensitive in PDB
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, aln_file) VALUES (%s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
 
 ######################
-    def record_imgt_genelist(self, record:dict):
-        names = ['Species', 'IMGT/GENE-DB', 'IMGT gene functionality', \
-            'IMGT and HGNC gene definition', 'Number of alleles', \
-            'Chromosome', 'Chromosomal localization', \
-            'IMGT/LIGM-DB reference sequence(s) for allele *01', \
-            'NCBI Gene', 'chain', 'domain']
-        rec = [record.get(i, '') for i in names]
-        return [rec,]
-
     def insert_imgt_genelist(self) -> tuple:
         table_name = 'imgt_genelist'
-        insert_query = f"""INSERT INTO {table_name} (species, gene_db, 
-                gene_function, gene_definition, number_alleles, chromosome,
-                chromosomal_loc, ligm_db_ref_gene, ncbi_gene, chain, domain)
+        insert_query = f"""INSERT INTO {table_name}
+            (species, gene_db, gene_function, gene_definition,
+                number_alleles, chromosome, chromosomal_loc,
+                ligm_db_ref_gene, ncbi_gene, chain, domain)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-        self.insert(table_name, insert_query, self.record_imgt_genelist)
-
-    def record_imgt_gene(self, record:dict):
-        names = ['germline_id', 'specie', 'isotype', 'chain_type', \
-            'gene_name', 'allele_name', 'region_name']
-        rec = [record.get(i, '') for i in names]
-        return [rec,]
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
 
     def insert_imgt_gene(self) -> tuple:
         table_name = 'imgt_gene'
-        insert_query = f"""INSERT INTO {table_name} (germline_id, specie,
-                isotype, chain_type, gene_name, allele_name, region_name)
+        insert_query = f"""INSERT INTO {table_name}
+            (germline_id, specie, isotype, chain_type,
+                gene_name, allele_name, region_name)
             VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-        self.insert(table_name, insert_query, self.record_imgt_gene)
-
-    def record_imgt_geneseq(self, record:dict):
-        names = ['germline_id', 'seq_type', 'seq']
-        rec = [record.get(i, '') for i in names]
-        return [rec,]
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
 
     def insert_imgt_geneseq(self) -> tuple:
         table_name = 'imgt_geneseq'
         insert_query = f"""INSERT INTO {table_name}
-            (germline_id, seq_type, seq) VALUES (%s, %s, %s)"""
-        self.insert(table_name, insert_query, self.record_imgt_geneseq)
+            (germline_id, seq_type, seq)
+            VALUES (%s, %s, %s)"""
+        func = getattr(self.recorder, table_name)    
+        self.insert(table_name, insert_query, func)
 
-    def record_uniprot_structure(self, record:dict):
-        names = ['uniprot_acc', 'model', 'pdb_path']
-        rec = [record.get(i, '') for i in names]
-        return [rec,]
 
-    def insert_uniprot_structure(self) -> tuple:
-        table_name = 'uniprot_structure'
-        insert_query = f"""INSERT INTO {table_name}
-            (uniprot_acc, model, pdb_path) VALUES (%s, %s, %s)"""
-        self.insert(table_name, insert_query, self.record_uniprot_structure)
 
 ########################
     def record_uniprot(self, record):
@@ -185,63 +225,20 @@ class BuildComplex(BuildDb):
             VALUES (%s, %s, %s)"""
         self.insert(table_name, insert_query, self.record_uniprot_dbxrefs)
 
-    def record_align_uniprot(self, aln_file):
-        records = []
-        best_hits = ParseBlastXml(aln_file).best_hits()
-        for hit in best_hits:
-            chain_id = hit['query']
-            pdb_id = hit['query'].split('_')[0]
-            rec0 = (chain_id, pdb_id)
-            if 'hit_desc' in hit:
-                uniprot_acc = hit['hit_desc'].split('|')[1]
-                rec = rec0 + (
-                    uniprot_acc,
-                    float(hit['evalue']),
-                    int(hit['bit_score']),
-                    float(hit['identity'])
-                )
-                if rec not in records:
-                    records.append(rec)
-            else:
-                # insert null if not hits detected
-                rec0 += (None,) * 4
-                if rec0 not in records:
-                    records.append(rec0)
-        return records
-
-    def insert_align_uniprot(self) -> tuple:
-        table_name = 'align_uniprot'
+    def insert_uniprot_meta_alphafold(self) -> tuple:
+        table_name = 'uniprot_meta_alphafold'
         insert_query = f"""INSERT INTO {table_name}
-            (chain_id, pdb_id, uniprot_acc, evalue, bit_score, identity)
-            VALUES (%s, %s, %s, %s, %s, %s)"""
-        self.insert(table_name, insert_query, self.record_align_uniprot)
+            (uniprot_acc, pdb_path) VALUES (%s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
 
-    def record_align_imgt(self, item:tuple):
-        aln_file, fa_file = item
-        pi = ParseIgblast(aln_file, fa_file, self.verbose)
-        records = []
-        for hit in pi.retrieve_hits():
-            chain_id = hit['query_id']
-            pdb_id = chain_id.split('_')[0]
-            rec0 = (chain_id, pdb_id)
-            if 'allele_name' in hit:
-                rec = rec0 + (
-                    hit['allele_name'].split('|')[0],
-                    hit['gene_name'],
-                    hit['gene_family'],
-                    hit['chain_type'].upper(),
-                    hit['isotype'].upper(), 
-                    float(hit['e-value']),
-                    float(hit['bits-score']),
-                )
-                if rec not in records:
-                    records.append(rec)
-            else:
-                # insert null if not hits detected
-                rec0 += (None,) * 7
-                if rec0 not in records:
-                    records.append(rec0)
-        return records
+    def insert_uniprot_alphafold_plddt(self) -> tuple:
+        table_name = 'uniprot_alphafold_plddt'
+        insert_query = f"""INSERT INTO {table_name}
+            (uniprot_acc, model_no, chain_no, avg_plddt, pickle_file)
+            VALUES (%s, %s, %s, %s, %s)"""
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
 
     def insert_align_imgt(self) -> tuple:
         table_name = 'align_imgt'
@@ -250,32 +247,8 @@ class BuildComplex(BuildDb):
             chain_type, isotype, evalue, bit_score)
             VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s)
         """
-        self.insert(table_name, insert_query, self.record_align_imgt)
-
-    def record_align_vregion(self, item:tuple):
-        aln_file, fa_file = item
-        pi = ParseIgblast(aln_file, fa_file, self.verbose)
-        records = []
-        for region in pi.retrieve_regions():
-            chain_id = region['query_id']
-            pdb_id = chain_id.split('_')[0]
-            rec0 = (chain_id, pdb_id,)
-            if 'percent identity' in region:
-                rec = rec0 + (
-                    region['region'],
-                    region['percent identity'],
-                    region['from'],
-                    region['to'],
-                    region['seq'],
-                )
-                if rec not in records:
-                    records.append(rec)
-            else:
-                # region name is composite primary key
-                rec0 += ('UN', None, None, None, None)
-                if rec0 not in records:
-                    records.append(rec0)
-        return records
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
 
     def insert_align_vregion(self) -> tuple:
         table_name = 'align_vregion'
@@ -283,7 +256,10 @@ class BuildComplex(BuildDb):
             (chain_id, pdb_id, region_name, identity, start, end, seq)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
-        self.insert(table_name, insert_query, self.record_align_vregion)
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+
 
     def insert_uniprot_rmsd(self, record):
         table_name = 'uniprot_rmsd'

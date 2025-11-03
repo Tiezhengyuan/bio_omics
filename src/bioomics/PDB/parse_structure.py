@@ -3,7 +3,7 @@ process PDB
 1. renumber chains
 '''
 import re
-from Bio.PDB import PDBIO, PDBParser, MMCIFParser, Select
+from Bio.PDB import Select
 
 # Filter out the specific warning
 import warnings
@@ -83,6 +83,30 @@ class ParseStructure:
                 for res in chain:
                     yield model, chain, res
 
+    def parse_chains(self) -> list:
+        '''
+        In most cases, model.id + chain.id is unique, but
+        there are multiple chain.id with identical letters in some PDB
+        chain_no is character sensitive
+        '''
+        pdb_id = self.structure_id
+        tmp = {}
+        for model in self.structure:
+            model_no = model.id
+            for chain in model:
+                chain_no = chain.id
+                key = f"{model_no}_{chain_no.upper()}"
+                if key not in tmp:
+                    tmp[key] = []
+                tmp[key].append((model_no, chain_no, chain))
+        chains = []
+        for key in list(tmp):
+            for ver_no, (model_no, chain_no, chain) in enumerate(tmp[key]):
+                chain_id = f"{pdb_id}_{key}_{ver_no}"
+                rec = (chain_id, pdb_id, model_no, chain_no, chain)
+                chains.append(rec)
+        return chains
+            
     def _chain_seq(self, chain):
         '''
         return AA seq given a chain object
@@ -106,13 +130,15 @@ class ParseStructure:
                     res[chain_id] = seq
         return res
 
-    def get_chain_no(self) -> list:
-        chains = []
+    def get_chain_no(self) -> dict:
+        chain_no_pool = {}
         for model in self.structure:
+            model_no = model.id
+            chain_no_pool[model_no] = []
             for chain in model:
-                if chain.id not in chains:
-                    chains.append(chain.id)
-        return chains
+                if chain.id not in chain_no_pool[model_no]:
+                    chain_no_pool[model_no].append(chain.id)
+        return chain_no_pool
 
     def get_chains(self):
         '''

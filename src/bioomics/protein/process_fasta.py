@@ -10,8 +10,8 @@ class ProcessFasta:
         try:
             with open(self.fa_file, 'w') as f:
                 SeqIO.write(records, f, 'fasta')
-                if self.verbose:
-                    print(f"Export to {self.fa_file}.")
+            if self.verbose:
+                print(f"Export to {self.fa_file}.")
             return 'succeed'
         except Exception as e:
             if self.verbose:

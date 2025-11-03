@@ -3,23 +3,25 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 
-class SeqDia:
-    def __init__(self, ax, ft=None):
+class PlotSeqRegion:
+    def __init__(self, ax, ft:pd.DataFrame=None, chain_len:int=None):
         self.ax = ax
         self.ft = ft
+        self.chain_len = chain_len if chain_len else \
+            ft[ft['code']=='W']['length'][0]
         self.xlim_max = 100
         self.ylim = 1
         self.height = .3
 
     def add_dia(self, region_name:str, label:str=None):
-        if region_name not in self.ft:
+        regions = self.ft[self.ft['code']==region_name]
+        if len(regions)==0:
             print('wrong region name:', region_name)
             return None
 
         self.lines= None
         self.boxes = None
         self.baseline = self.ylim
-        regions = self.ft[region_name]
         self.add_lines(regions)
         self.add_boxes(regions)
         label = label if label else region_name
@@ -34,9 +36,9 @@ class SeqDia:
             x1.insert(0, 1)
             x2.insert(0, regions['start'].iloc[0])
         # add line to the tail if needed
-        if int(self.ft['ft']['end'].iloc[-1]) > int(regions['end'].iloc[-1]):
+        if self.chain_len > int(regions['end'].iloc[-1]):
             x1.append(regions['end'].iloc[-1])
-            x2.append(self.ft['ft']['end'].iloc[-1])
+            x2.append(self.chain_len)
 
         # update lines
         self.lines = pd.DataFrame({'x1': x1, 'x2': x2,})
@@ -61,15 +63,15 @@ class SeqDia:
             )
             self.ax.add_patch(rect)
             self.ax.text(row[0]+2, self.baseline+self.height/2, row[0],
-                fontsize=8, ha='right', va='bottom', color='blue')
+                fontsize=6, ha='right', va='bottom', color='blue')
             self.ax.text(row[1]-2, self.baseline-self.height/2, row[1],
-                fontsize=8, ha='left', va='top', color='red')
+                fontsize=6, ha='left', va='top', color='red')
 
     def add_label(self, title):
         self.ax.text(-10, self.baseline, title, ha='right', va='center')
 
     def set_ax(self, x_left:int=60, x_right:int=20):
-        xlim_max = max(self.ft['ft']['end']) + x_right
+        xlim_max = self.chain_len + x_right
         self.ax.set_xlim(-x_left, xlim_max)
         self.ax.set_ylim(.6, self.ylim+.5)
 

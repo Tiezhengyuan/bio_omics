@@ -1,12 +1,13 @@
 '''
+requirements:
+    - table pdb_chain, meta_chain_faa
 example: 
-    - parallel -j4 python /home/yuan/bio/bio_omics/src/pipelines/imgt_msa.py \
-        ::: /home/yuan/data/pdb/_list/pdb_*.json
-    - python /home/yuan/bio/bio_omics/src/pipelines/imgt_msa.py \
-        /home/yuan/data/pdb/_list/pdb_46.json
-
-functions: collect data from tables and perform MSA
+    - parallel -j4 python src/pipelines/ab_imgt_msa.py ::: {0..46}
+    - python src/pipelines/ab_imgt_msa.py 46
+functions:
+    - collect data from tables and perform MSA
 '''
+from collections import defaultdict
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
@@ -14,7 +15,21 @@ if src_dir not in sys.path:
     sys.path.append(src_dir)
 
 from bioomics import Dir, QueryComplex, AlignSeq, CalPhylo, \
-    ProcessJson, ProcessSeq, ProcessPickle
+    QueryComplex, ProcessSeq, ProcessPickle
+
+def retrieve_data(pdb_group, args, meta):
+    query = f"""
+        SELECT G.allele_name AS id, S.seq AS seq
+        FROM imgt_gene G, imgt_geneseq S
+        WHERE G.chain_type IN {chain_group}
+            AND G.germline_id = S.germline_id
+            AND G.specie = 'Homo_sapiens'
+            AND G.isotype = 'IG'
+            AND G.region_name = 'V-REGION'
+            AND S.seq_type = 'AA-WithoutGaps-F+ORF+inframeP';
+    """
+    rows = QueryComplex(args['verbose']).list_data(query)
+    return rows
 
 
 def align_germline(args:dict, pdb_ids:dict):
@@ -65,12 +80,12 @@ def align_germline(args:dict, pdb_ids:dict):
 
 ##############################
 if __name__ == "__main__":
+    meta = defaultdict(int)
     args = {
         'verbose':True,
         'outdir': '/home/yuan/data/pdb/data',
     }
-    json_file = sys.argv[1]
-    args_pool = ProcessJson.load_json(json_file)
-    pdb_ids = {i['pdb_id']:i['pdb_file'] for i in args_pool}
+    pdb_group = sys.argv[1]
+    record_iter = retrieve_data(pdb_group, args, meta)
 
-    align_germline(args, pdb_ids)
+    align_germline(args, meta)

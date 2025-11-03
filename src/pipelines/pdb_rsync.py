@@ -25,10 +25,7 @@ def wrap_args(args):
     pdb_iter = PullPdb(args['pdb_dir']).iter_raw_pdb_args(args)
     outprefix = os.path.join(args_dir, 'pdb')
     file_list = ProcessJson.iter_to_json(pdb_iter, outprefix, chunk_size=5_000)
-    print('\n\n')
-    for script in ('pdb_outfile.py', 'pdb_blast.py', 'pdb_igblastp.py',):
-        print(f"parallel -j6 python src/pipelines/{script} ::: {args_dir}/pdb_*.json")
-    print('\n\n')
+    print(f"\n{file_list}\n")
 
 if __name__ == "__main__":
     args = {

@@ -18,6 +18,7 @@ if __name__ == "__main__":
         'verbose': True,
         'new_pdb': False,
         'pdb_dir': '/home/yuan/data/pdb/rsync',
+        'chunk_size': 100,
     }
 
     # table pdb is foundamental table

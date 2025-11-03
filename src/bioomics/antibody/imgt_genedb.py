@@ -37,36 +37,6 @@ class ImgtGenedb(Imgt):
         # keys: specie, gene_name, region_name
         self.data = {}
     
-    def build_gene_records(self):
-        # read fasta and integrate sequences to self.data
-        self.data = {}
-        self.parse_fasta()
-
-        germline_id, records, seq_records = 0, [], []
-        for specie, sub1 in self.data.items():
-            for gene_name, sub2 in sub1.items():
-                for region_name, sub3 in sub2.items():
-                    for allele_name, sub4 in sub3.items():
-                        germline_id += 1
-                        rec = {
-                            'germline_id': germline_id,
-                            'specie': specie,
-                            'isotype': gene_name[:2].upper(),
-                            'chain_type': gene_name[2].upper(),
-                            'gene_name': gene_name,
-                            'allele_name': allele_name,
-                            'region_name': region_name,
-                        }
-                        records.append(rec)
-                        for k,v in sub4['seq'].items():
-                            seq_rec = {
-                                'germline_id': germline_id,
-                                'seq_type': k,
-                                'seq': v.upper(),
-                            }
-                            seq_records.append(seq_rec)
-        return records, seq_records
-
     def build_specie_genelist_json(self):
         self.data = {}
         # parse gene list to self.data
@@ -190,6 +160,7 @@ class ImgtGenedb(Imgt):
                         'seq': {},
                     }
                 self.data[organism][gene_name][region_name][allele_name]['seq'][postfix] = str(record.seq)
+
 
     def parse_fasta_file(self):
         prefix = 'IMGTGENEDB-ReferenceSequences.fasta'

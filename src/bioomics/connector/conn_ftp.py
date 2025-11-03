@@ -1,13 +1,13 @@
 """
 connect FTP using object methods
 """
-from biosequtils import Dir
+
 from ftplib import FTP
 import os
 import re
 from sh import gunzip
 
-
+from ..common import Dir
 
 class ConnFTP:
 
