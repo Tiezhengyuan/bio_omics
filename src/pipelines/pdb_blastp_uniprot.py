@@ -4,13 +4,14 @@ requirements:
     - table meta_faa, meta_pdb
     - blastp database
 example: 
-    - parallel -j4 python src/pipelines/pdb_blastp.py ::: {0..46}
-    - python src/pipelines/pdb_blastp.py 46
+    - parallel -j4 python src/pipelines/pdb_blastp_uniprot.py ::: {0..46}
+    - python src/pipelines/pdb_blastp_uniprot.py 46
 functions:
     - blastp against uniprot_sprot
     - put aln_file into meta_blastp5
 '''
 from collections import defaultdict
+from dotenv import load_dotenv
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
@@ -26,12 +27,14 @@ def query_faa_iter(pdb_group, args, meta):
         FROM meta_faa F, meta_pdb P
         WHERE P.pdb_group = {pdb_group}
             AND F.pdb_id = P.pdb_id
+            AND F.faa_file IS NOT NULL
             AND F.pdb_id not in (
                 SELECT distinct pdb_id
                 FROM meta_blastp5
             );
     """
-    rows = QueryComplex().list_data(query)
+    rows = QueryComplex(args['verbose']).list_data(query)
+    meta['pdb_group'] = int(pdb_group)
     meta['rows'] = len(rows)
     for row in rows:
         row.update(args)
@@ -57,23 +60,23 @@ def uniprot_blastp(args_pool, meta, outfmt=5):
             yield args['pdb_id'], aln_file
 
 if __name__ == "__main__":
-    pdb_group = sys.argv[1]
+    meta = defaultdict(int)
+    load_dotenv()
     args = {
         'verbose': True,
-        'overwrite': True,
-        'db_uniprot': '/home/yuan/data/UniProt/db/uniprot_sprot',
-        'chunk_size': 20,
+        'overwrite': False,
+        'db_uniprot': os.getenv('db_uniprot'),
+        'chunk_size': 10,
     }
-    meta = defaultdict(int)
-
     # collect query
+    pdb_group = sys.argv[1]
     args_pool = query_faa_iter(pdb_group, args, meta)
 
     # blastp alignment
     aln5_pool = uniprot_blastp(args_pool, meta, outfmt=5)
 
     #insert aln_file to table meta_blastp5
-    BuildComplex(aln5_pool, args['verbose'], args['chunk_size']).insert_meta_blastp5()
+    bc = BuildComplex(aln5_pool, args['verbose'], args['chunk_size'])
+    bc.insert_meta_blastp5()
 
-    print('pdb group: ', pdb_group)
     print(meta)

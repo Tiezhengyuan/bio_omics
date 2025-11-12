@@ -7,12 +7,31 @@ class TestParsePdb(TestCase):
 
     def setUp(self):
         self.c = {}
-        pool = [('7S8L', '7S8L.pdb'), ('2OX8_A', '2OX8_A.pdb'), ('1HG8', 'pdb1hg8.ent.gz')]
+        pool = [
+            ('7S8L', '7S8L.pdb'),
+            ('2OX8_A', '2OX8_A.pdb'),
+            ('1HG8', 'pdb1hg8.ent.gz'),
+            ('9BS0', '9BS0.pdb'),
+            ('6BSX_0_A_0', '6BSX_0_A_0.pdb'),
+        ]
         for key, file_name in pool:
             pdb_file = os.path.join(DATA_DIR, 'PDB', file_name)
             obj = Pdb(pdb_file, RESULTS_DIR, False)
             obj.load_structure()
             self.c[key] = obj
+
+    @data(
+        ['7S8L', {0: ['R', 'A', 'B', 'C', 'D', 'E']}],
+        ['9BS0', {0: ['A', 'B', 'C', 'D', 'E', 'F', 'G', \
+            'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', \
+            'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Z', 'Y']}],
+        ['6BSX_0_A_0', {0: ['A',]}],
+    )
+    @unpack
+    def test_chain_no(self, input, expect):
+        result = self.c[input].get_chain_no()
+        print(result)
+        assert result == expect
 
     @data(
         ['7S8L', 'cryoem structure of gq-coupled mrgprx2 with peptide agonist cortistatin-14'],
@@ -122,13 +141,6 @@ class TestParsePdb(TestCase):
         result = self.c[input].get_chains()
         assert result == expect
 
-    @data(
-        ['7S8L', ['R', 'A', 'B', 'C', 'D', 'E'],],
-    )
-    @unpack
-    def test_chain_no(self, input, expect):
-        result = self.c[input].get_chain_no()
-        assert result == expect
 
     '''
     @data(

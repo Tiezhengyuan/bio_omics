@@ -5,6 +5,7 @@ import os
 from ..common import ProcessPickle
 from ..PDB import AnalyzeDssp, Pdb
 from ..protein import ParseBlastXml, ParseIgblast
+from ..UniProt import ParseDatRecord
 
 class BuildRecords:
 
@@ -41,7 +42,19 @@ class BuildRecords:
             rec = (pdb_id, compound_no, chains, compound_text)
             records.append(rec)
         return records
-    
+
+    def pdb_method(self, args):
+        pdb_id = args['pdb_id']
+        pdb_file = args['pdb_file']
+        p = Pdb(pdb_file, None, self.verbose)
+        p.load_structure()
+        method = p.structure_method
+        resolution = p.resolution
+        if method or resolution:
+            rec = (pdb_id, method, resolution)
+            return [rec,]
+        return []
+        
     def pdb_keyword(self, args):
         pdb_id = args['pdb_id']
         pdb_file = args['pdb_file']
@@ -61,29 +74,51 @@ class BuildRecords:
         for chain_id, pdb_id, model_no, chain_no, chain in p.parse_chains():
             # the column pro_seq is not null
             chain_seq = p._chain_seq(chain)
-            if chain_seq:
-                rec = (chain_id, pdb_id, model_no, chain_no, chain_seq)
-                records.append(rec)
+            rec = (chain_id, pdb_id, model_no, chain_no, chain_seq) if chain_seq \
+                else (chain_id, pdb_id, model_no, chain_no, None)
+            records.append(rec)
         if self.verbose:
             print(f"Warning: no chains {pdb_id} are detectin in {pdb_file}")
         return records
 
-    def pdb_method(self, args):
+    def pdb_chainid(self, args):
+        '''
+        chain_id is unique and could be null
+        '''
         pdb_id = args['pdb_id']
         pdb_file = args['pdb_file']
         p = Pdb(pdb_file, None, self.verbose)
         p.load_structure()
-        method = p.structure_method
-        resolution = p.resolution
-        if method or resolution:
-            rec = (pdb_id, method, resolution)
-            return [rec,]
-        return []
-           
+        records = []
+        for chain_id, pdb_id, model_no, chain_no, chain in p.parse_chains():
+            rec = (pdb_id, model_no, chain_no, chain_id)
+            records.append(rec)
+        if records:
+            return records
+        if self.verbose:
+            print(f"Warning: no chains are detectin in {pdb_id}:{pdb_file}")
+        return [(pdb_id, None, None, None),]
+
+    def pdb_chain_seq(self, args):
+        pdb_id = args['pdb_id']
+        pdb_file = args['pdb_file']
+        p = Pdb(pdb_file, None, self.verbose)
+        p.load_structure()
+        records = []
+        for chain_id, _pdb_id, model_no, chain_no, chain in p.parse_chains():
+            # the column pro_seq is not null
+            chain_seq = p._chain_seq(chain)
+            rec = (chain_id, chain_seq) if chain_seq else (chain_id, None)
+            records.append(rec)
+        if not records and self.verbose:
+            print(f"Warning: no chains {pdb_id} are detectin in {pdb_file}")
+        return records
+
+                 
     def pdb_bfactor(self, args):
         records = []
         pdb_id = args['pdb_id']
-        pfile = args['pfile']
+        pfile = args['pickle_file']
         try:
             data = ProcessPickle(pfile).load_pickle()
             for item in data.get('bfactor', []):
@@ -97,10 +132,13 @@ class BuildRecords:
             if os.path.isfile(pfile):
                 os.remove(pfile)
             print(f"Warning: pfile={pfile}, error={e}")
+        if records == []:
+            records = [(pdb_id, None, None, None,), ]
         return records
 
     def pdb_secondary(self, args):
         pdb_id = args['pdb_id']
+        # note: pdb_file contains only one chain
         pdb_file = args['pdb_file']
         records = []
         try:
@@ -115,7 +153,7 @@ class BuildRecords:
         except Exception as e:
             print(f"ERROR: Fail in pdb_secondary(). error={e}")
         if records == []:
-            records = [(pdb_id, None, None, None),]
+            records = [(pdb_id, args['model_no'], args['chain_no'], None),]
         return records
 
     def align_uniprot(self, args):
@@ -143,6 +181,32 @@ class BuildRecords:
                     records.append(rec0)
         return records
 
+    def uniprot(self, record):
+        p = ParseDatRecord(record)
+        rec = (p.uniprot_acc, p.name, p.organism, p.seq,)
+        return [rec,]
+    
+    def uniprot_keyword(self, record):
+        uniprot_acc = record.id
+        records = []
+        keywords = ParseDatRecord(record).keywords()
+        for keyword in keywords:
+            rec = (uniprot_acc, keyword)
+            if rec not in records:
+                records.append(rec)
+        return records
+
+    def uniprot_dbxrefs(self, record):
+        uniprot_acc = record.id
+        records = []
+        dbxrefs = ParseDatRecord(record).dbxrefs()
+        for k, values in dbxrefs.items():
+            for v in values:
+                rec = (uniprot_acc, k, v)
+                if rec not in records:
+                    records.append(rec)
+        return records
+    
     def uniprot_alphafold_plddt(self, pLDDT_data):
         uniprot_acc = pLDDT_data['uniprot_acc']
         pfile = pLDDT_data['pfile']
@@ -193,9 +257,10 @@ class BuildRecords:
         for region in pi.retrieve_regions():
             chain_id = region['query_id']
             pdb_id = chain_id.split('_')[0]
-            rec0 = (chain_id, pdb_id,)
             if 'percent identity' in region:
-                rec = rec0 + (
+                rec = (
+                    chain_id,
+                    pdb_id,
                     region['region'],
                     region['percent identity'],
                     region['from'],
@@ -206,9 +271,9 @@ class BuildRecords:
                     records.append(rec)
             else:
                 # region name is composite primary key
-                rec0 += ('UN', None, None, None, None)
-                if rec0 not in records:
-                    records.append(rec0)
+                rec = (chain_id, pdb_id, 'UN', None, None, None, None)
+                if rec not in records:
+                    records.append(rec)
         return records
 
     def imgt_genelist(self, record:dict):

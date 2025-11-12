@@ -1,36 +1,20 @@
 
-import os
-import pickle
-from ddt import ddt, data, unpack
-from unittest import TestCase, skip
+from ..helper import *
+from src.bioomics import SasaCalculate
 
-from src.bioomics import CalculateSasa
-
-TESTS_DIR = os.path.dirname(os.path.dirname(__file__))
-DATA_DIR = os.path.join(TESTS_DIR, 'data', 'PDB')
-RESULTS_DIR = os.path.join(TESTS_DIR, 'results')
 
 @ddt
-class TestCalculateSasa(TestCase):
+class TestSasaCalculate(TestCase):
 
     
     @data(
-        ['7S8L', (1096, 20)],
+        ['7S8L', None, (1096, 12)],
+        ['7S8L', True, (1096, 12)],
     )
     @unpack
-    def test_freesasa(self, pdb_id, expect):
-        pdb_file = os.path.join(DATA_DIR, f'{pdb_id}.pdb')
-        c = CalculateSasa(pdb_file)
-        result = c.cal_freesasa(pdb_file)
+    def test_freesasa(self, pdb_id, hetatm, expect):
+        pdb_file = os.path.join(DATA_DIR, 'PDB', f'{pdb_id}.pdb')
+        c = SasaCalculate(pdb_file)
+        result = c.cal_freesasa(None, hetatm)
         assert result.shape == expect
 
-    @data(
-        ['7S8L', 'A', (1096, 20)],
-    )
-    @unpack
-    def test_freesasa(self, pdb_id, chain_id, expect):
-        pdb_file = os.path.join(DATA_DIR, f'{pdb_id}.pdb')
-        c = CalculateSasa(pdb_file)
-        result = c.cal_sasa_df(0, chain_id)
-        print(result)
-        # assert result.shape == expect

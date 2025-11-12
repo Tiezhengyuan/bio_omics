@@ -1,10 +1,13 @@
 '''
-example: python src/pipelines/pdb_rsync.py
+requirements:
+    - enough free space ~500GB
+example:
+    - python src/pipelines/pdb_rsync.py
 functions:
  - download the latest pdb files
  - wrap the commands for running pipelines in multi-rocessing
 '''
-from Bio import SeqIO
+from dotenv import load_dotenv
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
@@ -28,10 +31,11 @@ def wrap_args(args):
     print(f"\n{file_list}\n")
 
 if __name__ == "__main__":
+    load_dotenv()
     args = {
         'overwrite': False,
-        'pdb_dir': '/home/yuan/data/pdb/rsync',
-        'data_dir': '/home/yuan/data/pdb',
+        'pdb_dir': os.getenv("pdb_dir"),
+        'data_dir': os.getenv("data_dir"),
     }
     # donwload pdb
     PullPdb(args['pdb_dir']).synchronize_pdb()

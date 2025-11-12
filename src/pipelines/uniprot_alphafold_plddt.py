@@ -9,6 +9,7 @@ functions:
     - put pLDDT to table uniprot_alphafold_plddt
 '''
 from collections import defaultdict
+from dotenv import load_dotenv
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
@@ -65,10 +66,11 @@ def cal_plddt(rows, args, meta):
 
 if __name__ == "__main__":
     meta = defaultdict(int)
+    load_dotenv()
     args = {
         'verbose': True,
         'overwrite': False,
-        'data_dir': '/home/yuan/data/pdb',
+        'data_dir': os.getenv('data_dir'),
     }
     # retrieve pdb_ids
     rows = retrieve_rows(meta)

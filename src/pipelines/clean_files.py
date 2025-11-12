@@ -1,7 +1,7 @@
 '''
 example:
     - parallel -j3 python src/pipelines/clean_files.py 0 ::: {0..6}
-    - python src/pipelines/clean_files.py 0
+    - python src/pipelines/clean_files.py 11
 '''
 from collections import defaultdict
 import os
@@ -10,7 +10,7 @@ src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-from bioomics import Dir, QueryComplex, UpdateComplex
+from bioomics import Dir, ProcessFasta, QueryComplex, UpdateComplex
 
 
 def clean_empty_files(indir):
@@ -23,13 +23,17 @@ def clean_empty_files(indir):
     print(f"Total {n} files are deleted.")
 
 
-def clean_table_files(table_name, col_name, meta):
+def clean_table_files(table_name, col_name, file_format, meta):
     print(f"Try to confirm local files defined in {table_name}.{col_name}...")
     files = QueryComplex().unique_values(table_name, col_name)
     n = 0
     for path in files:
         n += 1
         if os.path.isfile(path):
+            if file_format == 'fasta':
+                res = ProcessFasta(path).clean_fasta()
+                if res:
+                    meta['having_empty'] += 1
             if os.path.getsize(path) == 0:
                 print("The file is empty. Try to delete ", path)
                 # delete local file
@@ -53,18 +57,35 @@ if __name__ == "__main__":
     meta = defaultdict(int)
     idx = int(sys.argv[1])
     pool = [
-        ('meta_pdb', 'pdb_file'),
-        ('meta_chain_faa', 'faa_file'),
-        ('meta_chain_pdb', 'pdb_file'),
-        ('meta_faa', 'faa_file'),
-        ('uniprot_meta_alphafold', 'pdb_path'),
-        ('uniprot_alphafold_plddt', 'pickle_file'),
-        ('meta_blastp5', 'aln_file'),
-        ('meta_pdb_igblastp', 'aln_file')
+        # 0
+        ('meta_pdb', 'pdb_file', 'pdb'),
+        # 1
+        ('meta_chain_faa', 'faa_file', 'fasta'),
+        # 2
+        ('meta_chain_pdb', 'pdb_file', 'pdb'),
+        # 3
+        ('meta_combo_pdb', 'pdb_file', 'pdb'),
+        # 4
+        ('meta_faa', 'faa_file', 'fasta'),
+        # 5
+        ('meta_pdb_distance', 'pickle_file', 'pickle'),
+        # 6
+        ('meta_pdb_sasa', 'pickle_file', 'pickle'),
+        # 7
+        ('uniprot_meta_alphafold', 'pdb_path', 'pdb'),
+        # 8
+        ('uniprot_alphafold_plddt', 'pickle_file', 'pickle'),
+        # 9
+        ('meta_blastp5', 'aln_file', 'xml'),
+        # 10
+        ('meta_pdb_igblastp', 'aln_file', 'text'),
+        # 11
+        ('meta_bfactor', 'pickle_file', 'pickle'),
+
     ]
     if 0 <= idx < len(pool):
-        table_name, col_name = pool[idx]
-        clean_table_files(table_name, col_name, meta)
+        table_name, col_name, file_format = pool[idx]
+        clean_table_files(table_name, col_name, file_format, meta)
         print('\nSummary:')
         print(f"table:{table_name}, column:{col_name}\n")
         print(meta)

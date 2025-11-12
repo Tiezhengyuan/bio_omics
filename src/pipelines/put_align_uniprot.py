@@ -17,15 +17,7 @@ if src_dir not in sys.path:
 
 from bioomics import QueryComplex, BuildComplex
 
-if __name__ == "__main__":
-
-    pdb_group = sys.argv[1]
-    args = {
-        'verbose': True,
-    }
-    meta = defaultdict(int)
-
-    # insert alignment into table align_uniprot
+def retrieve_pdb(pdb_group, args, meta):
     query = f"""
         SELECT B.pdb_id, B.aln_file
         FROM meta_blastp5 B, meta_pdb P
@@ -36,8 +28,21 @@ if __name__ == "__main__":
             FROM align_uniprot
         );
     """
-    rows = QueryComplex().list_data(query)
+    rows = QueryComplex(args['verbose']).list_data(query)
+    meta['pdb_group'] = int(pdb_group)
     meta['align_uniprot'] = len(rows)
+    return rows
+
+if __name__ == "__main__":
+    args = {
+        'verbose': True,
+    }
+    meta = defaultdict(int)
+
+    pdb_group = sys.argv[1]
+    rows = retrieve_pdb(pdb_group, args, meta)
+
+    # insert alignment into table align_uniprot
     BuildComplex(rows, args['verbose']).insert_align_uniprot()
 
     print(meta)

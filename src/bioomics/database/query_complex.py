@@ -56,16 +56,7 @@ class QueryComplex(QueryDb):
         rows = self.list_data(query)
         return rows
 
-    def get_antibody_seq(self, chain_type:str):
-        query = f"""
-            SELECT chain_id AS id, pdb_id, pro_seq As seq
-            FROM view_antibody_imgt
-            WHERE chain_type IN {chain_type};
-        """
-        rows = self.list_data(query)
-        return rows
-
-    def get_germline_seq(self, chain_type:str):
+    def germline_seq(self, chain_type:str):
         query = f"""
             SELECT G.allele_name AS id, S.seq AS seq
             FROM imgt_gene G, imgt_geneseq S
@@ -78,24 +69,16 @@ class QueryComplex(QueryDb):
         """
         rows = self.list_data(query)
         return rows
-
-    def germline_human_vregion(self, pdb_ids:list):
-        records_pool = {}
-        pool = [
-            ["H", "('H')"],
-            ["K", "('K')"],
-            ["L", "('L')"],
-            ["KL", "('K', 'L')"],
-        ]
-        for chain_type, cond in pool:
-            records_pool[chain_type] = []
-            germlines = self.get_germline_seq(cond)
-            abs = self.get_antibody_seq(cond)
-            for ab in abs:
-                if ab['pdb_id'] in pdb_ids:
-                    item = (ab, germlines)
-                    records_pool[chain_type].append(item)
-        return records_pool
+    
+    def antibody_seq(self, chain_type:str=None):
+        query = f"""
+            SELECT chain_id AS id, pdb_id, chain_seq As seq
+            FROM view_antibody
+            WHERE chain_seq IS NOT NULL
+                AND chain_type IN {chain_type};
+        """
+        rows = self.list_data(query)
+        return rows
     
     def get_seq(self):
         query = """

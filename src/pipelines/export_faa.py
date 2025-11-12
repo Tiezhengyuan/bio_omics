@@ -3,12 +3,13 @@ requirements:
     - PDB data
     - table meta_pdb
 example: 
-    - parallel -j4 python /home/yuan/bio/bio_omics/src/pipelines/export_faa.py ::: {0..46}
-    - python /home/yuan/bio/bio_omics/src/pipelines/export_faa.py 46
+    - parallel -j4 python src/pipelines/export_faa.py ::: {0..46}
+    - python src/pipelines/export_faa.py 46
 functions:
     - retrieve pdb to fasta
     - blastp against uniprot_sprot
 '''
+from dotenv import load_dotenv
 from collections import defaultdict
 import os
 import sys
@@ -17,6 +18,21 @@ if src_dir not in sys.path:
     sys.path.append(src_dir)
 
 from bioomics import Pdb, QueryComplex, BuildComplex
+
+def retrieve_pdb(pdb_group, args, meta):
+    query = f"""
+        SELECT pdb_id, pdb_file
+        FROM meta_pdb
+        WHERE pdb_group = {pdb_group}
+            AND pdb_id NOT IN (
+                SELECT DISTINCT pdb_id
+                FROM meta_faa
+            );
+    """
+    rows = QueryComplex(args['verbose']).list_data(query)
+    meta['pdb_group'] = int(pdb_group)
+    meta['rows'] = len(rows)
+    return rows
 
 def build_faa(args, rows, meta):
     for row in rows:
@@ -27,34 +43,29 @@ def build_faa(args, rows, meta):
         if db_record:
             meta['db_records'] += 1
             yield db_record
+        else:
+            meta['fail'] += 1
 
 if __name__ == "__main__":
     meta = defaultdict(int)
+    load_dotenv()
     args = {
         'verbose': True,
         'overwrite': True,
-        'outdir': '/home/yuan/data/pdb/data',
+        'outdir': os.path.join(os.getenv('data_dir'), 'data'),
+        'chunk_size': 50,
     }
 
     # retrieve pdb_ids
     pdb_group = sys.argv[1]
-    query = f"""
-        SELECT pdb_id, pdb_file
-        FROM meta_pdb
-        WHERE pdb_group = {pdb_group}
-            AND pdb_id NOT IN (
-                SELECT DISTINCT pdb_id
-                FROM meta_faa
-            );
-    """
-    rows = QueryComplex().list_data(query)
-    meta['rows'] = len(rows)
+    rows = retrieve_pdb(pdb_group, args, meta)
 
+    # export faa
     print(f"{len(rows)} PDB files ready for processing...")
     record_iter = build_faa(args, rows, meta)
 
     # insert
-    bc = BuildComplex(record_iter, args['verbose'])
+    bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
     bc.insert_meta_faa()
 
     print(meta)

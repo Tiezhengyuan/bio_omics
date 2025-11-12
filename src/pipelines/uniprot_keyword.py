@@ -22,6 +22,7 @@ if __name__ == "__main__":
         'verbose': True,
         'overwrite': False,
         'uniprot_sprot_dat': '/home/yuan/data/UniProt/uniprot_sprot.dat.gz',
+        'chunk_size': 500,
     }
     table_name = 'uniprot_keyword'
     print(f"Try to insert UniProt data into table {table_name}...")
@@ -38,7 +39,7 @@ if __name__ == "__main__":
         qc = QueryComplex(args['verbose'])
         db_ids = qc.get_unique_values(table_name, 'uniprot_acc')
         records_iter = u.filter_dat_iter(db_ids)
-        bc = BuildComplex(records_iter, args['verbose'])
+        bc = BuildComplex(records_iter, args['verbose'], args['chunk_size'])
         bc.insert_uniprot_keyword()
         print(f'Synchronization data with {table_name} is good.')
 

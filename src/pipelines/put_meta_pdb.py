@@ -8,6 +8,7 @@ example:
 function:
     - build table pdb and insert data into table meta_pdb
 '''
+from dotenv import load_dotenv
 import os
 import re
 import sys
@@ -19,15 +20,15 @@ from bioomics import ProcessJson, BuildComplex, QueryComplex
 
 
 if __name__ == "__main__":
+    load_dotenv()
     args = {
         'verbose': True,
-        'list_dir': '/home/yuan/data/pdb/_list'
-
+        'list_dir': os.getenv("list_dir"),
     }
 
     # build reords
     table_name = 'meta_pdb'
-    pdb_ids = QueryComplex().unique_values(table_name, 'pdb_id')
+    pdb_ids = QueryComplex(args['verbose']).unique_values(table_name, 'pdb_id')
     for file_name in os.listdir(args['list_dir']):
         if file_name.endswith('.json'):
             pdb_group = re.split(r'_|\.', file_name)[1]

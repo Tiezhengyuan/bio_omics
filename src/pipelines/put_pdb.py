@@ -1,9 +1,13 @@
 #!/usr/bin/python
 '''
-Note: PDB raw data should be downloaded to the local
-example: python src/pipelines/put_pdb.py
-function: build table pdb and insert data into table pdb
+requirements:
+    - PDB raw data should be downloaded to the local
+example:
+    - python src/pipelines/put_pdb.py
+function:
+    - build table pdb and insert data into table pdb
 '''
+from dotenv import load_dotenv
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
@@ -14,10 +18,11 @@ from bioomics import PullPdb, BuildComplex, QueryComplex
 
 
 if __name__ == "__main__":
+    load_dotenv()
     args = {
         'verbose': True,
         'new_pdb': False,
-        'pdb_dir': '/home/yuan/data/pdb/rsync',
+        'pdb_dir': os.getenv('pdb_dir'),
         'chunk_size': 100,
     }
 

@@ -11,6 +11,7 @@ functions:
     - put meta data to table meta_pdb_igblastp
 '''
 from collections import defaultdict
+from dotenv import load_dotenv
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
@@ -26,6 +27,7 @@ def retrieve_query(pdb_group, args, meta):
         FROM meta_faa F, meta_pdb P
         WHERE P.pdb_group = {pdb_group}
             AND P.pdb_id = F.pdb_id
+            AND F.faa_file IS NOT NULL
             AND F.pdb_id NOT IN(
                 SELECT pdb_id
                 FROM meta_pdb_igblastp
@@ -33,6 +35,7 @@ def retrieve_query(pdb_group, args, meta):
     """
     rows = QueryComplex(args['verbose']).list_data(query)
     meta['rows'] = len(rows)
+    meta['pdb_group'] = int(pdb_group)
     return rows
 
 def vregion_igblastp(rows, args, meta, outfmt:int=3):
@@ -53,14 +56,15 @@ def vregion_igblastp(rows, args, meta, outfmt:int=3):
             yield row['pdb_id'], aln_file
 
 if __name__ == "__main__":
-    pdb_group = sys.argv[1]
+    meta = defaultdict(int)
+    load_dotenv()
     args = {
         'verbose': True,
         'overwrite': True,
-        'db_vregion': '/home/yuan/data/IMGT/GENE-DB/AA-WithoutGaps-F+ORF+inframeP/region_igblastdb/V-REGION',
+        'db_vregion': os.getenv("db_vregion"),
         'chunk_size': 50,
     }
-    meta = defaultdict(int)
+    pdb_group = sys.argv[1]
     rows = retrieve_query(pdb_group, args, meta)
     # igblastp agaist IMGT V-region
     aln_iter = vregion_igblastp(rows, args, meta)
@@ -69,5 +73,4 @@ if __name__ == "__main__":
     bc = BuildComplex(aln_iter, args['verbose'], args['chunk_size'])
     bc.insert_meta_pdb_igblastp()
 
-    print(f"PDB group: {pdb_group}")
     print(meta)

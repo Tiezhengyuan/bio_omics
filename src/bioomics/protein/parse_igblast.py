@@ -167,6 +167,7 @@ class ParseIgblast:
             sig_hits = self.sig_alignment(block)
             if sig_hits:
                 alignment = self.alignment_summary(block, query_seq)
+                # print(alignment)
                 for region_name, items in alignment.items():
                     rec = {
                         'query_id': query_id,
@@ -327,7 +328,6 @@ class ParseIgblast:
             'end': max(pos),
         }
         region = ''.join(region)
-        # print('=', region, '=')
         gap_seq = ''.join(aln_seq)
         if gap_seq:
             res['gap_seq'] = gap_seq

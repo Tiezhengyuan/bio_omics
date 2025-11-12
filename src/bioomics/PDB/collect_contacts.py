@@ -9,8 +9,8 @@ import pickle
 import requests
 
 from ..common.dir import Dir
-from .analyze_dist import AnalyzeDist
-from .analyze_sasa import AnalyzeSasa
+from .distance_analyze import DistanceAnalyze
+from .sasa_analyze import SasaAnalyze
 from ..protein.analyze_seq import AnalyzeSeq
 
 class CollectContacts:
@@ -84,7 +84,7 @@ class CollectContacts:
         names, sasa = [], []
         path_iter = self.filter_files(pdb_ids, 'freesasa.p')
         for pdb_id, path in path_iter:
-            p = AnalyzeSasa(path)
+            p = SasaAnalyze(path)
             _sasa = p.get_chain_data(type_name, chain_len)
             for chain_id in _sasa:
                 names.append((pdb_id, chain_id[idx]))
@@ -103,7 +103,7 @@ class CollectContacts:
         names, antibody_sasa, antigen_sasa = [], [], []
         path_iter = self.filter_files(pdb_ids, 'freesasa.p')
         for pdb_id, path in path_iter:
-            p = AnalyzeSasa(path)
+            p = SasaAnalyze(path)
             sasa = p.get_chain_data(type_name, chain_len)
             for chain_id in sasa:
                 # print(sasa[chain_id])
@@ -128,7 +128,7 @@ class CollectContacts:
         names, dist = [], []
         path_iter = self.filter_files(pdb_ids, 'dist.p')
         for pdb_id, path in path_iter:
-            p = AnalyzeDist(path)
+            p = DistanceAnalyze(path)
             _dist = p.get_chain_data(type_name, chain_len)
             for chain_id in _dist:
                 names.append((pdb_id, chain_id[idx]))
@@ -148,7 +148,7 @@ class CollectContacts:
         names, antibody_dist, antigen_dist = [], [], []
         path_iter = self.filter_files(pdb_ids, 'dist.p')
         for pdb_id, path in path_iter:
-            p = AnalyzeDist(path)
+            p = DistanceAnalyze(path)
             dist = p.get_chain_data(type_name, chain_len)
             for chain_id in dist:
                 names.append((pdb_id, chain_id[0], chain_id[1]))
@@ -171,7 +171,7 @@ class CollectContacts:
         names, antigen = [], []
         path_iter = self.filter_files(pdb_ids, 'freesasa.p')
         for pdb_id, path in path_iter:
-            p = AnalyzeSasa(path)
+            p = SasaAnalyze(path)
             sasa = p.get_receptor_data()
             for chain_id in sasa:
                 names.append((pdb_id, chain_id[0], chain_id[1]))
@@ -187,7 +187,7 @@ class CollectContacts:
         names, antigen = [], []
         path_iter = self.filter_files(pdb_ids, 'dist.p')
         for pdb_id, path in path_iter:
-            p = AnalyzeDist(path)
+            p = DistanceAnalyze(path)
             dist = p.get_receptor_data()
             for chain_id in dist:
                 names.append((pdb_id, chain_id[0], chain_id[1]))

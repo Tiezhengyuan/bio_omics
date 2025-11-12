@@ -25,22 +25,26 @@ def retrieve_data(pdb_group, args, meta):
         WHERE P.pdb_group = {pdb_group}
             AND P.pdb_id = F.pdb_id
             AND P.pdb_id = I.pdb_id
+            AND F.faa_file IS NOT NULL
+            AND I.aln_file IS NOT NULL
             AND F.pdb_id NOT IN(
                 SELECT DISTINCT pdb_id
                 FROM align_vregion
             );
     """
     rows = QueryComplex(args['verbose']).list_data(query)
+    meta['pdb_group'] = int(pdb_group)
     meta['rows'] = len(rows)
     return rows
 
 
 if __name__ == "__main__":
-    pdb_group = sys.argv[1]
     meta = defaultdict(int)
     args = {
         'verbose': True,
     }
+    
+    pdb_group = sys.argv[1]
     rows = retrieve_data(pdb_group, args, meta)
 
     table_name = 'align_vregion'
@@ -48,6 +52,5 @@ if __name__ == "__main__":
     bc = BuildComplex(rows, args['verbose'])
     bc.insert_align_vregion()
 
-    print(f"PDB group: {pdb_group}")
     print(meta)
 

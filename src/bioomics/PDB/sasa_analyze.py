@@ -6,32 +6,13 @@ import pickle
 
 from .analyze_complex import AnalyzeComplex
 
-class AnalyzeSasa(AnalyzeComplex):
-    def __init__(self, pickle_file, delta_threshold:float=None, \
-        max_span:int=None, verbose:bool=None):
-        super().__init__(pickle_file, max_span, verbose)
-        self.delta_threshold = delta_threshold if delta_threshold else 0
-
-    def print_delta_sasa(self, ix:int):
-        '''
-        print delta SASA
-        '''
-        k1, k2 = self.data[ix]['type'].split('-')
-        c1, c2 = self.data[ix]['chains'][:2]
-        print(f'complex: {k1} chain {c1[0]} ~ {k2} chain {c2[0]}')
-
-
-        print('---'*10)
-        print(f'{k1} chain:')
-        delta1 = self.data[ix]['delta_total_sasa']['delta1']
-        sig1 = delta1[delta1['value'] > self.delta_threshold]
-        print(sig1)
-
-        print('---'*10)
-        print(f'{k2} chain:')
-        delta2 = self.data[ix]['delta_total_sasa']['delta2']
-        sig2 = delta2[delta2['value'] > self.delta_threshold]
-        print(sig2)
+class SasaAnalyze:
+    def __init__(self, data, delta_threshold:float=None, \
+            max_span:int=None, verbose:bool=None):
+        self.data = data
+        self.delta_threshold = float(delta_threshold) if delta_threshold else 0
+        self.max_span = int(max_span) if max_span else 30
+        self.verbose = True if verbose else False
     
     def retrieve_seq(self):
         pairs = []
@@ -62,7 +43,7 @@ class AnalyzeSasa(AnalyzeComplex):
         group, curr = [], []
         for ix, res_no in sig['res_no'].items():
             if curr: 
-                span = self.cal_span(curr[-1][1], res_no)
+                span = AnalyzeComplex.cal_span(curr[-1][1], res_no)
                 if span <= self.max_span:
                     curr.append((ix, res_no))
                 else:
@@ -100,8 +81,8 @@ class AnalyzeSasa(AnalyzeComplex):
             sig1 = delta1[delta1['value']>0]['res_no']
             sig2 = delta2[delta2['value']>0]['res_no']
             #spans
-            span1 = [self.cal_span(a, b) for a, b in zip(sig1[:-1], sig1[1:])]
-            span2 = [self.cal_span(a, b) for a, b in zip(sig2[:-1], sig2[1:])]
+            span1 = [AnalyzeComplex.cal_span(a, b) for a, b in zip(sig1[:-1], sig1[1:])]
+            span2 = [AnalyzeComplex.cal_span(a, b) for a, b in zip(sig2[:-1], sig2[1:])]
             # filter
             span1 = [i for i in span1 if i > 1]
             span2 = [i for i in span2 if i > 1]
@@ -121,7 +102,7 @@ class AnalyzeSasa(AnalyzeComplex):
             # 
             frag1, frag1_len = [], 1
             for ix in range(0, len(sig1)-1):
-                span = self.cal_span(sig1[ix],sig1[ix+1])
+                span = AnalyzeComplex.cal_span(sig1[ix],sig1[ix+1])
                 if span > 1:
                     frag1.append(frag1_len)
                     frag1_len = 1
@@ -133,7 +114,7 @@ class AnalyzeSasa(AnalyzeComplex):
             # 
             frag2, frag2_len = [], 1
             for ix in range(0, len(sig2)-1):
-                span = self.cal_span(sig2[ix],sig2[ix+1])
+                span = AnalyzeComplex.cal_span(sig2[ix],sig2[ix+1])
                 if span > 1:
                     frag2.append(frag2_len)
                     frag2_len = 1
@@ -174,3 +155,24 @@ class AnalyzeSasa(AnalyzeComplex):
             if chain_len is None or (chain_len and chain_len == len(df)):
                 res[chain_id] = df
         return res
+
+    def print_delta_sasa(self, ix:int):
+        '''
+        print delta SASA
+        '''
+        k1, k2 = self.data[ix]['type'].split('-')
+        c1, c2 = self.data[ix]['chains'][:2]
+        print(f'complex: {k1} chain {c1[0]} ~ {k2} chain {c2[0]}')
+
+
+        print('---'*10)
+        print(f'{k1} chain:')
+        delta1 = self.data[ix]['delta_total_sasa']['delta1']
+        sig1 = delta1[delta1['value'] > self.delta_threshold]
+        print(sig1)
+
+        print('---'*10)
+        print(f'{k2} chain:')
+        delta2 = self.data[ix]['delta_total_sasa']['delta2']
+        sig2 = delta2[delta2['value'] > self.delta_threshold]
+        print(sig2)

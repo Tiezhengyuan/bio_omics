@@ -28,3 +28,33 @@ class ProcessFasta:
             if self.verbose:
                 print(f"Failure: Can't write to {self.fa_file}, error={e}")
         return None
+
+    def wrong_fasta(self) -> bool:
+        '''
+        check if a fasta file is good
+        false: sequence is empty string, or not at least one record
+        '''
+        data = self.load_fasta()
+        if not data:
+            return True
+        for record in data:
+            seq = str(record.seq)
+            if len(seq) == 0:
+                return True
+        return False
+
+    def clean_fasta(self):
+        '''
+        remove empty sequence record
+        '''
+        remove_empty = False
+        records = []
+        data = self.load_fasta()
+        for record in data:
+            seq = str(record.seq)
+            if len(seq) > 0:
+                records.append(record)
+            else:
+                remove_empty = True
+        self.to_fasta(records)
+        return remove_empty

@@ -174,6 +174,8 @@ class Pdb(ParseStructure):
         '''
         retrieve sequence by chains from pdb
         '''
+        if meta is None:
+            meta = defaultdict(int)
         cascade_dir = self.init_cascade_outdir()
         outfile = os.path.join(cascade_dir, 'chain_sequences.faa')
         pdb_id = self.structure_id
@@ -185,7 +187,7 @@ class Pdb(ParseStructure):
             for chain_id, _pdb_id, model_no, chain_no, chain in self.parse_chains():
                 chain_seq = self._chain_seq(chain)
                 # only export unique sequences to chain_sequences.faa
-                if chain_seq not in unique_seq:
+                if chain_seq and chain_seq not in unique_seq:
                     record = SeqRecord(
                         Seq(chain_seq),
                         id=chain_id,
@@ -202,7 +204,7 @@ class Pdb(ParseStructure):
 
         if os.path.isfile(outfile):
             return (pdb_id, outfile)
-        return None
+        return (pdb_id, None)
 
       
     def export_chain_faa(self, meta:defaultdict=None, overwrite:bool=False):
@@ -233,16 +235,47 @@ class Pdb(ParseStructure):
             else:
                 meta['skip'] += 1
             if os.path.isfile(outfile):
-                db_records.append((chain_id, outfile))
+                rec = (chain_id, outfile)
+                db_records.append(rec)
         return db_records
 
 
     def export_chain_pdb(self, meta:defaultdict=None, overwrite:bool=False):
         """
-        export by single chain, and two chains combinations
+        export by single chain in .pdb
+        Note: number chain pdb could be more than *.faa
+            because some of structure are not protein
         """
+        db_records = []
         if meta is None:
             meta = defaultdict(int)
+        pdb_id = self.structure_id
+        cascade_dir = self.init_chains_outdir(pdb_id)
+        # retrieve chains
+        chains = self.parse_chains()
+        for chain_id, _pdb_id, model_no, chain_no, chain in chains:
+            chain_seq = self._chain_seq(chain)
+            # only consider limited models
+            if len(chain_seq) > 0 and int(model_no) <= 10:
+                outfile = os.path.join(cascade_dir, f"{chain_id}.pdb")
+                if overwrite or (not os.path.isfile(outfile)):
+                    status = self.to_chain_pdb([chain_no,], outfile)
+                    meta[status] += 1
+                else:
+                    meta['skip'] += 1
+                rec = (chain_id, outfile) if os.path.isfile(outfile) else (chain_id, None)
+                db_records.append(rec)
+        return db_records
+    
+    def export_combo_pdb(self, combo:int=None, meta:defaultdict=None, overwrite:bool=False):
+        """
+        export by two chains combinations
+        """
+        if combo is None:
+            combo = 2
+        if meta is None:
+            meta = defaultdict(int)
+        print(meta)
         meta['pdb'] += 1
 
         chain_no_pool = self.get_chain_no()
@@ -260,35 +293,38 @@ class Pdb(ParseStructure):
         for model_no, _pool in chain_no_pool.items():
             outprefix = os.path.join(cascade_dir, f"{pdb_id}_{model_no}_")
             _pool.sort()
-            for combo in (1, 2,):
-                for _ids in combinations(_pool, combo):
-                    chain_combo = '-'.join(list(_ids))
-                    outfile = outprefix + chain_combo + '.pdb'
-                    if overwrite is True or not os.path.isfile(outfile):
-                        status = self.export_chain_pdb(list(_ids), outfile)
-                        if status:
-                            outfiles.append(outfile)
-                        else:
-                            fail.append(outfile)
+            for _ids in combinations(_pool, combo):
+                chain_combo = '-'.join(list(_ids))
+                outfile = outprefix + chain_combo + '.pdb'
+                if overwrite is True or not os.path.isfile(outfile):
+                    status = self.to_chain_pdb(list(_ids), outfile)
+                    if status:
+                        outfiles.append(outfile)
                     else:
-                        meta['skip_build_faa'] += 1
-                    rec = (pdb_id, model_no, chain_combo, outfile)
-                    records.append(rec)
+                        fail.append(outfile)
+                else:
+                    meta['skip_build_faa'] += 1
+                rec = (pdb_id, model_no, chain_combo, outfile)
+                records.append(rec)
+        if outfiles == []:
+            rec = (pdb_id, None, None, None)
+            records.append(rec)
         meta['succeessful_faa'] += len(outfiles)
         meta['fail_faa'] += len(fail)
         return records
 
 
-    def to_chain_pdb(self, chain_ids:list, outfile):
+    def to_chain_pdb(self, chain_no_pool:list, outfile):
         """
         Save chain while preserving original header information
+        TODO: comfirm 1BAG A chain B is oligo
         """
         try:
             # Write output with header
             io = PDBIO()
             io.set_structure(self.structure)
             # selector
-            _ids = ''.join(chain_ids)
+            _ids = ''.join(chain_no_pool)
             atom_selector = ChainAtomSelect
             if '-' in _ids:
                 atom_selector = LigandAtomSelect
@@ -299,10 +335,10 @@ class Pdb(ParseStructure):
             header_lines = self.header_lines()
             with open(outfile, "w") as f:
                 f.writelines(header_lines)
-                io.save(f, atom_selector(chain_ids))
+                io.save(f, atom_selector(chain_no_pool))
             if self.verbose:
-                print(f"Saved chain {chain_ids} to {outfile}")
+                print(f"Saved chain {chain_no_pool} to {outfile}")
             return True
         except Exception as e:
-            pass
+            print(f'Error: can not extract chain {chain_no_pool} from {self.structure_id}, error={e}')
         return False
