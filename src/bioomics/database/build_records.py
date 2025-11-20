@@ -108,7 +108,9 @@ class BuildRecords:
         for chain_id, _pdb_id, model_no, chain_no, chain in p.parse_chains():
             # the column pro_seq is not null
             chain_seq = p._chain_seq(chain)
-            rec = (chain_id, chain_seq) if chain_seq else (chain_id, None)
+            pro_len = len(chain_seq)
+            rec = (chain_id, pro_len, chain_seq) if chain_seq \
+                else (chain_id, None, None)
             records.append(rec)
         if not records and self.verbose:
             print(f"Warning: no chains {pdb_id} are detectin in {pdb_file}")
@@ -183,7 +185,7 @@ class BuildRecords:
 
     def uniprot(self, record):
         p = ParseDatRecord(record)
-        rec = (p.uniprot_acc, p.name, p.organism, p.seq,)
+        rec = (p.uniprot_acc, p.name, p.organism, len(p.seq), p.seq,)
         return [rec,]
     
     def uniprot_keyword(self, record):
@@ -205,6 +207,26 @@ class BuildRecords:
                 rec = (uniprot_acc, k, v)
                 if rec not in records:
                     records.append(rec)
+        return records
+    
+    def uniprot_feature(self, record):
+        records = []
+        uniprot_acc = record.id
+        features = ParseDatRecord(record).features()
+        for feature in features:
+            rec = (
+                uniprot_acc,
+                feature.get('type'),
+                feature.get('start'),
+                feature.get('end'),
+                feature.get('seq'),
+                feature.get('note'),
+                feature.get('evidence'),
+            )
+            records.append(rec)
+        if not records:
+            rec = (uniprot_acc,) + (None,) * 6
+            records.append(rec)
         return records
     
     def uniprot_alphafold_plddt(self, pLDDT_data):
@@ -285,13 +307,166 @@ class BuildRecords:
         rec = [record.get(i, '') for i in names]
         return [rec,]
 
-    def imgt_gene(self, record:dict):
-        names = ['germline_id', 'specie', 'isotype', 'chain_type', \
-            'gene_name', 'allele_name', 'region_name']
-        rec = [record.get(i, '') for i in names]
+    def imgt_inn(self, inn_data):
+        names = ('inn_number', 'cas_number', 'common_name', 'inn_name',
+            'proposed_list', 'recommended_list', 'receptor_type',
+            'receptor_description', 'species',
+            'molecular_formula', 'glycosylation_sites')
+        rec = [inn_data['inn_file'], ]
+        for name in names:
+            val = inn_data.get(name)
+            if isinstance(val, list):
+                rec.append(','.join(val))
+            else:
+                rec.append(None)
         return [rec,]
+    
+    def imgt_inn_chain(self, inn_data):
+        inn_number = ','.join(inn_data['inn_number'])
+        records = []
+        for chain in inn_data.get('chains', []):
+            seq = chain.get('chain_seq')
+            pro_len = len(seq) if seq else None
+            rec = (
+                inn_number,
+                chain['chain_id'],
+                chain['chain_description'],
+                pro_len,
+                seq,
+            )
+            records.append(rec)
+        return records
+    
+    def imgt_inn_region(self, inn_data):
+        records = []
+        for chain in inn_data.get('chains', []):
+            for region in chain.get('regions', []):
+                rec = (
+                    chain['chain_id'],
+                    region.get('region'),
+                    region.get('type'),
+                    region.get('start'),
+                    region.get('end'),
+                    region.get('seq'),
+                )
+                records.append(rec)
+        return records
+    
+    def imgt_inn_cdomain(self, inn_data):
+        records = []
+        for chain in inn_data.get('chains', []):
+            for domain in chain.get('c_domain', []):
+                rec = (
+                    chain['chain_id'],
+                    domain.get("IMGT domain description"),
+                    ','.join(domain.get("IMGT gene and allele", [])),
+                    domain.get('seq'),
+                    domain.get('seq_align'),
+                )
+                records.append(rec)
+        return records
 
-    def imgt_geneseq(self, record:dict):
-        names = ['germline_id', 'seq_type', 'seq']
-        rec = [record.get(i, '') for i in names]
-        return [rec,]
+    def imgt_inn_vdomain(self, inn_data):
+        records = []
+        for chain in inn_data.get('chains', []):
+            for domain in chain.get('v_domain', []):
+                rec = (
+                    chain['chain_id'],
+                    domain.get("IMGT domain description"),
+                    domain.get("CDR-IMGT length"),
+                    domain.get("FR-IMGT length"),
+                    ','.join(domain.get("IMGT gene and allele", [])),
+                    domain.get('seq'),
+                    domain.get('seq_cdr'),
+                    domain.get('seq_align'),
+                    domain.get('seq_align_cdr'),
+                    domain.get('seq_cdr_mask'),
+                    domain.get('seq_align_cdr_mask'),
+                )
+                records.append(rec)
+        return records
+    
+    def imgt_inn_cdr(self, inn_data):
+        records = []
+        for chain in inn_data.get('chains', []):
+            for domain in chain.get('v_domain', []):
+                for cdr in domain.get('cdr', []):
+                    start, end = cdr.get("start"), cdr.get("end")
+                    len = None
+                    try:
+                        len = end - start + 1
+                    except Exception as e:
+                        pass
+                    rec = (
+                        chain['chain_id'],
+                        cdr.get("name"),
+                        cdr.get("seq"),
+                        cdr.get("align"),
+                        start,
+                        end,
+                        len,
+                    )
+                    records.append(rec)
+        return records
+    
+    def ab_absd_source(self, seq_record):
+        # 'header','dxref_id','vgene_family','source'
+        records = []
+        desc = seq_record.description.split("|||")
+        for _desc in desc[1:]:
+            items = [seq_record.id, desc[0]] + _desc.split(";")
+            records.append(items)
+        return records
+
+    def absd_align_imgt(self, args:dict):
+        seq_id = args['seq_id']
+        faa_file = args['faa_file']
+        aln_file = args['aln_file']
+        pi = ParseIgblast(aln_file, faa_file, self.verbose)
+        records = []
+        for hit in pi.retrieve_hits():
+            if 'allele_name' in hit:
+                rec = (
+                    seq_id,
+                    hit['allele_name'].split('|')[0],
+                    hit['gene_name'],
+                    hit['gene_family'],
+                    hit['chain_type'].upper(),
+                    hit['isotype'].upper(), 
+                    float(hit['e-value']),
+                    float(hit['bits-score']),
+                )
+                if rec not in records:
+                    records.append(rec)
+        if not records:
+            # insert null if not hits detected
+            rec0 = (seq_id,) + (None,) * 7
+            records.append(rec0)
+        return records
+
+    def absd_align_vregion(self, args:dict):
+        seq_id = args['seq_id']
+        faa_file = args['faa_file']
+        aln_file = args['aln_file']
+    
+        pi = ParseIgblast(aln_file, faa_file, self.verbose)
+        records = []
+        for region in pi.retrieve_regions():
+            if 'percent identity' in region:
+                rec = (
+                    seq_id,
+                    region['region'],
+                    region['percent identity'],
+                    region['from'],
+                    region['to'],
+                    region['seq'],
+                )
+                if rec not in records:
+                    records.append(rec)
+        if not records:
+            # region name is composite primary key
+            rec = (seq_id, 'UN', None, None, None, None)
+            records.append(rec)
+        return records
+
+        

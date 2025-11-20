@@ -21,6 +21,7 @@ CREATE TABLE uniprot (
     uniprot_acc     VARCHAR(20),
     name            VARCHAR(100),
     organism        VARCHAR(200),
+    pro_len         INT,
     pro_seq         TEXT,
     CONSTRAINT pk_uniprot PRIMARY KEY (uniprot_acc)
 );
@@ -39,6 +40,19 @@ CREATE TABLE uniprot_dbxrefs (
     db_acc          VARCHAR(50),
     UNIQUE (uniprot_acc, db_name, db_acc),
     CONSTRAINT fk_uniprot_dbxrefs_uniprot FOREIGN KEY (uniprot_acc)
+        REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS uniprot_feature;
+CREATE TABLE uniprot_feature (
+    uniprot_acc     VARCHAR(20),
+    feature         VARCHAR(100),
+    start           VARCHAR(50),
+    end             VARCHAR(50),
+    seq             TEXT,
+    note            TEXT,
+    evidence        TEXT,
+    CONSTRAINT fk_feature_uniprot FOREIGN KEY (uniprot_acc)
         REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 );
 //

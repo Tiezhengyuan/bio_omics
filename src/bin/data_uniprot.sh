@@ -10,9 +10,11 @@ python ${PIPELINE_DIR}/uniprot_keyword.py &
 P1=$!
 python ${PIPELINE_DIR}/uniprot_dbxrefs.py &
 P2=$!
-python ${PIPELINE_DIR}/uniprot_meta_alphafold.py &
+python ${PIPELINE_DIR}/uniprot_feature.py &
 P3=$!
-wait $P1 $P2 $P3
+python ${PIPELINE_DIR}/uniprot_meta_alphafold.py &
+P4=$!
+wait $P1 $P2 $P3 $P4
 
 # pLDDT of alphafold modelling
 python ${PIPELINE_DIR}/uniprot_alphafold_plddt.py

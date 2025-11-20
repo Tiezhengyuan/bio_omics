@@ -93,6 +93,7 @@ CREATE TABLE meta_chain_pdb(
 DROP TABLE IF EXISTS pdb_chain_seq;
 CREATE TABLE pdb_chain_seq(
     chain_id        VARCHAR(20),
+    pro_len         INT,
     chain_seq       TEXT,
     CONSTRAINT pk_chain_seq PRIMARY KEY (chain_id)
 );

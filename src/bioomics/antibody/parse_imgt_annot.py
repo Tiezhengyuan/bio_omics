@@ -57,6 +57,7 @@ class ParseImgtAnnot:
         for i, line in enumerate(self.lines):
             if key in line:
                 _line = self.lines[i+1].strip().replace('REMARK 410 ', '')
+                _line = re.sub(r'\"$', '', _line)
                 values = _line.split(',')
                 return [i.strip() for i in values]
         return default

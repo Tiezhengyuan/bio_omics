@@ -190,3 +190,22 @@ class QueryComplex(QueryDb):
         if rows:
              return rows
         return []
+
+    def detect_new_seq(self, df):
+        '''
+        columns of df is pro_len, seq
+        '''
+        g = df.groupby('pro_len')
+        for pro_len, sub in g:
+            input_seq = [i['seq'] for i in sub]
+            query = f"""
+                SELECT pro_seq AS seq
+                FROM protein_seq
+                WHERE pro_len = {pro_len}
+            """
+            rows = self.list_data(query, True)
+            if rows:
+                db_seq = [i['seq'] for i in rows]
+                new_seq = set(input_seq).difference(db_seq)
+                yield pro_len, list(new_seq)
+

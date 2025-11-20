@@ -1,4 +1,5 @@
 from Bio import SeqIO
+from collections import defaultdict
 from copy import deepcopy
 import os
 import re
@@ -22,21 +23,14 @@ class Imgt(ProcessData):
     3D-DB: INN
     '''
     def retrieve_inn(self):
-        s, f = 0, 0
         data = []
-        indir = os.path.join(self.data_dir, '3Dstructure-DB', 'IMGT3DFlatFiles')
-        for gz_file in self.recursive_files(indir):
-            if gz_file.endswith('.inn.gz'):
-                try:
-                    res = ParseImgtAnnot(gz_file)()
-                    data.append(res)
-                    s += 1
-                except Exception as e:
-                    print(f"{gz_file}, error={e}")
-                    f += 1
+        for inn_data in self.get_inn_data():
+            if inn_data:
+                data.append(inn_data)
         outfile = os.path.join(self.data_dir, 'imgt_inn.json')
         self.save_json(data, outfile)
-        print(f"{outfile}, succeed={s}, fail={f}")
+        if self.verbose:
+            print(f"Save INN data to {outfile}")
     
     def build_inn_sequence(self, outprefix:str):
         res = {'chain':[],}

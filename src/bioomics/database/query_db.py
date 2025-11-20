@@ -45,3 +45,10 @@ class QueryDb:
             return list(rows[col_name])
         return []
 
+    def next_id(self, table_name, col_name):
+        query = f"""
+            SELECT MAX({col_name}) AS id FROM {table_name};
+        """
+        res = self.list_data(query, False)
+        curr = res[0]['id']
+        return int(curr) + 1 if curr else 1

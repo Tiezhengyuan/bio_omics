@@ -2,8 +2,8 @@
 requirements:
     - table pdb_chain, meta_chain_faa
 example: 
-    - parallel -j4 python src/pipelines/ab_imgt_msa.py ::: {0..46}
-    - python src/pipelines/ab_imgt_msa.py 46
+    - parallel -j4 python src/pipelines/imgt_msa.py ::: {0..46}
+    - python src/pipelines/imgt_msa.py 46
 functions:
     - collect data from tables and perform MSA
 '''

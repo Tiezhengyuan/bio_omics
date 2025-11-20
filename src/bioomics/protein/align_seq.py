@@ -11,7 +11,8 @@ from Bio.Seq import Seq
 
 class AlignSeq:
 
-    def __init__(self, verbose:bool=False):
+    def __init__(self, bin_dir=None, verbose:bool=False):
+        self.bin_dir = bin_dir
         self.verbose = verbose
 
     @staticmethod    
@@ -53,8 +54,10 @@ class AlignSeq:
 
     def muscle(self, fa_file:str, outfile:str, large_msa:bool=None):
         # alignment
+        muscle = os.path.join(self.bin_dir, 'muscle') if self.bin_dir \
+            else 'muscle'
         method = '-super5' if large_msa else '-align'
-        cmd = ['muscle', method, fa_file, '-output', outfile,]
+        cmd = [muscle, method, fa_file, '-output', outfile,]
         cmd = ' '.join(cmd)
         try:
             if self.verbose:

@@ -80,7 +80,8 @@ class BuildComplex(BuildDb):
     def insert_pdb_chain_seq(self) -> tuple:
         table_name = 'pdb_chain_seq'
         insert_query = f"""INSERT INTO {table_name} 
-            (chain_id, chain_seq) VALUES (%s, %s)"""
+            (chain_id, pro_len, chain_seq)
+            VALUES (%s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         return self.insert(table_name, insert_query, func)
 
@@ -194,25 +195,25 @@ class BuildComplex(BuildDb):
             (species, gene_db, gene_function, gene_definition,
                 number_alleles, chromosome, chromosomal_loc,
                 ligm_db_ref_gene, ncbi_gene, chain, domain)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
     def insert_imgt_gene(self) -> tuple:
         table_name = 'imgt_gene'
         insert_query = f"""INSERT INTO {table_name}
-            (germline_id, specie, isotype, chain_type,
+            (record_id, specie, isotype, chain_type,
                 gene_name, allele_name, region_name)
             VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-        func = getattr(self.recorder, table_name)
+        func = lambda rec: [rec,]
         self.insert(table_name, insert_query, func)
 
     def insert_imgt_geneseq(self) -> tuple:
         table_name = 'imgt_geneseq'
         insert_query = f"""INSERT INTO {table_name}
-            (germline_id, seq_type, seq)
-            VALUES (%s, %s, %s)"""
-        func = getattr(self.recorder, table_name)    
+            (record_id, seq_type, seq) VALUES (%s, %s, %s)"""
+        func = lambda rec: [rec,]
         self.insert(table_name, insert_query, func)
 
     def insert_msa_vregion(self) -> tuple:
@@ -223,13 +224,73 @@ class BuildComplex(BuildDb):
         func = lambda rec: [rec,]
         self.insert(table_name, insert_query, func)
 
+    def insert_imgt_inn(self) -> tuple:
+        table_name = 'imgt_inn'
+        insert_query = f"""INSERT INTO {table_name}
+            (inn_file, inn_number, cas_number, common_name, 
+                inn_name, proposed_list, recommended_list, 
+                receptor_type, receptor_description, species,
+                molecular_formula, glycosylation_sites)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+    def insert_imgt_inn_chain(self) -> tuple:
+        table_name = 'imgt_inn_chain'
+        insert_query = f"""INSERT INTO {table_name}
+            (inn_number, chain_id, chain_description, pro_len, chain_seq)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+    def insert_imgt_inn_region(self) -> tuple:
+        table_name = 'imgt_inn_region'
+        insert_query = f"""INSERT INTO {table_name}
+            (chain_id, region_name, region_type, start, end, seq)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+    def insert_imgt_inn_cdomain(self) -> tuple:
+        table_name = 'imgt_inn_cdomain'
+        insert_query = f"""INSERT INTO {table_name}
+            (chain_id, domain_name, gene_allele, seq, seq_align)
+            VALUES (%s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+    def insert_imgt_inn_vdomain(self) -> tuple:
+        table_name = 'imgt_inn_vdomain'
+        insert_query = f"""INSERT INTO {table_name}
+            (chain_id, domain_name, cdr_length, fr_length,
+            gene_allele, seq, seq_cdr, seq_align, seq_align_cdr,
+            seq_cdr_mask, seq_align_cdr_mask)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+    def insert_imgt_inn_cdr(self) -> tuple:
+        table_name = 'imgt_inn_cdr'
+        insert_query = f"""INSERT INTO {table_name}
+            (chain_id, cdr_type, seq, seq_align,
+            align_start, align_end, align_length)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
 ########################
 
     def insert_uniprot(self) -> tuple:
         table_name = 'uniprot'
         insert_query = f"""INSERT INTO {table_name}
-            (uniprot_acc, name, organism, pro_seq)
-            VALUES (%s, %s, %s, %s)"""
+            (uniprot_acc, name, organism, pro_len, pro_seq)
+            VALUES (%s, %s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
@@ -245,6 +306,14 @@ class BuildComplex(BuildDb):
         insert_query = f"""INSERT INTO {table_name}
             (uniprot_acc, db_name, db_acc)
             VALUES (%s, %s, %s)"""
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+    def insert_uniprot_feature(self) -> tuple:
+        table_name = 'uniprot_feature'
+        insert_query = f"""INSERT INTO {table_name}
+            (uniprot_acc, feature, start, end, seq, note, evidence)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
@@ -301,21 +370,115 @@ class BuildComplex(BuildDb):
         self.insert(table_name, insert_query, func)
 
 #####################
+    def insert_ab_aacdb(self):
+        # AACDB
+        table_name = 'ab_aacdb'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, antibody_chains, antigen_chains,
+                antibody, protein, drug, targets, method,
+                organism, resolution, reference)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
 
+    def insert_meta_sabdab(self):
+        # SAbDab
+        table_name = 'meta_sabdab'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, summary_file) VALUES (%s, %s)
+        """
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
 
-    def record_aacdb(self):
-        '''
-        self.data is df of aacdb summary
-        '''
-        for ix, row in self.data.iterrows():
-            pdb_id = row['pdb'].upper()
-            chains = row['chains'].split('_')
-            rec = (
-                pdb_id,
-                chains[0],
-                chains[1] if len(chains) > 1 else None,
-                row['antibody'] ,
-                row['protein'],
-                None if np.isnan(row['resolution']) else row['resolution'],
-            )
-            yield pdb_id, [rec,]
+    def insert_ab_sabdab(self):
+        # SAbDab
+        table_name = 'ab_sabdab'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, model, heavy_chain, light_chain,
+                antigen_chain, antigen_type, resolution)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_ab_abybank(self):
+        # abYbank
+        table_name = 'ab_abybank'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, chain_type, chain_numbering)
+            VALUES (%s, %s, %s)
+        """
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+    
+    def insert_absd_source(self):
+        table_name = 'absd_source'
+        insert_query = f"""INSERT INTO {table_name}
+            (seq_id, absd_id, header, dxref_id, vgene_family, source)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+    def insert_absd_seq(self):
+        table_name = 'absd_seq'
+        insert_query = f"""INSERT INTO {table_name}
+            (absd_id, specie, version, pro_len, pro_seq, record_id)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_absd_faa(self):
+        table_name = 'absd_faa'
+        insert_query = f"""INSERT INTO {table_name}
+            (seq_id, faa_file) VALUES (%s, %s)
+        """
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_absd_igblastp(self):
+        table_name = 'absd_igblastp'
+        insert_query = f"""INSERT INTO {table_name}
+            (seq_id, aln_file) VALUES (%s, %s)
+        """
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_absd_align_imgt(self) -> tuple:
+        table_name = 'absd_align_imgt'
+        insert_query = f"""INSERT INTO {table_name}
+            (seq_id, allele_name, gene_name, gene_family,
+                chain_type, isotype, evalue, bit_score)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+    def insert_absd_align_vregion(self) -> tuple:
+        table_name = 'absd_align_vregion'
+        insert_query = f"""INSERT INTO {table_name}
+            (seq_id, region_name, identity, start, end, seq)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+#######################
+
+    def insert_protein_seq(self):
+        table_name = 'protein_seq'
+        insert_query = f"""INSERT INTO {table_name}
+            (pro_id, prefix, pro_len, pro_seq)
+            VALUES (%s, %s, %s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_protein_source(self):
+        table_name = 'protein_source'
+        insert_query = f"""INSERT INTO {table_name}
+            (pro_id, source_name, source_id)
+            VALUES (%s, %s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)

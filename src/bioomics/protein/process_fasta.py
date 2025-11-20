@@ -1,10 +1,35 @@
 from Bio import SeqIO
-
+from Bio.Seq import Seq
+from Bio.SeqRecord import SeqRecord
+import pandas as pd
 
 class ProcessFasta:
     def __init__(self, fa_file:str, verbose:bool=False):
         self.fa_file = fa_file
         self.verbose = verbose
+
+    def row_seq(self, rows):
+        records = []
+        for row in rows:
+            rec = SeqRecord(
+                Seq(row['seq']),
+                id= str(row['id']),
+                description=row.get('description', '')
+            )
+            records.append(rec)
+        return self.to_fasta(records)
+    
+    def unique_sequences(self, df):
+        records = []
+        g = df.groupby('seq')
+        for seq, sub in g:
+            rec = SeqRecord(
+                Seq(seq),
+                id = sub['id'].str.cat(sep=','),
+                description=''
+            )
+            records.append(rec)
+        return self.to_fasta(records)
 
     def to_fasta(self, records):
         try:

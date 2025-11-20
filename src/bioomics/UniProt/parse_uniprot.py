@@ -18,7 +18,7 @@ class ParseUniprot:
         n, m = 0, 0
         data = []
         dat_file = os.path.join(self.outdir, f'uniprot_{name}.dat.gz')
-        record_iter = UniProt(dat_file).dat_iter()
+        record_iter = Uniprot(dat_file).dat_iter()
         for record in record_iter:
             rec_parser = ParseDatRecord(record)
             n += 1
@@ -42,7 +42,7 @@ class ParseUniprot:
         print('Path: ', dat_file)
         record_iter = Uniprot(dat_file).dat_iter()
         for record in record_iter:
-            rec_parser = ParsetDatRecord(record)
+            rec_parser = ParseDatRecord(record)
             n += 1
             if rec_parser.is_drug():
                 rec = rec_parser.basic()

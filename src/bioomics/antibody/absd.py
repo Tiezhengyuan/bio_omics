@@ -44,6 +44,8 @@ class Absd(ProcessData):
         file_iter = self.recursive_files(self.data_dir)
         for path in file_iter:
             if path.endswith(extension):
+                if self.verbose:
+                    print(path)
                 file_name = os.path.basename(path)
                 specie = '_'.join(re.split(r'\s|_|\.', file_name)[:2])
                 yield specie, path

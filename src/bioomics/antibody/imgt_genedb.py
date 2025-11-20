@@ -140,6 +140,7 @@ class ImgtGenedb(Imgt):
         '''
         for postfix, parser in self.parse_fasta_file():
             for record in parser:
+                record_id = record.id
                 items = record.description.split('|')
                 allele_name, region_name = items[1], items[4]
                 gene_name = allele_name.split('*')[0]
@@ -153,6 +154,8 @@ class ImgtGenedb(Imgt):
                     self.data[organism][gene_name][region_name] = {}
                 if allele_name not in self.data[organism][gene_name][region_name]:
                     self.data[organism][gene_name][region_name][allele_name] = {
+                        'record_id': record_id,
+                        'organism': organism,
                         'specie': items[2],
                         'gene_name': gene_name,
                         'region': region_name,

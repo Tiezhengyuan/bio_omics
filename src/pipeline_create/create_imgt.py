@@ -33,23 +33,20 @@ CREATE TABLE imgt_genelist (
 //
 DROP TABLE IF EXISTS imgt_gene;
 CREATE TABLE imgt_gene (
-    germline_id         INT PRIMARY KEY,
-    specie              VARCHAR(100),
-    isotype             VARCHAR(10),
-    chain_type          VARCHAR(10),
-    gene_name           VARCHAR(20),
-    allele_name         VARCHAR(20),
-    region_name         VARCHAR(50)
+    record_id       VARCHAR(100),
+    specie          VARCHAR(100),
+    isotype         VARCHAR(10),
+    chain_type      VARCHAR(10),
+    gene_name       VARCHAR(20),
+    allele_name     VARCHAR(20),
+    region_name     VARCHAR(50)
 );
 //
 DROP TABLE IF EXISTS imgt_geneseq;
 CREATE TABLE imgt_geneseq (
-    germline_id     INT,
+    record_id       VARCHAR(100),
     seq_type        VARCHAR(100),
-    seq             TEXT,
-    UNIQUE (germline_id, seq_type),
-    CONSTRAINT fk_imgt_genseq_gene FOREIGN KEY (germline_id)
-    REFERENCES imgt_gene(germline_id) ON DELETE CASCADE
+    seq             TEXT
 );
 //
 DROP TABLE IF EXISTS msa_vregion;
@@ -60,6 +57,80 @@ CREATE TABLE msa_vregion (
     aln_file        VARCHAR(100),
     pickle_file     VARCHAR(100),
     UNIQUE (chain_id, chain_types)
+);
+//
+DROP TABLE IF EXISTS imgt_inn;
+CREATE TABLE imgt_inn (
+    inn_number              VARCHAR(50),
+    cas_number              VARCHAR(100),
+    common_name             VARCHAR(100),
+    inn_name                VARCHAR(100),
+    proposed_list           VARCHAR(50),
+    recommended_list        VARCHAR(50),
+    receptor_type	        VARCHAR(50),
+    receptor_description    VARCHAR(100),
+    species    	            VARCHAR(50),
+    molecular_formula       VARCHAR(50),
+    glycosylation_sites     VARCHAR(200),
+    inn_file                VARCHAR(100),
+    CONSTRAINT pk_inn PRIMARY KEY (inn_number)
+);
+//
+DROP TABLE IF EXISTS imgt_inn_chain;
+CREATE TABLE imgt_inn_chain (
+    inn_number              VARCHAR(50),
+    chain_id                VARCHAR(50),
+    chain_description       VARCHAR(200),
+    pro_len                 INT,
+    chain_seq               TEXT,
+    CONSTRAINT pk_inn_chain PRIMARY KEY (chain_id),
+    CONSTRAINT fk_chain_inn FOREIGN KEY (inn_number)
+    REFERENCES imgt_inn(inn_number) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS imgt_inn_region;
+CREATE TABLE imgt_inn_region (
+    chain_id        VARCHAR(50),
+    region_name     VARCHAR(50),
+    region_type     VARCHAR(50),
+    start           INT,
+    end             INT,
+    seq             TEXT
+);
+//
+DROP TABLE IF EXISTS imgt_inn_cdomain;
+CREATE TABLE imgt_inn_cdomain (
+    chain_id        VARCHAR(50),
+    domain_name     VARCHAR(50),
+    gene_allele     TEXT,
+    seq             TEXT,
+    seq_align       TEXT
+);
+//
+DROP TABLE IF EXISTS imgt_inn_vdomain;
+CREATE TABLE imgt_inn_vdomain (
+    chain_id            VARCHAR(50),
+    domain_name         VARCHAR(50),
+    cdr_length          VARCHAR(50),
+    fr_length           VARCHAR(50),
+    gene_allele         TEXT,
+    seq                 TEXT,
+    seq_cdr             TEXT,
+    seq_align           TEXT,
+    seq_align_cdr       TEXT,
+    seq_cdr_mask        TEXT,
+    seq_align_cdr_mask  TEXT
+);
+//
+DROP TABLE IF EXISTS imgt_inn_cdr;
+CREATE TABLE imgt_inn_cdr (
+    chain_id        VARCHAR(50),
+    cdr_type        VARCHAR(50),
+    seq             VARCHAR(200),
+    seq_align       VARCHAR(200),
+    align_start     INT,
+    align_end       INT,
+    align_length    INT
 );
 """
 

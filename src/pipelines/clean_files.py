@@ -81,7 +81,12 @@ if __name__ == "__main__":
         ('meta_pdb_igblastp', 'aln_file', 'text'),
         # 11
         ('meta_bfactor', 'pickle_file', 'pickle'),
-
+        # 12
+        ('meta_dabsab', 'summary_file', 'text'),
+        # 13
+        ('ab_absd_faa', 'faa_file', 'fasta'),
+        # 14
+        ('ab_absd_aln', 'aln_file', 'text'),
     ]
     if 0 <= idx < len(pool):
         table_name, col_name, file_format = pool[idx]
