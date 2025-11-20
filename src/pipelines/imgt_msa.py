@@ -56,7 +56,7 @@ def align_germline(row_iter, args, meta):
     for chain_type, ab, germlines in row_iter:
         chain_id = ab['id']
         pdb_id = ab['pdb_id']
-        outdir = os.path.join(args['outdir'], pdb_id[:2], pdb_id, 'MSA')
+        outdir = os.path.join(args['data_dir'], 'data', pdb_id[:2], pdb_id, 'MSA')
         Dir(outdir).init_dir()
         outprefix = os.path.join(outdir, f"{chain_id}.{chain_type}")
 
@@ -73,7 +73,8 @@ def align_germline(row_iter, args, meta):
         # multiple sequence alignment
         aln_file = outprefix + '.habs.afa'
         if args['overwrite'] or not os.path.isfile(aln_file):
-            AlignSeq(args['verbose']).muscle(fa_file, aln_file, large_msa=True)
+            s = AlignSeq(args['muscle_bin'], args['verbose'])
+            s.muscle(fa_file, aln_file, large_msa=True)
             meta['muscle_alignment'] += 1
         else:
             meta['skip_muscle_alignment'] += 1
@@ -112,7 +113,8 @@ if __name__ == "__main__":
     args = {
         'verbose':True,
         'overwrite':False,
-        'outdir': os.path.join(os.getenv("data_dir"), 'data'),
+        'data_dir': os.getenv("data_dir"),
+        'muscle_bin': os.getenv('muscle_bin'),
         'chunk_size': 10,
     }
     pdb_group = sys.argv[1]

@@ -1,3 +1,4 @@
+from collections import defaultdict
 import pandas as pd
 
 from .query_db import QueryDb
@@ -209,3 +210,15 @@ class QueryComplex(QueryDb):
                 new_seq = set(input_seq).difference(db_seq)
                 yield pro_len, list(new_seq)
 
+    def parse_pro_id(self, source_name):
+        query = f"""
+            SELECT pro_id, source_id
+            FROM protein_source
+            WHERE source_name = '{source_name}';
+        """
+        rows = self.list_data(query)
+        ids = defaultdict(list)
+        for row in rows:
+            pro_id = int(row['pro_id'])
+            ids[pro_id].append(row['source_id'])
+        return ids

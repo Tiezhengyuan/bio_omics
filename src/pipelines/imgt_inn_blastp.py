@@ -14,7 +14,7 @@ src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-from bioomics import Dir, QueryComplex, ProcessFasta, ProcessBlast
+from bioomics import Dir, QueryComplex, ProcessFasta, ProcessBlast, BuildComplex
 
 def pull_data(args, meta):
     query = '''
@@ -54,5 +54,12 @@ if __name__ == "__main__":
         pb = ProcessBlast(args['outdir'], args['verbose'])
         pb.blastp(fa_file, args['db_pdb_antibody'], aln_file, outfmt)
     
+
+    # insert aignment
+    table_name = 'imgt_inn_blastp'
+    bc = BuildComplex([aln_file,], args['verbose'])
+    bc.empty_table(table_name)
+    bc.insert_imgt_inn_blastp()
+
     print(meta)
 

@@ -9,9 +9,9 @@ from ..common.dir import Dir
 
 class ProcessIgblast:
 
-    def __init__(self, outdir:str=None, verbose:bool=False):
+    def __init__(self, bin_dir:str, outdir:str=None, verbose:bool=False):
         # igblast bin
-        self.bin_dir = '/home/yuan/data/ncbi-igblast-1.22.0/bin'
+        self.bin_dir = bin_dir
         if self.bin_dir not in sys.path:
             sys.path.append(self.bin_dir)
         # outdir

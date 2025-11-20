@@ -44,7 +44,7 @@ def retrieve_query(pdb_group, args, meta):
 
 def cal_dist(pdb_iter, args, meta):
     for pdb_id, sub in pdb_iter:
-        pfile = os.path.join(args['outdir'], pdb_id[:2], pdb_id, 'pair_distance.pkl')
+        pfile = os.path.join(args['data_dir'], 'data', pdb_id[:2], pdb_id, 'pair_distance.pkl')
         if args['overwrite'] or (not os.path.isfile(pfile)):
             data = []
             for _, row in sub.iterrows():
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     args = {
         'verbose': True,
         'overwrite': True,
-        'outdir': os.path.join(os.getenv("data_dir"), 'data'),
+        'data_dir': os.getenv("data_dir"),
         'chunk_size': 20,
     }
     meta = defaultdict(int)

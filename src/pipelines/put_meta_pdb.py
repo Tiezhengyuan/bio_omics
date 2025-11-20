@@ -23,16 +23,17 @@ if __name__ == "__main__":
     load_dotenv()
     args = {
         'verbose': True,
-        'list_dir': os.getenv("list_dir"),
+        'data_dir': os.getenv("data_dir"),
     }
+    list_dir = os.path.join(args['data_dir'], '_list')
 
     # build reords
     table_name = 'meta_pdb'
     pdb_ids = QueryComplex(args['verbose']).unique_values(table_name, 'pdb_id')
-    for file_name in os.listdir(args['list_dir']):
+    for file_name in os.listdir(list_dir):
         if file_name.endswith('.json'):
             pdb_group = re.split(r'_|\.', file_name)[1]
-            path = os.path.join(args['list_dir'], file_name)
+            path = os.path.join(list_dir, file_name)
             print(f"Load meta data from {path}")
             meta = ProcessJson.load_json(path)
             records = []

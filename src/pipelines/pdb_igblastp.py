@@ -45,7 +45,7 @@ def vregion_igblastp(rows, args, meta, outfmt:int=3):
             outdir = os.path.dirname(query_fa)
             aln_file = os.path.join(outdir, f'chain_sequences.vregion.igblastp{outfmt}')
             if args['overwrite'] or not os.path.isfile(aln_file):
-                pb = ProcessIgblast(verbose=args['verbose'])
+                pb = ProcessIgblast(args['igblast_bin'], None, args['verbose'])
                 status = pb.igblastp(query_fa, args['db_vregion'], aln_file, outfmt)
                 meta[status] += 1
             else:
@@ -61,8 +61,9 @@ if __name__ == "__main__":
     args = {
         'verbose': True,
         'overwrite': True,
-        'db_vregion': os.getenv("db_vregion"),
         'chunk_size': 50,
+        'db_vregion': os.getenv("db_vregion"),
+        'igblast_bin': os.getenv("igblast_bin"),
     }
     pdb_group = sys.argv[1]
     rows = retrieve_query(pdb_group, args, meta)

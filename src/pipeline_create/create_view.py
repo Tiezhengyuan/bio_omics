@@ -2,10 +2,10 @@
 '''
 requirements:
     - a empty database is created.
-example: python src/pipelines/complex_create.py
+example:
+    - python src/pipeline_create/create_view.py
 functions:
-    - build database known as complex2
-    - build tables
+    - create views for database COMPLEX2
 '''
 import os
 import sys
@@ -39,7 +39,8 @@ DROP VIEW IF EXISTS view_pdb_chain;
 CREATE VIEW view_pdb_chain AS
     SELECT C.chain_id, X.pro_id, C.pdb_id, C.model_no,
         C.chain_no, D.structure_method, D.resolution,
-        S.chain_seq, F.faa_file, P.pdb_file, D.pdb_group
+        S.chain_seq, D.release_date,
+        F.faa_file, P.pdb_file, D.pdb_group
     FROM pdb_chainid C
     LEFT JOIN pdb_chain_seq S
         ON C.chain_id = S.chain_id
@@ -77,7 +78,7 @@ DROP VIEW IF EXISTS view_antibody;
 CREATE VIEW view_antibody AS
     SELECT I.allele_name, I.gene_name, I.gene_family,
         I.chain_type, C.pdb_id, C.chain_id, C.model_no,
-        C.chain_no, C.pro_id, C.chain_seq,
+        C.chain_no, C.pro_id, C.chain_seq, C.release_date,
         C.structure_method, C.resolution,
         C.faa_file, C.pdb_file, C.pdb_group
     FROM view_pdb_chain C, align_imgt I
@@ -164,8 +165,24 @@ CREATE VIEW view_allergen AS
     ON C.uniprot_acc = U.uniprot_acc
     LEFT JOIN uniprot_dbxrefs D
     ON C.uniprot_acc = D.uniprot_acc
-    WHERE U.organism LIKE '%Homo sapiens%'
-        AND D.db_name = 'allergome'
+    WHERE D.db_name = 'allergome'
+        AND U.organism LIKE '%Homo sapiens%'
+        
+;
+//
+DROP VIEW IF EXISTS view_inn_pdb;
+CREATE VIEW view_inn_pdb AS 
+    SELECT B.inn_chain_id, B.pdb_chain_id, P.pdb_id,
+        I.inn_number, A.common_name, A.inn_name,
+        A.receptor_type, A.receptor_description, I.chain_seq
+    FROM imgt_inn_blastp B
+    LEFT JOIN pdb_chainid P
+        ON B.pdb_chain_id = P.chain_id
+    LEFT JOIN imgt_inn_chain I
+        ON B.inn_chain_id = I.chain_id
+    LEFT JOIN imgt_inn A
+        ON I.inn_number = A.inn_number
+    WHERE B.identity = 1
 ;
 """
 

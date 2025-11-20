@@ -69,6 +69,17 @@ CREATE TABLE align_vregion (
     CONSTRAINT fk_vregion_chain FOREIGN KEY (chain_id)
         REFERENCES pdb_chain(chain_id)
 );
+//
+DROP TABLE IF EXISTS imgt_inn_blastp;
+CREATE TABLE imgt_inn_blastp(
+    query_pro_id    INT,
+    inn_chain_id    VARCHAR(20),
+    ref_pro_id      INT,
+    pdb_chain_id    VARCHAR(20),
+    evalue          DOUBLE,
+    bit_score       INT,
+    identity        FLOAT
+);
 """
 
 #####################################################################################

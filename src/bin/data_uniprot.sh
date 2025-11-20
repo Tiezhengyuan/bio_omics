@@ -18,3 +18,6 @@ wait $P1 $P2 $P3 $P4
 
 # pLDDT of alphafold modelling
 python ${PIPELINE_DIR}/uniprot_alphafold_plddt.py
+
+# RMSD between chain pdb and uniprot prediction by alphafold
+parallel -j4 python ${PIPELINE_DIR}/uniprot_alphafold_rmsd.py ::: {0..46}

@@ -284,6 +284,18 @@ class BuildComplex(BuildDb):
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
+    def insert_imgt_inn_blastp(self) -> tuple:
+        '''
+        note: single one *.blastp5
+        '''
+        table_name = 'imgt_inn_blastp'
+        insert_query = f"""INSERT INTO {table_name}
+            (query_pro_id, inn_chain_id, ref_pro_id, pdb_chain_id,
+                evalue, bit_score, identity)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)"""
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func, 2)
+
 ########################
 
     def insert_uniprot(self) -> tuple:

@@ -31,7 +31,3 @@ P9=$!
 python ${PIPELINE_DIR}/imgt_inn_cdr.py &
 P10=$!
 wait $P7 $P8 $P9 $P10
-
-# identify INN sequences
-python ${PIPELINE_DIR}/ab_blastp_db.py
-python ${PIPELINE_DIR}/imgt_inn_blastp.py

@@ -6,6 +6,7 @@ from ..common import ProcessPickle
 from ..PDB import AnalyzeDssp, Pdb
 from ..protein import ParseBlastXml, ParseIgblast
 from ..UniProt import ParseDatRecord
+from .query_complex import QueryComplex
 
 class BuildRecords:
 
@@ -409,6 +410,35 @@ class BuildRecords:
                     records.append(rec)
         return records
     
+    def imgt_inn_blastp(self, aln_file):
+        # parse pro_ids
+        qc = QueryComplex(self.verbose)
+        query_pro_ids = qc.parse_pro_id('imgt_inn_chain')
+        ref_pro_ids = qc.parse_pro_id('pdb_chain_seq')
+        
+        records = []
+        best_hits = ParseBlastXml(aln_file).best_hits()
+        for hit in best_hits:
+            query_id = int(hit['query'])
+            for inn_chain_id in query_pro_ids[query_id]:
+                rec0 = (query_id, inn_chain_id)
+                if 'hit_desc' in hit:
+                    ref_id = int(hit['hit_desc'])
+                    for pdb_chain_id in ref_pro_ids[ref_id]:
+                        rec = rec0 + (
+                            ref_id,
+                            pdb_chain_id,
+                            float(hit['evalue']),
+                            int(hit['bit_score']),
+                            float(hit['identity'])
+                        )
+                        records.append(rec)
+                else:
+                    # insert null if not hits detected
+                    rec0 += (None,) * 5
+                    records.append(rec0)
+        return records
+
     def ab_absd_source(self, seq_record):
         # 'header','dxref_id','vgene_family','source'
         records = []

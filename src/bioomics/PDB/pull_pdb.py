@@ -23,6 +23,8 @@ class PullPdb:
         url = "rsync.rcsb.org"
         endpoint = "ftp_data/structures/divided/pdb/"
         cmd = f"rsync -rlpt -v -z --delete --port=33444 {url}::{endpoint} {self.pdb_dir}"
+        if self.verbose:
+            print('Synchronize PDB data:', cmd)
         res = os.system(cmd)
         return res
 
@@ -98,7 +100,6 @@ class PullPdb:
                 rec_args.update({
                     'pdb_id': pdb_id,
                     'pdb_file': path,
-                    'outdir': os.path.join(args['data_dir'], 'data')
                 })
                 yield rec_args
 
