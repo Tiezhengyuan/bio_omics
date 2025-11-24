@@ -9,6 +9,7 @@ from .database import *
 from .PDB import *
 from .protein import *
 from .RNA import *
+from .simulation import *
 
 from .protein_meta import ProteinMeta
 from .integrate_data import IntegrateData

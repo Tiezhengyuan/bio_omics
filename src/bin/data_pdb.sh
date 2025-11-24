@@ -29,3 +29,5 @@ parallel -j8 python ${PIPELINE_DIR}/export_pair_pdb.py ::: {0..46}
 parallel -j4 python ${PIPELINE_DIR}/pdb_bfactor.py ::: {0..46}
 parallel -j8 python ${PIPELINE_DIR}/put_bfactor.py ::: {0..46}
 
+# fix pdb
+parallel -j4 python ${PIPELINE_DIR}/pdb_fixer.py ::: {0..46}

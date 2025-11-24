@@ -8,6 +8,14 @@ class ProcessFasta:
         self.fa_file = fa_file
         self.verbose = verbose
 
+    def one_seq(self, seq:str, seq_id:str):
+        rec = SeqRecord(
+            Seq(seq),
+            id= str(seq_id),
+            description=''
+        )
+        return self.to_fasta([rec,])
+
     def row_seq(self, rows):
         records = []
         for row in rows:

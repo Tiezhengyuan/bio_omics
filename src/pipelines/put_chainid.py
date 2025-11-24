@@ -3,7 +3,7 @@ note:
     - PDB files should be synchronized to the local.
     - The table pdb is ready.
 example:
-    - parallel -j4 python src/pipelines/put_chainid.py ::: {0..46}
+    - parallel -j8 python src/pipelines/put_chainid.py ::: {0..46}
     - python src/pipelines/put_chainid.py 46
 function:
     synchronize PDB/UniProt/alignments with data in database COMPLEX.

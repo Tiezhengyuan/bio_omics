@@ -26,7 +26,8 @@ if __name__ == "__main__":
         'data_dir': os.getenv("data_dir"),
     }
     # donwload pdb
-    PullPdb(args['pdb_dir'], args['verbose']).synchronize_pdb()
+    raw_dir = os.path.join(args['pdb_dir'], 'rsync')
+    PullPdb(raw_dir, args['verbose']).synchronize_pdb()
 
     # prepare _list dir
     list_dir = os.path.join(args['data_dir'], '_list')
@@ -34,7 +35,8 @@ if __name__ == "__main__":
     d.init_dir()
     d.clear_dir()
     outprefix = os.path.join(list_dir, 'pdb')
+    
     # build json
-    pdb_iter = PullPdb(args['pdb_dir']).iter_raw_pdb_args(args)
+    pdb_iter = PullPdb(raw_dir).iter_raw_pdb_args(args)
     file_list = ProcessJson.iter_to_json(pdb_iter, outprefix, chunk_size=5_000)
     print(f"\n{file_list}\n")

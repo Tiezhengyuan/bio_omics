@@ -34,6 +34,7 @@ CREATE TABLE meta_pdb(
     CONSTRAINT fk_meta_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)  ON DELETE CASCADE
 );
+CREATE TABLE meta_pdb_fixed LIKE meta_pdb;
 //
 CREATE TABLE pdb_compound(
     pdb_id          VARCHAR(10),
@@ -64,10 +65,10 @@ CREATE TABLE pdb_keyword(
 //
 DROP TABLE IF EXISTS pdb_chainid;
 CREATE TABLE pdb_chainid(
+    chain_id        VARCHAR(20) PRIMARY KEY,
     pdb_id          VARCHAR(10),
     model_no        INT,
     chain_no        VARCHAR(5),
-    chain_id        VARCHAR(20),
     CONSTRAINT fk_chainid_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)  ON DELETE CASCADE
 );
@@ -87,7 +88,9 @@ DROP TABLE IF EXISTS meta_chain_pdb;
 CREATE TABLE meta_chain_pdb(
     chain_id        VARCHAR(20),
     pdb_file        VARCHAR(100),
-    CONSTRAINT pk_pdb_chain PRIMARY KEY (chain_id)
+    CONSTRAINT pk_pdb_chain PRIMARY KEY (chain_id),
+    CONSTRAINT fk_pdb_chain FOREIGN KEY (chain_id)
+        REFERENCES pdb_chainid(chain_id)
 );
 //
 DROP TABLE IF EXISTS pdb_chain_seq;
@@ -104,7 +107,7 @@ CREATE TABLE meta_chain_faa(
     faa_file        VARCHAR(100) NOT NULL,
     UNIQUE (chain_id),
     CONSTRAINT fk_faa_chain FOREIGN KEY (chain_id)
-        REFERENCES pdb_chain(chain_id)
+        REFERENCES pdb_chainid(chain_id)
 );
 //
 DROP TABLE IF EXISTS meta_combo_pdb;

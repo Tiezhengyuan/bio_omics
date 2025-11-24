@@ -14,9 +14,10 @@ src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-from bioomics import Pdb, QueryComplex, BuildComplex
+from bioomics import Dir, Pdb, QueryComplex, BuildComplex, ProcessFasta
 
 def retrieve_pdb(pdb_group, args, meta):
+    # meta_pdb.pdb_file is absolute path
     query = f"""
         SELECT pdb_id, pdb_file
         FROM meta_pdb
@@ -36,25 +37,49 @@ def retrieve_pdb(pdb_group, args, meta):
     meta['rows'] += len(rows)
     return rows
 
+def export_chain_faa(rows, args, meta):
+    for row in rows:
+        pdb_id = row['pdb_id']
+        dir_endpoint = os.path.join('data', pdb_id[:2], pdb_id, 'chain_faa')
+        outdir = os.path.join(args['data_dir'], dir_endpoint)
+        Dir(outdir).init_dir()
+
+        # load structure
+        p = Pdb(row['pdb_file'], None, args['verbose'])
+        p.load_structure()
+        # retrieve chains
+        chains = p.parse_chains()
+        for chain_id, _pdb_id, model_no, chain_no, chain in chains:
+            file_name = f"{chain_id}.faa"
+            outfile = os.path.join(outdir, file_name)
+            if args['overwrite'] or (not os.path.isfile(outfile)):
+                chain_seq = p._chain_seq(chain)
+                pf = ProcessFasta(outfile, args['verbose'])
+                status = pf.one_seq(chain_seq, chain_id)
+                meta[status] += 1
+            else:
+                meta['skip_faa'] += 1
+            if os.path.isfile(outfile):
+                relative_path = os.path.join(dir_endpoint, file_name)
+                yield chain_id, relative_path
+        if len(chains) == 0:
+            meta['no_chain_seq'] += 1
+    
 if __name__ == "__main__":
     meta = defaultdict(int)
     load_dotenv()
     args = {
         'verbose': True,
         'overwrite': False,
-        'outdir': os.path.join(os.getenv('data_dir'), 'data'),
+        'data_dir': os.getenv('data_dir'),
+        'chunk_size': 2,
     }
     pdb_group = sys.argv[1]
     rows = retrieve_pdb(pdb_group, args, meta)
-
-    for row in rows:
-        p = Pdb(row['pdb_file'], args['outdir'], args['verbose'])
-        p.load_structure()
-        # export chain sequences in fasta to data/ in default
-        db_records = p.export_chain_faa(meta, args['overwrite'])
-        # insert
-        meta['db_records'] += len(db_records)
-        bc = BuildComplex(db_records, args['verbose'])
-        bc.insert_meta_chain_faa()
+    # export chain sequences in fasta to data/ in default
+    record_iter = export_chain_faa(rows, args, meta)
+    # insert
+    bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
+    bc.insert_meta_chain_faa()
 
     print(meta)

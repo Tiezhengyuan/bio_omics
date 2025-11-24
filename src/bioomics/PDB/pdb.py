@@ -206,7 +206,7 @@ class Pdb(ParseStructure):
             return (pdb_id, outfile)
         return (pdb_id, None)
 
-      
+    # TODO: deprecated in the future
     def export_chain_faa(self, meta:defaultdict=None, overwrite:bool=False):
         '''
         retrieve sequence by chains from pdb
@@ -239,7 +239,6 @@ class Pdb(ParseStructure):
                 db_records.append(rec)
         return db_records
 
-
     def export_chain_pdb(self, meta:defaultdict=None, overwrite:bool=False):
         """
         export by single chain in .pdb
@@ -250,20 +249,24 @@ class Pdb(ParseStructure):
         if meta is None:
             meta = defaultdict(int)
         pdb_id = self.structure_id
-        cascade_dir = self.init_chains_outdir(pdb_id)
+        dir_endpoint = os.path.join('data', pdb_id[:2], pdb_id, 'chain_pdb') 
+        cascade_dir = os.path.join(self.outdir, dir_endpoint)
+        Dir(cascade_dir).init_dir()
         # retrieve chains
         chains = self.parse_chains()
         for chain_id, _pdb_id, model_no, chain_no, chain in chains:
             chain_seq = self._chain_seq(chain)
             # only consider limited models
             if len(chain_seq) > 0 and int(model_no) <= 10:
-                outfile = os.path.join(cascade_dir, f"{chain_id}.pdb")
+                file_name = f"{chain_id}.pdb"
+                outfile = os.path.join(cascade_dir, file_name)
                 if overwrite or (not os.path.isfile(outfile)):
                     status = self.to_chain_pdb([chain_no,], outfile)
                     meta[status] += 1
                 else:
                     meta['skip'] += 1
-                rec = (chain_id, outfile) if os.path.isfile(outfile) else (chain_id, None)
+                relative_path = os.path.join(dir_endpoint, file_name)
+                rec = (chain_id, relative_path) if os.path.isfile(outfile) else (chain_id, None)
                 db_records.append(rec)
         return db_records
     

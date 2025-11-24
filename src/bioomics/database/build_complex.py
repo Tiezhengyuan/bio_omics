@@ -125,6 +125,14 @@ class BuildComplex(BuildDb):
         func = lambda rec: [rec,]
         self.insert(table_name, insert_query, func)
 
+    def insert_meta_pdb_fixed(self):
+        table_name = 'meta_pdb_fixed'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, pdb_file, pdb_group)
+            VALUES (%s, %s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
     def insert_meta_faa(self):
         table_name = 'meta_faa'
         insert_query = f"""INSERT INTO {table_name}

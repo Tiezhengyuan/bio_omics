@@ -50,7 +50,7 @@ def pull_chain_pdb(rows, args, meta):
     records = []
     for row in rows:
         print(row)
-        p = Pdb(row['pdb_file'], args['outdir'], args['verbose'])
+        p = Pdb(row['pdb_file'], args['data_dir'], args['verbose'])
         p.load_structure()
         # export chain sequences in fasta to data/ in default
         _records = p.export_chain_pdb(meta, args['overwrite'])
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     args = {
         'verbose': True,
         'overwrite': True,
-        'outdir': os.path.join(os.getenv("data_dir"), 'data'),
+        'data_dir': os.getenv("data_dir"),
     }
     pdb_group = sys.argv[1]
     rows_iter = retrieve_pdb(pdb_group, args, meta)
