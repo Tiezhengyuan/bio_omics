@@ -1,0 +1,47 @@
+#!/usr/bin/python
+'''
+requirements:
+    - a empty database is created.
+example:
+    - python src/pipeline_create/pdb_simulation.py
+functions:
+    - build tables
+'''
+import os
+import sys
+src_dir = os.path.dirname(os.path.dirname(__file__))
+if src_dir not in sys.path:
+    sys.path.append(src_dir)
+
+
+from bioomics import BuildComplex
+
+SQL_TEXT = """
+DROP TABLE IF EXISTS meta_pdb_fixed;
+CREATE TABLE meta_pdb_fixed (
+    pdb_id          VARCHAR(10),
+    pdb_file        VARCHAR(100),
+    pdb_group       INT,
+    UNIQUE (pdb_id),
+    CONSTRAINT fk_meta_pdb_fixed FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
+);
+//
+DROP TABLE IF EXISTS meta_pdb_relaxed;
+CREATE TABLE meta_pdb_relaxed (
+    pdb_id          VARCHAR(10),
+    pdb_file        VARCHAR(100),
+    pdb_group       INT,
+    UNIQUE (pdb_id),
+    CONSTRAINT fk_meta_pdb_relax FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
+);
+"""
+#####################################################################################
+
+if __name__ == "__main__":
+    bc = BuildComplex(verbose=True)
+    for query in SQL_TEXT.split('//'): 
+        res = bc.create_table(query)
+        if res is None:
+            print(f"ERROR. Check the above SQL: {query}\n\n")

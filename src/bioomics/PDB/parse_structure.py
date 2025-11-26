@@ -3,7 +3,7 @@ process PDB
 1. renumber chains
 '''
 import re
-from Bio.PDB import Select
+from Bio.PDB import Select, Polypeptide
 
 # Filter out the specific warning
 import warnings
@@ -89,16 +89,20 @@ class ParseStructure:
         there are multiple chain.id with identical letters in some PDB
         chain_no is character sensitive
         '''
-        pdb_id = self.structure_id
         tmp = {}
-        for model in self.structure:
-            model_no = model.id
-            for chain in model:
-                chain_no = chain.id
-                key = f"{model_no}_{chain_no.upper()}"
-                if key not in tmp:
-                    tmp[key] = []
-                tmp[key].append((model_no, chain_no, chain))
+        try:
+            pdb_id = self.structure_id
+            for model in self.structure:
+                model_no = model.id
+                for chain in model:
+                    chain_no = chain.id
+                    key = f"{model_no}_{chain_no.upper()}"
+                    if key not in tmp:
+                        tmp[key] = []
+                    tmp[key].append((model_no, chain_no, chain))
+        except Exception as e:
+            pass
+
         chains = []
         for key in list(tmp):
             for ver_no, (model_no, chain_no, chain) in enumerate(tmp[key]):
@@ -243,3 +247,71 @@ class ParseStructure:
             else:
                 residue.id = (' ', residue_id, ' ')
             residue_id += 1
+
+    def residue_type(self, chain):
+        '''
+        identify chain type given a chain
+        '''
+        residues = list(chain.get_residues())
+        total_res = len(residues)
+        counts = {
+            'chain_no': chain.id,
+            'total_res': total_res,
+            'aa_res': 0,
+            'dna_res': 0,
+            'rna_res': 0,
+            'water_res': 0,
+            'ion_res': 0,
+            'hetero_res': 0,
+            'other_res': 0,
+        }
+        
+        # Count residues by various types
+        for residue in residues:
+            resname = residue.resname.strip().upper()
+            # amino acids
+            if Polypeptide.is_aa(residue):
+                counts['aa_res'] += 1
+            # DNA
+            elif resname in ['DA', 'DC', 'DG', 'DT', 'DI']:
+                counts['dna_res'] += 1
+            # RNA
+            elif resname in ['A', 'C', 'G', 'U', 'I']:
+                counts['rna_res'] += 1
+            else:
+                # hetero residues, not(protein or nucleic)
+                counts['hetero_res'] += 1
+                # water
+                if resname in ['HOH', 'WAT', 'H2O', 'DOD', 'SOL']:
+                    counts['water_res'] += 1
+                # NA sodium, CL chloride, K Potassium,
+                # CA Calcium, MG magnesium
+                # ZN zinc, FE ion, CU copper 2+, MN manganese 3+
+                elif resname in ['NA', 'CL', 'K', 'CA', 'MG', 'ZN', 'FE', 'CU', 'MN']:
+                    counts['ion_res'] += 1
+                else:
+                    counts['other_res'] += 1
+
+        # Determine chain type
+        non_water_res  = total_res - counts['water_res']
+        counts['non_water_res'] = non_water_res
+        chain_type = None
+        if total_res == 0:
+            chain_type = "empty"
+        elif non_water_res == 0:
+            chain_type = "water"
+        else:
+            if counts['aa_res'] / non_water_res >= 0.8:
+                chain_type = "protein"
+            elif counts['dna_res'] / non_water_res >= 0.7:
+                chain_type = "DNA"
+            elif counts['rna_res'] / non_water_res >= 0.7:
+                chain_type = "RNA"
+            elif counts['ion_res'] / non_water_res >= 0.7:
+                chain_type = "ion"
+            elif counts['hetero_res'] / non_water_res >= 0.7:
+                chain_type = "ligand"
+            else:
+                chain_type = "other"
+        counts['type'] = chain_type
+        return counts

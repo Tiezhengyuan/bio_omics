@@ -184,6 +184,15 @@ CREATE VIEW view_inn_pdb AS
         ON I.inn_number = A.inn_number
     WHERE B.identity = 1
 ;
+//
+DROP VIEW IF EXISTS view_complex;
+CREATE VIEW view_complex AS
+    SELECT pdb_id, count(*) AS num_chains, GROUP_CONCAT(DISTINCT 
+        chain_type ORDER BY chain_type) AS complex_type
+    FROM pdb_chain_type
+    GROUP BY pdb_id
+    ORDER BY num_chains, complex_type
+;
 """
 
 

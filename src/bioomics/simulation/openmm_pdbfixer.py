@@ -1,4 +1,5 @@
 '''
+Fix PDB raw data for MD simulation
 PDBFixer: https://github.com/openmm/pdbfixer
 '''
 import gzip
@@ -12,7 +13,7 @@ class OpenmmPdbfixer:
     def __init__(self, pdb_file, verbose:bool=False):
         self.pdb_file = pdb_file
         self.verbose = verbose
-        self.info = {}
+        self.info = {'pdb_file': self.pdb_file,}
         self.fixer = None
         self.init_fixer()
 
@@ -31,17 +32,17 @@ class OpenmmPdbfixer:
     def fix_pdb(self):
         if self.fixer is None:
             return None
-        self.info = {
+        self.info.update({
             'num_chains': len(list(self.fixer.topology.chains())),
             "num_residues": len(list(self.fixer.topology.residues())),
             "num_atoms": len(list(self.fixer.topology.atoms())),
-        }
+        })
         # Identify missing residues
         self.missing_residues()
         # Find non-standard residues
         self.non_standard_residues()
         # remove heterogens, Remove water and ions (keep=False)
-        self.remove_hydrogens()
+        self.remove_heterogens()
         # Find missing atoms
         self.missing_atoms()
         # Add missing hydrogens at pH 7.0
@@ -55,7 +56,7 @@ class OpenmmPdbfixer:
         except Exception as e:
             self.info['error_missing_residues'] = str(e)
 
-    def remove_hydrogens(self):
+    def remove_heterogens(self):
         try:
             self.fixer.removeHeterogens(keepWater=False)
         except Exception as e:

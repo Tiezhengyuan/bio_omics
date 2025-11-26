@@ -34,7 +34,6 @@ CREATE TABLE meta_pdb(
     CONSTRAINT fk_meta_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)  ON DELETE CASCADE
 );
-CREATE TABLE meta_pdb_fixed LIKE meta_pdb;
 //
 CREATE TABLE pdb_compound(
     pdb_id          VARCHAR(10),
@@ -128,6 +127,26 @@ CREATE TABLE meta_faa(
     CONSTRAINT fk_faa_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)
 );
+//
+DROP TABLE IF EXISTS pdb_chain_type;
+CREATE TABLE pdb_chain_type(
+    pdb_id          VARCHAR(20),
+    chain_id        VARCHAR(20),
+    chain_type      VARCHAR(20),
+    water_res       INT,
+    total_res       INT,
+    non_water_res   INT,
+    aa_res          INT,
+    dna_res         INT,
+    rna_res         INT,
+    ion_res         INT,
+    hetero_res      INT,
+    other_res       INT,
+    UNIQUE (chain_id),
+    CONSTRAINT fk_chain_type FOREIGN KEY (chain_id)
+        REFERENCES pdb_chainid(chain_id)
+);
+
 """
 #####################################################################################
 

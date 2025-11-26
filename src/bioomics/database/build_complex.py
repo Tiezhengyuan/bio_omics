@@ -1,15 +1,8 @@
 '''
 insert data into empty table
 '''
-import numpy as np
-import pandas as pd
-
-
 from .build_db import BuildDb
-from .query_complex import QueryComplex
 from .build_records import BuildRecords
-
-from ..protein import ParseIgblast
 
 
 class BuildComplex(BuildDb):
@@ -116,17 +109,19 @@ class BuildComplex(BuildDb):
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func, 2)
 
+    def insert_pdb_chain_type(self) -> tuple:
+        table_name = 'pdb_chain_type'
+        insert_query = f"""INSERT INTO {table_name} 
+            (pdb_id, chain_id, chain_type, total_res, non_water_res,
+                aa_res, dna_res, rna_res, water_res, ion_res,
+                hetero_res, other_res)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        func = lambda rec: [rec,]
+        return self.insert(table_name, insert_query, func)
 ########################
     def insert_meta_pdb(self):
         table_name = 'meta_pdb'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, pdb_file, pdb_group)
-            VALUES (%s, %s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_pdb_fixed(self):
-        table_name = 'meta_pdb_fixed'
         insert_query = f"""INSERT INTO {table_name}
             (pdb_id, pdb_file, pdb_group)
             VALUES (%s, %s, %s)"""
@@ -193,6 +188,22 @@ class BuildComplex(BuildDb):
         # chain_no is case sensitive in PDB
         insert_query = f"""INSERT INTO {table_name}
             (pdb_id, pickle_file) VALUES (%s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_meta_pdb_fixed(self):
+        table_name = 'meta_pdb_fixed'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, pdb_file, pdb_group)
+            VALUES (%s, %s, %s)"""
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
+    def insert_meta_pdb_relaxed(self):
+        table_name = 'meta_pdb_relaxed'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, pdb_file, pdb_group)
+            VALUES (%s, %s, %s)"""
         func = lambda rec: [rec,]
         self.insert(table_name, insert_query, func)
 

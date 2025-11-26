@@ -50,8 +50,30 @@ Note:
 ```
 
 
-## tests
+## install simulation packages
+```
+conda create -n open python=3.9
+conda activate open
+'''
 
+
+install openmm
+'''
+conda install -c conda-forge openmm cudatoolkit=11.8
+<!-- confirm install -->
+python -m openmm.testInstallation
+conda install -c conda-forge pdbfixer
 ```
-conda activate py
-```
+
+install pyrosetta
+'''
+pip install pyrosetta-installer
+python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta()'
+'''
+
+install MDAnalysis
+'''
+pip install MDAnalysis
+pip install freesasa
+'''
+

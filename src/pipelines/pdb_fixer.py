@@ -4,8 +4,8 @@ requirements:
     - PDB raw data
     - table meta_pdb
 example:
-    - parallel -j2 python src/pipelines/pdb_fixer.py ::: {0..46}
-    - python src/pipelines/pdb_fixer.py 46
+    - parallel -j1 python src/pipelines/pdb_fixer.py ::: {0..46}
+    - python src/pipelines/pdb_fixer.py 4
 function:
     - fix pdb files
     - insert data into table meta_pdb_fixed
