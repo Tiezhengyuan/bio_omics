@@ -1,6 +1,6 @@
 '''
 '''
-from Bio.PDB import Select, PDBIO
+from Bio.PDB import Select
 
 class ChainAtomSelect(Select):
     def __init__(self, chains):

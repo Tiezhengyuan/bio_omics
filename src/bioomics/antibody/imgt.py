@@ -1,16 +1,10 @@
-from Bio import SeqIO
-from collections import defaultdict
-from copy import deepcopy
 import os
 import re
 import requests
 import pandas as pd
-import subprocess
-import sys
 
 from .parse_xml import ParseXml
 from .process_data import ProcessData
-from .parse_imgt_annot import ParseImgtAnnot
 from .process_seq import ProcessSeq
 
 class Imgt(ProcessData):

@@ -1,5 +1,3 @@
-import sys
-import os
 import json
 
 from bioomics import Uniref

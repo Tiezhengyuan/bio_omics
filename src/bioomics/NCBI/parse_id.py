@@ -1,8 +1,6 @@
 import pandas as pd
 from typing import Iterable
 
-from .ncbi import NCBI
-
 class ParseID:
     def __init__(self, nrows:int=None, nworks:int=None, chunk_size:int=None):
         self.nrows = nrows

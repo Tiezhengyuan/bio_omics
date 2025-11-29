@@ -1,7 +1,6 @@
 '''
 '''
 import os
-import re
 import pickle
 
 from .analyze_complex import AnalyzeComplex

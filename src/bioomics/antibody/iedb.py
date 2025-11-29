@@ -1,12 +1,12 @@
 '''
 Immune epitope database https://www.iedb.org/
 '''
-from biosequtils import Dir
 import json
 import os
 import pandas as pd
 import numpy as np
 
+from ..common import Dir
 from ..connector.conn_http import ConnHTTP
 
 

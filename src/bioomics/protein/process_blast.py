@@ -3,7 +3,7 @@ install blast: sudo apt install ncbi-blast+
 '''
 import os
 import subprocess
-from biosequtils import Dir
+from ..common import Dir
 
 class ProcessBlast:
 

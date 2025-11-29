@@ -1,4 +1,3 @@
-import pandas as pd
 import os
 from ..common.concurrency import multi_threads
 

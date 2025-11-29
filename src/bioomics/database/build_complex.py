@@ -1,6 +1,7 @@
 '''
 insert data into empty table
 '''
+import os
 from .build_db import BuildDb
 from .build_records import BuildRecords
 
@@ -12,12 +13,7 @@ class BuildComplex(BuildDb):
         args: data is iterable of pdb_file, or dat_record
         '''
         super().__init__(data, verbose, chunk_size)
-        self.config = {
-            'host': 'localhost',
-            'user': 'admin',
-            'password': 'strong_password',
-            'database': 'COMPLEX2'
-        }
+        self.config['database'] = os.getenv('MYSQL_DB', 'COMPLEX2')
         self.recorder = BuildRecords(verbose)
     
     def insert_pdb(self):

@@ -3,11 +3,11 @@ miRBase: https://mirbase.org/
 '''
 import os
 from Bio import SeqIO
-from biosequtils import Dir
 from io import StringIO
 import lxml.html as html
 from urllib.request import urlopen
 
+from ..common import Dir
 
 class Mirbase:
     url = 'https://mirbase.org/download/CURRENT/'

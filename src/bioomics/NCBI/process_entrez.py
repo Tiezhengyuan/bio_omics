@@ -1,10 +1,6 @@
-from itertools import combinations
-import os
 import io
-import re
 import pandas as pd
 from Bio import Entrez, SeqIO
-from Bio.Seq import Seq
 
 from .parse_entrez import ParseEntrez
 

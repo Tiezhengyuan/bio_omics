@@ -5,8 +5,6 @@ UniProtKB/Swiss-Prot
 
 """
 from Bio import SeqIO
-from Bio.SeqRecord import SeqRecord
-from biosequtils import Dir
 import gzip
 import os
 from typing import Iterable

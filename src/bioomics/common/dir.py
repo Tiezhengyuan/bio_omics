@@ -1,7 +1,6 @@
 
-import os, sys
+import os
 import re
-import json
 
 class Dir:
     def __init__(self, indir):

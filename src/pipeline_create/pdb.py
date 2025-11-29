@@ -28,7 +28,7 @@ CREATE TABLE pdb(
 DROP TABLE IF EXISTS meta_pdb
 CREATE TABLE meta_pdb(
     pdb_id          VARCHAR(10),
-    pdb_file        VARCHAR(100) NOT NULL,
+    pdb_file        VARCHAR(60) NOT NULL,
     pdb_group       INT,
     UNIQUE (pdb_id),
     CONSTRAINT fk_meta_pdb FOREIGN KEY (pdb_id)
@@ -86,7 +86,7 @@ CREATE TABLE pdb_chain(
 DROP TABLE IF EXISTS meta_chain_pdb;
 CREATE TABLE meta_chain_pdb(
     chain_id        VARCHAR(20),
-    pdb_file        VARCHAR(100),
+    pdb_file        VARCHAR(60),
     CONSTRAINT pk_pdb_chain PRIMARY KEY (chain_id),
     CONSTRAINT fk_pdb_chain FOREIGN KEY (chain_id)
         REFERENCES pdb_chainid(chain_id)
@@ -103,7 +103,7 @@ CREATE TABLE pdb_chain_seq(
 DROP TABLE IF EXISTS meta_chain_faa;
 CREATE TABLE meta_chain_faa(
     chain_id        VARCHAR(20),
-    faa_file        VARCHAR(100) NOT NULL,
+    faa_file        VARCHAR(60) NOT NULL,
     UNIQUE (chain_id),
     CONSTRAINT fk_faa_chain FOREIGN KEY (chain_id)
         REFERENCES pdb_chainid(chain_id)
@@ -111,18 +111,18 @@ CREATE TABLE meta_chain_faa(
 //
 DROP TABLE IF EXISTS meta_combo_pdb;
 CREATE TABLE meta_combo_pdb(
-    pdb_id          VARCHAR(20),
+    pdb_id          VARCHAR(10),
     model_no        INT,
     chain_combo     VARCHAR(10),
-    pdb_file        VARCHAR(100),
+    pdb_file        VARCHAR(60),
     CONSTRAINT fk_combo_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)
 );
 //
 DROP TABLE IF EXISTS meta_faa;
 CREATE TABLE meta_faa(
-    pdb_id          VARCHAR(20),
-    faa_file        VARCHAR(100),
+    pdb_id          VARCHAR(10),
+    faa_file        VARCHAR(60),
     UNIQUE (pdb_id),
     CONSTRAINT fk_faa_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)
@@ -130,7 +130,7 @@ CREATE TABLE meta_faa(
 //
 DROP TABLE IF EXISTS pdb_chain_type;
 CREATE TABLE pdb_chain_type(
-    pdb_id          VARCHAR(20),
+    pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
     chain_type      VARCHAR(20),
     water_res       INT,

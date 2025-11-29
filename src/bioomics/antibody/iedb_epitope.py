@@ -2,9 +2,6 @@
 build data mapping of epitopes from IEDB
 entity is proteins with epitopes
 '''
-import json
-import os
-
 from .iedb import IEDB
 from ..integrate_data import IntegrateData
 from ..protein_meta import ProteinMeta

@@ -2,7 +2,6 @@ import json
 import os
 import re
 import requests
-from biosequtils import Dir
 
 class ProcessData:
     def __init__(self, data_dir:str, verbose:bool=False):

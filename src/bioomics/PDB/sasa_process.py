@@ -6,7 +6,7 @@ formular:
 '''
 from ..common import ProcessPickle
 from .sasa_calculate import SasaCalculate
-from .analyze_complex import AnalyzeComplex
+
 
 class SasaProcess:
 

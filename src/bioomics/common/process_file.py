@@ -1,7 +1,6 @@
 '''
 '''
 import os
-import json
 from .dir import Dir
 
 

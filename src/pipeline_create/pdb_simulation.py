@@ -20,8 +20,9 @@ SQL_TEXT = """
 DROP TABLE IF EXISTS meta_pdb_fixed;
 CREATE TABLE meta_pdb_fixed (
     pdb_id          VARCHAR(10),
-    pdb_file        VARCHAR(100),
+    pdb_file        VARCHAR(40),
     pdb_group       INT,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (pdb_id),
     CONSTRAINT fk_meta_pdb_fixed FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)
@@ -30,8 +31,9 @@ CREATE TABLE meta_pdb_fixed (
 DROP TABLE IF EXISTS meta_pdb_relaxed;
 CREATE TABLE meta_pdb_relaxed (
     pdb_id          VARCHAR(10),
-    pdb_file        VARCHAR(100),
+    pdb_file        VARCHAR(40),
     pdb_group       INT,
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (pdb_id),
     CONSTRAINT fk_meta_pdb_relax FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)

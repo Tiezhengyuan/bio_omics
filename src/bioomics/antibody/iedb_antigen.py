@@ -3,9 +3,9 @@ build data mapping of antigen from IEDB
 
 antigen --- eptope --- BCR/TCR/BCell/TCell/MHC
 '''
-from biosequtils import Dir
 import os
-import json
+
+from ..common import Dir
 from .iedb import IEDB
 from ..integrate_data import IntegrateData
 

@@ -1,10 +1,6 @@
 
 '''
 '''
-import os
-import json
-from typing import Iterable
-
 from ..common.bio_dict import BioDict
 from ..integrate_data import IntegrateData
 from ..protein_meta import ProteinMeta

@@ -1,9 +1,5 @@
 from itertools import combinations
 import os
-import io
-import re
-import numpy as np
-import pandas as pd
 import subprocess
 
 from Bio.Seq import Seq

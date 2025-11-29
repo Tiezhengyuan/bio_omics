@@ -1,6 +1,5 @@
 '''
 '''
-import os
 import json
 
 class ProcessJson:

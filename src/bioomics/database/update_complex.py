@@ -1,15 +1,11 @@
+import os
 from .update_db import UpdateDb
 
 class UpdateComplex(UpdateDb):
 
     def __init__(self, verbose:bool=False):
         super().__init__(verbose)
-        self.config = {
-            'host': 'localhost',
-            'user': 'admin',
-            'password': 'strong_password',
-            'database': 'COMPLEX2'
-        }
+        self.config['database'] = os.getenv('MYSQL_DB', 'COMPLEX2')
 
     def update_compound(self, df, col_name:str):
         '''

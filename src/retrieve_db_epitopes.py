@@ -1,10 +1,7 @@
 '''
 retrieve epitopes from IEDB
 '''
-import pandas as pd
 import json
-import gzip
-from zipfile import ZipFile
 import mysql.connector
 import os
 

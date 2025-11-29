@@ -1,11 +1,12 @@
-import mysql.connector
 from copy import deepcopy
+import mysql.connector
 
-class UpdateDb:
+from .db import Db
+
+class UpdateDb(Db):
 
     def __init__(self, verbose:bool=False):
-        self.verbose = verbose
-        self.config = {}
+        super().__init__(verbose)
 
     def execute_update(self, query, record):
         record = deepcopy(record)

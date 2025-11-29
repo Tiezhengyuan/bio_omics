@@ -4,12 +4,8 @@ pLDDT per residue local distance testing
 
 import numpy as np
 import pandas as pd
-
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-
-
 
 from .pdb import Pdb
 

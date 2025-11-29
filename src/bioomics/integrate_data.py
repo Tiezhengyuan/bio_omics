@@ -1,11 +1,11 @@
 '''
 '''
-from biosequtils import Dir
 import os
 import json
 import math
 from typing import Iterable
-from datetime import datetime
+
+from .common import Dir
 
 class IntegrateData:
     def __init__(self, meta:dict):

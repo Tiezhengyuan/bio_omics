@@ -1,20 +1,20 @@
+'''
+basic operation for altering tables
+'''
 import mysql.connector
 
-class BuildDb:
+from .db import Db
+
+class BuildDb(Db):
 
     def __init__(self, data:list=None, verbose:bool=False, chunk_size:int=None):
+        super().__init__(verbose)
         self.data = data
-        self.verbose = verbose
         self.chunk_size = int(chunk_size) if chunk_size else 100
-        self.config = {}
 
     def execute_sql(self, query):
         try:
-            connection = mysql.connector.connect(
-                host=self.config['host'],
-                user=self.config['user'],
-                password=self.config['password'],
-            )
+            connection = mysql.connector.connect(**self.config)
             cursor = connection.cursor(dictionary=True)
             cursor.execute(query)
             connection.commit()

@@ -33,7 +33,8 @@ def retrieve_pdb(args, meta):
                 FROM meta_pdb_fixed
             );
     """
-    rows = QueryComplex(args['verbose']).list_data(query)
+    qc = QueryComplex(args['verbose'])
+    rows = qc.list_data(query)
     print(f"{len(rows)} PDB files ready...")
     meta['pdb_group'] = int(pdb_group)
     meta['rows'] += len(rows)
@@ -48,7 +49,7 @@ def run_fixer(rows, args, meta):
             Dir(outdir).init_dir()
             # run pdbfixer
             op = OpenmmPdbfixer(row['pdb_file'], args['verbose'])
-            op.fix_pdb()
+            op.fast_fixer()
             status = op.save_fixer(fixed_pdb_file)
             meta[status] += 1
         else:

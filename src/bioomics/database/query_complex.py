@@ -1,4 +1,5 @@
 from collections import defaultdict
+import os
 import pandas as pd
 
 from .query_db import QueryDb
@@ -7,12 +8,7 @@ class QueryComplex(QueryDb):
 
     def __init__(self, verbose:bool=None):
         super().__init__(verbose)
-        self.config = {
-            'host': 'localhost',
-            'user': 'admin',
-            'password': 'strong_password',
-            'database': 'COMPLEX2'
-        }
+        self.config['database'] = os.getenv('MYSQL_DB', 'COMPLEX2')
 
     def get_latest_date(self, table_name):
         query = f"""
@@ -99,7 +95,6 @@ class QueryComplex(QueryDb):
                 str(len(rec['pro_seq'])),])
             res[key] = str(rec['pro_seq'])
         return res
-
     
     def dup_uniprot_align(self):
         query = """

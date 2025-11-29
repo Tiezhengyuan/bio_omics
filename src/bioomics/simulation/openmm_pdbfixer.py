@@ -7,6 +7,7 @@ from pdbfixer import PDBFixer
 from openmm import app
 import re
 
+from .timeout import timeout
 from ..common.process_json import ProcessJson
 
 class OpenmmPdbfixer:
@@ -28,6 +29,18 @@ class OpenmmPdbfixer:
         except Exception as e:
             print(f"Error: wrong pdb file: {self.pdb_file}")
             self.info['error_init_fixer'] = str(e)
+
+    @timeout(10)
+    def fast_fixer(self):
+        '''
+        timeout is 10 minutes for large-scale fixing
+        '''
+        try:
+            self.fix_pdb()
+        except TimeoutError as e:
+            self.info['timeout_fix_pdb'] = str(e)
+        except Exception as e:
+            self.info['fail_fix_pdb'] = str(e)
 
     def fix_pdb(self):
         if self.fixer is None:

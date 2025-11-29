@@ -1,7 +1,6 @@
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-import pandas as pd
 
 class ProcessFasta:
     def __init__(self, fa_file:str, verbose:bool=False):

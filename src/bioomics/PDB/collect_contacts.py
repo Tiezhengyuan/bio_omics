@@ -1,12 +1,9 @@
 '''
 '''
-import numpy as np
 import pandas as pd
 import os
 import json
 import re
-import pickle
-import requests
 
 from ..common.dir import Dir
 from .distance_analyze import DistanceAnalyze

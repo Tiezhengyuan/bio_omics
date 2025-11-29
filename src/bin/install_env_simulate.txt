@@ -1,0 +1,40 @@
+
+## conda ENV: simulate
+
+install simulation packages
+```
+conda create -n simulate python=3.9 -y
+conda activate simulate
+```
+
+install openmm and cuda=11.8
+```
+conda install -c conda-forge openmm cudatoolkit=11.8 -y
+```
+confirm installation
+```
+python -m openmm.testInstallation
+```
+
+install Pdbfixer
+```
+conda install -c conda-forge pdbfixer -y
+```
+
+install pyrosetta 
+```
+pip install pyrosetta-installer
+python -c 'import pyrosetta_installer; pyrosetta_installer.install_pyrosetta()'
+python -c "import pyrosetta; print('PyRosetta is installed')"
+```
+
+MDAnalysis
+```
+pip install freesasa
+pip install MDAnalysis
+```
+
+install other packages
+```
+pip install -r src/bin/requirements.txt
+```

@@ -1,13 +1,9 @@
 """
 FTP of UniProtKB/Swiss-Prot
 """
-from Bio import SeqIO
-from biosequtils import Dir
-import gzip
 import os
-from typing import Iterable
-from biosequtils import Dir
 
+from ..common import Dir
 from ..connector.conn_ftp import ConnFTP
 
 class DownloadUniprot(ConnFTP):

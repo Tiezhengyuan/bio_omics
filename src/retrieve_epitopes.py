@@ -1,7 +1,6 @@
 '''
 retrieve epitopes from IEDB, UniProt
 '''
-from bioomics.protein.iedb_epitope import IEDBEpitope
 from bioomics.protein.uniprot_epitope import UniprotEpitope
 
 def retrieve_epitopes(local_path:str, result_dir:str=None):

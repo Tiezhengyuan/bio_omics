@@ -4,7 +4,6 @@ cache data
 import re
 import redis
 import json
-from biosequtils import KeyValue
 
 # default database is 0
 redis_db = {
@@ -65,10 +64,10 @@ class ConnRedis(object):
         except Exception as e:
             return False
         
-    def put_data(self, key:str, val):
-        old = self.get_data(key)
-        insert = KeyValue.merge_dict(old, val) if old else val
-        self.set_data(key, insert)
+    # def put_data(self, key:str, val):
+    #     old = self.get_data(key)
+    #     insert = KeyValue.merge_dict(old, val) if old else val
+    #     self.set_data(key, insert)
     
     def get_geneid(self, geneid:str):
         '''

@@ -1,0 +1,14 @@
+Bio
+py3Dmol
+dotenv
+pandas
+matplotlib
+seaborn
+requests
+urllib3
+lxml
+bs4
+redis
+mysql-connector-python
+ddt
+sh

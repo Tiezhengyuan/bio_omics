@@ -1,10 +1,5 @@
-import os
 import re
-import numpy as np
-import numpy as np
 import pandas as pd
-from Bio.Seq import Seq
-from Bio.Align import PairwiseAligner
 from Bio import SeqIO
 
 from ..common import Utils, ProcessJson, ParseText

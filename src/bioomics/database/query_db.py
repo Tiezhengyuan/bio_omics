@@ -1,13 +1,35 @@
+import gc
 import pandas as pd
 import mysql.connector
+import time
 
-class QueryDb:
+from .db import Db
+
+class QueryDb(Db):
 
     def __init__(self, verbose:bool=False):
-        self.verbose = verbose
-        self.config = {}
+        super().__init__(verbose)
 
     def list_data(self, query:str, is_df:bool=False):
+        for _ in range(5):
+            try:
+                with mysql.connector.connect(**self.config) as connection:
+                    with connection.cursor(dictionary=True) as cursor:
+                        cursor.execute(query)
+                        rows = cursor.fetchall()
+                        if is_df:
+                            df = pd.DataFrame(rows)
+                            return df
+                        return rows
+            except Exception as e:
+                if self.verbose:
+                    print(f"error: can't connect mysql. error={e}")
+                gc.collect()
+                time.sleep(5)
+        return []
+
+    # TODO: old version, deprecated in the future.
+    def list_data0(self, query:str, is_df:bool=False):
         try:
             connection = mysql.connector.connect(**self.config)
             cursor = connection.cursor(dictionary=True)

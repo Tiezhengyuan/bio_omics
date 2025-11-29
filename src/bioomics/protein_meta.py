@@ -1,7 +1,8 @@
 from datetime import datetime
 import json
 import os
-from biosequtils import Dir
+
+from .common import Dir
 
 class ProteinMeta:
     

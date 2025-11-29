@@ -3,8 +3,6 @@ database SAbDab https://opig.stats.ox.ac.uk
 '''
 from collections import defaultdict
 import os
-import numpy as np
-import pandas as pd
 import requests
 import subprocess
 

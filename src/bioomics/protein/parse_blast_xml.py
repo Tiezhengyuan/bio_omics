@@ -1,8 +1,6 @@
 '''
 https://biopython.org/docs/dev/api/Bio.Blast.html
 '''
-import os
-import re
 import pandas as pd
 from Bio.Blast import NCBIXML
 

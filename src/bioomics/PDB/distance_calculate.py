@@ -3,8 +3,6 @@ distance between two atoms
 '''
 import numpy as np
 import pandas as pd
-
-
 import MDAnalysis as mda
 from MDAnalysis.analysis.distances import distance_array
 

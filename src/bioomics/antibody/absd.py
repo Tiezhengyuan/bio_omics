@@ -1,10 +1,8 @@
 '''
 antibody sequence database, https://absd.pasteur.cloud/
 '''
-from copy import deepcopy
 import os
 import re
-import numpy as np
 import pandas as pd
 from Bio import SeqIO
 

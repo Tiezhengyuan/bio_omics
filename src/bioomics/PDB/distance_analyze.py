@@ -1,7 +1,6 @@
 '''
 '''
 import os
-import re
 
 
 # from .analyze_complex import AnalyzeComplex

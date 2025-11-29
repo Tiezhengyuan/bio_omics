@@ -10,16 +10,15 @@ import os
 from Bio.PDB import PDBIO, PDBParser, MMCIFParser
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from biosequtils import Dir
 
 # Filter out the specific warning
 import warnings
 from Bio.PDB.PDBExceptions import PDBConstructionWarning
 warnings.simplefilter("ignore", PDBConstructionWarning)
 
+from ..common import Dir
 from .atom_select import *
 from .parse_structure import ParseStructure
-from ..constants.amino_acids import longer_names
 from ..protein.process_fasta import ProcessFasta
 
 # from .download import Download

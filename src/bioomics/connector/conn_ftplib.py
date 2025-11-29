@@ -4,12 +4,12 @@ connect FTP using static methods
 2. FTP login can't be alive long time.
 3. internet connection is low-speed
 """
-from biosequtils import Dir
 import ftplib
 import os
 import time
 from typing import Callable
 
+from ..common import Dir
 
 class ConnFTPlib:
 

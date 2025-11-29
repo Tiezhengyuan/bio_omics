@@ -1,11 +1,8 @@
 """
 FTP of UniProtKB/Swiss-Prot
 """
-from Bio import SeqIO
-import gzip
 import json
 import os
-from typing import Iterable
 
 from .uniprot import Uniprot
 from .parse_dat_record import ParseDatRecord
