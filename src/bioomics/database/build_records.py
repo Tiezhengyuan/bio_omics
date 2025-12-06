@@ -81,7 +81,7 @@ class BuildRecords:
         if self.verbose:
             print(f"Warning: no chains {pdb_id} are detectin in {pdb_file}")
         return records
-
+    
     def pdb_chainid(self, args):
         '''
         chain_id is unique and could be null

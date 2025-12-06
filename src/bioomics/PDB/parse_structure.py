@@ -83,15 +83,15 @@ class ParseStructure:
                 for res in chain:
                     yield model, chain, res
 
-    def parse_chains(self) -> list:
+    def parse_chains(self, pdb_id:str=None) -> list:
         '''
         In most cases, model.id + chain.id is unique, but
         there are multiple chain.id with identical letters in some PDB
         chain_no is character sensitive
         '''
+        pdb_id = pdb_id if pdb_id else self.structure_id
         tmp = {}
         try:
-            pdb_id = self.structure_id
             for model in self.structure:
                 model_no = model.id
                 for chain in model:

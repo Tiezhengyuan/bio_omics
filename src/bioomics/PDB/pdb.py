@@ -277,7 +277,6 @@ class Pdb(ParseStructure):
             combo = 2
         if meta is None:
             meta = defaultdict(int)
-        print(meta)
         meta['pdb'] += 1
 
         chain_no_pool = self.get_chain_no()

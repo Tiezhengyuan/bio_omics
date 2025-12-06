@@ -38,5 +38,5 @@ if __name__ == "__main__":
     
     # build json
     pdb_iter = PullPdb(raw_dir).iter_raw_pdb_args(args)
-    file_list = ProcessJson.iter_to_json(pdb_iter, outprefix, chunk_size=5_000)
+    file_list = ProcessJson.iter_to_json(pdb_iter, outprefix, chunk_size=2_000)
     print(f"\n{file_list}\n")

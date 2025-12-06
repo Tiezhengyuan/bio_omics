@@ -2,19 +2,22 @@
 Fix PDB raw data for MD simulation
 PDBFixer: https://github.com/openmm/pdbfixer
 '''
+from datetime import datetime
 import gzip
 from pdbfixer import PDBFixer
 from openmm import app
-import re
 
 from .timeout import timeout
-from ..common.process_json import ProcessJson
+from ..common import ProcessJson
 
 class OpenmmPdbfixer:
     def __init__(self, pdb_file, verbose:bool=False):
         self.pdb_file = pdb_file
         self.verbose = verbose
-        self.info = {'pdb_file': self.pdb_file,}
+        self.info = {
+            'status': 'fail',
+            'pdb_file': self.pdb_file,
+        }
         self.fixer = None
         self.init_fixer()
 
@@ -31,16 +34,31 @@ class OpenmmPdbfixer:
             self.info['error_init_fixer'] = str(e)
 
     @timeout(10)
-    def fast_fixer(self):
+    def fast_fixer(self, output_prefix:str):
         '''
         timeout is 10 minutes for large-scale fixing
         '''
         try:
+            if self.verbose:
+                print(f"\nTry to fix {self.pdb_file}:")
+            start_time = datetime.now()
+            
+            # 1. fix PDB
             self.fix_pdb()
+            # 2. save data
+            self.save_fixer(output_prefix)
+            self.info['status'] = 'succeed'
+
+            delta = datetime.now() - start_time
+            self.info['duration_min'] = round(delta.total_seconds() / 60)
+            if self.verbose:
+                print(f"Fixing {self.pdb_file} is done | {datetime.now()}")
         except TimeoutError as e:
             self.info['timeout_fix_pdb'] = str(e)
         except Exception as e:
             self.info['fail_fix_pdb'] = str(e)
+        self.save_info(output_prefix)
+        return self.info
 
     def fix_pdb(self):
         if self.fixer is None:
@@ -63,6 +81,8 @@ class OpenmmPdbfixer:
 
     def missing_residues(self):
         try:
+            if self.verbose:
+                print(f"\tFix missing residues {datetime.now()}")
             self.fixer.findMissingResidues()
             self.info['missing_residues'] = len(self.fixer.missingResidues) \
                 if self.fixer.missingResidues else 0
@@ -71,12 +91,16 @@ class OpenmmPdbfixer:
 
     def remove_heterogens(self):
         try:
+            if self.verbose:
+                print(f"\tRemove heterogens {datetime.now()}")
             self.fixer.removeHeterogens(keepWater=False)
         except Exception as e:
             self.info['error_remove_hetrogens'] = str(e)
 
     def non_standard_residues(self):
         try:
+            if self.verbose:
+                print(f"\tFix non standard residues {datetime.now()}")
             self.fixer.findNonstandardResidues()
             self.info['none_starndard_residues'] = len(self.fixer.nonstandardResidues) \
                 if self.fixer.nonstandardResidues else 0
@@ -87,6 +111,8 @@ class OpenmmPdbfixer:
 
     def missing_atoms(self):
         try:
+            if self.verbose:
+                print(f"\tFix missing atoms {datetime.now()}")
             self.fixer.findMissingAtoms()
             self.info['missing_atoms'] = len(list(self.fixer.missingAtoms))
             # Add missing atoms
@@ -96,27 +122,26 @@ class OpenmmPdbfixer:
 
     def add_hydrogens(self):
         try:
+            if self.verbose:
+                print(f"\tAdd hydrogens {datetime.now()}")
             self.fixer.addMissingHydrogens(7.0)       
             self.info['pH'] = 7.0
         except Exception as e:
             self.info['error_add_hydrogens'] = str(e)
 
-
-    def save_fixer(self, outfile:str):
+    def save_fixer(self, output_prefix:str):
+        outfile = output_prefix + '.pdb'
         # Save the fixed structure
         try:
             if self.fixer:
                 with open(outfile, 'w') as f:
                     app.PDBFile.writeFile(self.fixer.topology, self.fixer.positions, f)
-                return 'pdbfixer_succeed'
         except Exception as e:
             print(f"Warning: cannot save fixed pdb to {outfile}")
             self.info['error_save_fixer'] = str(e)
-
-        if self.info:
-            json_file = re.sub(r'\.pdb', '_fixed.json', outfile)
-            ProcessJson.save_json(self.info, json_file)
-            if self.verbose:
-                print(self.info)
-        return 'pdbfixer_fail'
     
+    def save_info(self, output_prefix:str):
+        outfile = output_prefix + '_fixed.json'
+        ProcessJson.save_json(self.info, outfile)
+        if self.verbose:
+            print(self.info)

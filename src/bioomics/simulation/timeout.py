@@ -5,10 +5,10 @@ class TimeoutError(Exception):
     pass
 
 def timeout(minutes):
+    seconds = int(minutes * 60)
     def decorator(func):
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            seconds = int(minutes * 60)
             def timeout_handler(signum, frame):
                 raise TimeoutError(f"{func.__name__} timed out after {minutes} minutes")
             

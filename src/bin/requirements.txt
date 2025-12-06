@@ -4,6 +4,7 @@ dotenv
 pandas
 matplotlib
 seaborn
+plotly
 requests
 urllib3
 lxml

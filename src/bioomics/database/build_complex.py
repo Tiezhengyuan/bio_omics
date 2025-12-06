@@ -100,7 +100,8 @@ class BuildComplex(BuildDb):
     def insert_align_uniprot(self) -> tuple:
         table_name = 'align_uniprot'
         insert_query = f"""INSERT INTO {table_name}
-            (chain_id, pdb_id, uniprot_acc, evalue, bit_score, identity)
+            (chain_id, pdb_id, uniprot_acc, evalue, 
+                bit_score, identity)
             VALUES (%s, %s, %s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func, 2)
@@ -108,13 +109,15 @@ class BuildComplex(BuildDb):
     def insert_pdb_chain_type(self) -> tuple:
         table_name = 'pdb_chain_type'
         insert_query = f"""INSERT INTO {table_name} 
-            (pdb_id, chain_id, chain_type, total_res, non_water_res,
-                aa_res, dna_res, rna_res, water_res, ion_res,
-                hetero_res, other_res)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (pdb_id, chain_id, chain_type, total_res, 
+                non_water_res, aa_res, dna_res, rna_res, 
+                water_res, ion_res, hetero_res, other_res)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, 
+                %s, %s, %s, %s, %s)
         """
         func = lambda rec: [rec,]
         return self.insert(table_name, insert_query, func)
+    
 ########################
     def insert_meta_pdb(self):
         table_name = 'meta_pdb'
@@ -187,19 +190,49 @@ class BuildComplex(BuildDb):
         func = lambda rec: [rec,]
         self.insert(table_name, insert_query, func)
 
-    def insert_meta_pdb_fixed(self):
-        table_name = 'meta_pdb_fixed'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, pdb_file, pdb_group)
-            VALUES (%s, %s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_pdb_relaxed(self):
-        table_name = 'meta_pdb_relaxed'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, pdb_file, pdb_group)
-            VALUES (%s, %s, %s)"""
+    def insert_batch_records(self, table_name:str):
+        query_pool = {
+            'fixed_pdb': f"""
+                INSERT INTO {table_name}
+                    (pdb_id, pdb_file) VALUES (%s, %s)
+            """,
+            'fixed_chain': f"""
+                INSERT INTO {table_name}
+                    (chain_id, pdb_id, model_no, chain_no, pdb_file)
+                VALUES (%s, %s, %s, %s, %s)
+            """,
+            'fixed_combo2': f"""
+                INSERT INTO {table_name}
+                    (pdb_id, model_no, chain_combo, pdb_file)
+                VALUES (%s, %s, %s, %s)
+            """,
+            'fixed_combo3': f"""
+                INSERT INTO {table_name}
+                    (pdb_id, model_no, chain_combo, pdb_file)
+                VALUES (%s, %s, %s, %s)
+            """,
+            'relaxed_pdb_amber99sb': f"""
+                INSERT INTO {table_name}
+                    (pdb_id, original_energy, relaxed_energy, pdb_file)
+                VALUES (%s, %s, %s, %s)
+            """,
+            'relaxed_pdb_amber14': f"""
+                INSERT INTO {table_name}
+                    (pdb_id, original_energy, relaxed_energy, pdb_file)
+                VALUES (%s, %s, %s, %s)
+            """,
+            'relaxed_chain_amber14': f"""
+                INSERT INTO {table_name}
+                    (chain_id, original_energy, relaxed_energy, endpoint)
+                VALUES (%s, %s, %s, %s)
+            """,
+            'pdb_chain_fixed': f"""
+                INSERT INTO {table_name}
+                    (chain_id, pdb_file) VALUES (%s, %s)
+            """,
+        }
+        insert_query = query_pool[table_name]
+        # load insertion
         func = lambda rec: [rec,]
         self.insert(table_name, insert_query, func)
 
@@ -254,7 +287,8 @@ class BuildComplex(BuildDb):
     def insert_imgt_inn_chain(self) -> tuple:
         table_name = 'imgt_inn_chain'
         insert_query = f"""INSERT INTO {table_name}
-            (inn_number, chain_id, chain_description, pro_len, chain_seq)
+            (inn_number, chain_id, chain_description, 
+                pro_len, chain_seq)
             VALUES (%s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
@@ -282,8 +316,8 @@ class BuildComplex(BuildDb):
         table_name = 'imgt_inn_vdomain'
         insert_query = f"""INSERT INTO {table_name}
             (chain_id, domain_name, cdr_length, fr_length,
-            gene_allele, seq, seq_cdr, seq_align, seq_align_cdr,
-            seq_cdr_mask, seq_align_cdr_mask)
+                gene_allele, seq, seq_cdr, seq_align,
+                seq_align_cdr, seq_cdr_mask, seq_align_cdr_mask)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
@@ -305,8 +339,8 @@ class BuildComplex(BuildDb):
         '''
         table_name = 'imgt_inn_blastp'
         insert_query = f"""INSERT INTO {table_name}
-            (query_pro_id, inn_chain_id, ref_pro_id, pdb_chain_id,
-                evalue, bit_score, identity)
+            (query_pro_id, inn_chain_id, ref_pro_id,
+                pdb_chain_id, evalue, bit_score, identity)
             VALUES (%s, %s, %s, %s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func, 2)
@@ -372,7 +406,8 @@ class BuildComplex(BuildDb):
     def insert_align_vregion(self) -> tuple:
         table_name = 'align_vregion'
         insert_query = f"""INSERT INTO {table_name}
-            (chain_id, pdb_id, region_name, identity, start, end, seq)
+            (chain_id, pdb_id, region_name, identity, 
+                start, end, seq)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
@@ -381,7 +416,8 @@ class BuildComplex(BuildDb):
     def insert_uniprot_alphafold_rmsd(self):
         table_name = 'uniprot_alphafold_rmsd'
         insert_query = f"""INSERT INTO {table_name}
-            (chain_id, uniprot_acc, ca_rmsd, native_pdb, model_pdb)
+            (chain_id, uniprot_acc, ca_rmsd, 
+                native_pdb, model_pdb)
             VALUES (%s, %s, %s, %s, %s)
         """
         func = lambda rec: [rec,]
@@ -390,7 +426,8 @@ class BuildComplex(BuildDb):
     def insert_uniprot_rmsd(self):
         table_name = 'uniprot_rmsd'
         insert_query = f"""INSERT INTO {table_name}
-            (chain_id, native_pdb, uniprot_acc, model_pdb, ca_rmsd)
+            (chain_id, native_pdb, uniprot_acc, 
+                model_pdb, ca_rmsd)
             VALUES (%s, %s, %s, %s, %s)
         """
         func = lambda rec: [rec,]
@@ -442,7 +479,8 @@ class BuildComplex(BuildDb):
     def insert_absd_source(self):
         table_name = 'absd_source'
         insert_query = f"""INSERT INTO {table_name}
-            (seq_id, absd_id, header, dxref_id, vgene_family, source)
+            (seq_id, absd_id, header, dxref_id, 
+                vgene_family, source)
             VALUES (%s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
@@ -451,7 +489,8 @@ class BuildComplex(BuildDb):
     def insert_absd_seq(self):
         table_name = 'absd_seq'
         insert_query = f"""INSERT INTO {table_name}
-            (absd_id, specie, version, pro_len, pro_seq, record_id)
+            (absd_id, specie, version, pro_len, 
+                pro_seq, record_id)
             VALUES (%s, %s, %s, %s, %s, %s)
         """
         func = lambda rec: [rec,]

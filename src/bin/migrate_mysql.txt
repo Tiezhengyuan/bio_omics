@@ -1,0 +1,49 @@
+
+backup database
+```
+mysqldump -u admin -p COMPLEX2 > /home/yuan/output/backup_mysql/complex2_20251202.sql
+mysqldump -u admin -p COMPLEX > /home/yuan/output/backup_mysql/complex_20251202.sql
+mysqldump -u admin -p . > /home/yuan/output/backup_mysql/db_20251202.sql
+```
+
+stop service
+```
+sudo systemctl stop msyql
+```
+
+prepare new directory
+```
+cd /home/yuan/bio
+sudo mkdir mysql
+sudo mkdir mysql/data
+sudo chown -R _mysql:_mysql /home/yuan/bio/mysql/data
+sudo chmod -R 0755 mysql
+```
+
+sudo chmod 660 /home/yuan/bio/mysql/data/binlog.index
+
+copy data
+```
+sudo rsync -av /var/lib/mysql/ /home/yuan/bio/mysql/data/
+```
+
+edit the file /etc/mysql/my.conf or /etc/mysql/mysql.conf.d/mysqld.cnf
+
+add 
+'''
+[mysqld]
+datadir = /home/yuan/bio/mysql/data
+'''
+
+edit /etc/apparmor.d/usr.sbin.mysqld. add
+'''
+/home/yuan/bio/mysql/data/ r,
+/home/yuan/bio/mysql/data/** rwk,
+'''
+
+reload appArmor porfiles
+```
+sudo systemctl reload apparmor
+```
+
+sudo systemctl start mysql
