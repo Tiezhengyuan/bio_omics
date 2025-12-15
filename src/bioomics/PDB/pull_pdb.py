@@ -16,12 +16,14 @@ class PullPdb:
         self.pdb_dir = pdb_dir
         self.verbose = verbose
 
-    def synchronize_pdb(self):
+    def synchronize_pdb(self, file_format:str=None):
         '''
         download entire PDB files to the local
+        file_format: pdb, mmCIF, xml
         '''
+        file_format = 'pdb' if file_format is None else file_format
         url = "rsync.rcsb.org"
-        endpoint = "ftp_data/structures/divided/pdb/"
+        endpoint = f"ftp_data/structures/divided/{file_format}/"
         cmd = f"rsync -rlpt -v -z --delete --port=33444 {url}::{endpoint} {self.pdb_dir}"
         if self.verbose:
             print('Synchronize PDB data:', cmd)

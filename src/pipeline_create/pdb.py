@@ -13,8 +13,20 @@ src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-
 from bioomics import BuildComplex
+
+'''
+pdb -> meta_pdb -> pdb_compound
+                -> pdb_method
+                -> pdb_keyword
+                -> pdb_chain_seq
+                -> pdb_chainid -> meta_chain_pdb
+                               -> meta_chain_faa
+                               -> pdb_chain_type
+                               -> pdb_chain_fixed
+                -> meta_combo_pdb
+                -> meta_faa
+'''
 
 SQL_TEXT = """
 CREATE TABLE pdb(
@@ -146,7 +158,15 @@ CREATE TABLE pdb_chain_type(
     CONSTRAINT fk_chain_type FOREIGN KEY (chain_id)
         REFERENCES pdb_chainid(chain_id)
 );
-
+//
+DROP TABLE IF EXISTS pdb_chain_fixed;
+CREATE TABLE pdb_chain_fixed (
+    chain_id        VARCHAR(20) PRIMARY KEY,
+    pdb_file        VARCHAR(60),
+    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pdb_chain_fixed FOREIGN KEY (chain_id)
+        REFERENCES pdb_chainid(chain_id)
+);
 """
 #####################################################################################
 

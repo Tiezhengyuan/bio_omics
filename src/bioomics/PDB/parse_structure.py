@@ -134,6 +134,19 @@ class ParseStructure:
                     res[chain_id] = seq
         return res
 
+    def model_chains_seq(self) -> dict:
+        res = {}
+        for model in self.structure:
+            model_no = model.id
+            res[model_no] = {}
+            for chain in model:
+                chain_id = chain.id
+                seq = self._chain_seq(chain)
+                if seq:
+                    res[model_no][chain_id] = seq
+        return res
+    
+    # TODO: deprecated in the future
     def get_chain_no(self) -> dict:
         chain_no_pool = {}
         for model in self.structure:

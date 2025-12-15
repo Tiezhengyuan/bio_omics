@@ -343,3 +343,4 @@ class Pdb(ParseStructure):
         except Exception as e:
             print(f'Error: can not extract chain {chain_no_pool} from {self.structure_id}, error={e}')
         return False
+

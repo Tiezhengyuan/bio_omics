@@ -16,6 +16,13 @@ if src_dir not in sys.path:
 
 from bioomics import BuildComplex
 
+'''
+relax chain/combo of pdb separately 
+meta_pdb -> fixed_pdb -> fixed_chain -> relaxed_chain_amber14
+                      -> fixed_comb2
+                      -> fixed_comb3
+'''
+
 SQL_TEXT = """
 DROP TABLE IF EXISTS fixed_pdb;
 CREATE TABLE fixed_pdb (
@@ -26,42 +33,6 @@ CREATE TABLE fixed_pdb (
     CONSTRAINT fk_fixed_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)
 );
-//
-DROP TABLE IF EXISTS relaxed_pdb_amber99sb;
-CREATE TABLE relaxed_pdb_amber99sb (
-    pdb_id              VARCHAR(10),
-    original_energy     VARCHAR(50),
-    relaxed_energy      VARCHAR(50),
-    pdb_file            VARCHAR(50),
-    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (pdb_id),
-    CONSTRAINT fk_relaxed_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
-);
-//
-DROP TABLE IF EXISTS relaxed_pdb_amber14;
-CREATE TABLE relaxed_pdb_amber14 (
-    pdb_id              VARCHAR(10),
-    original_energy     VARCHAR(50),
-    relaxed_energy      VARCHAR(50),
-    pdb_file            VARCHAR(50),
-    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (pdb_id),
-    CONSTRAINT fk_relaxed_pdb_amber14 FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
-);
-
-//
-DROP TABLE IF EXISTS pdb_chain_fixed;
-CREATE TABLE pdb_chain_fixed (
-    chain_id        VARCHAR(20) PRIMARY KEY,
-    pdb_file        VARCHAR(60),
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pdb_chain_fixed FOREIGN KEY (chain_id)
-        REFERENCES pdb_chainid(chain_id)
-);
-
-
 //
 DROP TABLE IF EXISTS fixed_chain;
 CREATE TABLE fixed_chain (
@@ -98,17 +69,6 @@ CREATE TABLE fixed_combo2 (
         REFERENCES pdb(pdb_id)
 );
 //
-DROP TABLE IF EXISTS relaxed_combo2_amber99sb;
-CREATE TABLE relaxed_combo2_amber99sb (
-    complex_id          INT PRIMARY KEY,
-    original_energy     VARCHAR(50),
-    relaxed_energy      VARCHAR(50),
-    pdb_file            VARCHAR(50),
-    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_relaxed_combo2_fixed FOREIGN KEY (complex_id)
-        REFERENCES fixed_combo2(complex_id)
-);
-//
 DROP TABLE IF EXISTS fixed_combo3;
 CREATE TABLE fixed_combo3 (
     complex_id      INT PRIMARY KEY AUTO_INCREMENT,
@@ -120,19 +80,6 @@ CREATE TABLE fixed_combo3 (
     CONSTRAINT fk_fixed_combo3 FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)
 );
-//
-DROP TABLE IF EXISTS relaxed_combo3_amber99sb;
-CREATE TABLE relaxed_combo3_amber99sb (
-    complex_id          INT PRIMARY KEY,
-    original_energy     VARCHAR(50),
-    relaxed_energy      VARCHAR(50),
-    pdb_file            VARCHAR(50),
-    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_relaxed_combo3_fixed FOREIGN KEY (complex_id)
-        REFERENCES fixed_combo3(complex_id)
-);
-
-
 
 """
 #####################################################################################

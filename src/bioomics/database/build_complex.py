@@ -221,6 +221,21 @@ class BuildComplex(BuildDb):
                     (pdb_id, original_energy, relaxed_energy, pdb_file)
                 VALUES (%s, %s, %s, %s)
             """,
+            'relaxed_amber14_chain': f"""
+                INSERT INTO {table_name}
+                    (chain_id, pdb_id, model_no, chain_no, relative_path)
+                VALUES (%s, %s, %s, %s, %s)
+            """,
+            'relaxed_amber14_combo2': f"""
+                INSERT INTO {table_name}
+                    (pdb_id, combo_id, model_no, chain_combo, endpoint_prefix)
+                VALUES (%s, %s, %s, %s, %s)
+            """,
+            'relaxed_amber14_combo3': f"""
+                INSERT INTO {table_name}
+                    (pdb_id, combo_id, model_no, chain_combo, endpoint_prefix)
+                VALUES (%s, %s, %s, %s, %s)
+            """,
             'relaxed_chain_amber14': f"""
                 INSERT INTO {table_name}
                     (chain_id, original_energy, relaxed_energy, endpoint)
@@ -229,6 +244,11 @@ class BuildComplex(BuildDb):
             'pdb_chain_fixed': f"""
                 INSERT INTO {table_name}
                     (chain_id, pdb_file) VALUES (%s, %s)
+            """,
+            'chain_alphafold': f"""
+                INSERT INTO {table_name}
+                    (chain_id, endpoint, predicted_at)
+                VALUES (%s, %s, %s)
             """,
         }
         insert_query = query_pool[table_name]
