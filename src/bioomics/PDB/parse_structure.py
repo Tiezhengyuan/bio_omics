@@ -93,7 +93,7 @@ class ParseStructure:
         tmp = {}
         try:
             for model in self.structure:
-                model_no = model.id
+                model_no = int(model.id)
                 for chain in model:
                     chain_no = chain.id
                     key = f"{model_no}_{chain_no.upper()}"
@@ -105,12 +105,44 @@ class ParseStructure:
 
         chains = []
         for key in list(tmp):
-            for ver_no, (model_no, chain_no, chain) in enumerate(tmp[key]):
-                chain_id = f"{pdb_id}_{key}_{ver_no}"
-                rec = (chain_id, pdb_id, model_no, chain_no, chain)
+            for idx, (model_no, chain_no, chain) in enumerate(tmp[key]):
+                chain_id = f"{pdb_id}_{key}_{idx}"
+                rec = {
+                    'chain_id': chain_id,
+                    'pdb_id': pdb_id,
+                    'model_no': model_no,
+                    'chain_no': chain_no,
+                    'idx': idx,
+                    'chain': chain,
+                }
                 chains.append(rec)
         return chains
-            
+
+    def parse_model_chains(self, pdb_id:str=None) -> dict:
+        res = {}
+        chains = self.parse_chains(pdb_id)
+        for item in chains:
+            model_no = item['model_no']
+            if model_no not in res:
+                res[model_no] = []
+            res[model_no].append(item)
+        return res
+    
+    def parse_model_chains_seq(self, pdb_id:str=None) -> dict:
+        res = {}
+        chains = self.parse_chains(pdb_id)
+        for item in chains:
+            seq = self._chain_seq(item['chain'])
+            if seq:
+                model_no = item['model_no']
+                if model_no not in res:
+                    res[model_no] = []
+                res[model_no].append({
+                    'id': item['chain_id'],
+                    'seq': seq,
+                })
+        return res
+    
     def _chain_seq(self, chain):
         '''
         return AA seq given a chain object
@@ -134,36 +166,58 @@ class ParseStructure:
                     res[chain_id] = seq
         return res
 
-    def model_chains_seq(self) -> dict:
+    def chains_seq(self) -> dict:
         res = {}
         for model in self.structure:
-            model_no = model.id
+            model_no = int(model.id)
             res[model_no] = {}
             for chain in model:
                 chain_id = chain.id
                 seq = self._chain_seq(chain)
                 if seq:
                     res[model_no][chain_id] = seq
+            if not res[model_no]:
+                del res[model_no]
         return res
+    
+    def model_chains_seq(self, model_no:int) -> dict:
+        for model in self.structure:
+            if int(model_no) == int(model.id):
+                res = {}
+                for chain in model:
+                    chain_id = chain.id
+                    seq = self._chain_seq(chain)
+                    if seq:
+                        res[chain_id] = seq
+                return res
+        return {}
     
     # TODO: deprecated in the future
     def get_chain_no(self) -> dict:
         chain_no_pool = {}
         for model in self.structure:
-            model_no = model.id
+            model_no = int(model.id)
             chain_no_pool[model_no] = []
             for chain in model:
                 if chain.id not in chain_no_pool[model_no]:
                     chain_no_pool[model_no].append(chain.id)
         return chain_no_pool
 
+    def get_model_chain_no(self, model_no:int) -> dict:
+        for model in self.structure:
+            if model_no == int(model.id):
+                res = [chain.id for chain in model]
+                res.sort()
+                return res
+        return []
+    
     def get_chains(self):
         '''
         update self.chains
         '''
         for model in self.structure:
             model_chains = {
-                'model_no': model.id,
+                'model_no': int(model.id),
                 'chains': [],
             }
             for chain in model:
@@ -185,7 +239,6 @@ class ParseStructure:
                     if atom.id == 'CA':
                         c_atoms.append(atom)
             yield model, chain, c_atoms
-            
 
     def ca_residue_iter(self):
         '''

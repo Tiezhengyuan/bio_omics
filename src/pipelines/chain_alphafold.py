@@ -9,40 +9,33 @@ function:
     - relax structure based on fixed pdb files
     - insert data into table chain_alphafold
 '''
-from collections import defaultdict
-from datetime import datetime
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, BuildComplex, QueryComplex, Predictor
-
+from helper import *
+from bioomics import Predictor
 
 def retrieve_pdb(args, meta):
     pdb_group = args['pdb_group']
     table_name = args['table_name']
     query = f"""
-        SELECT P.pdb_id, F.chain_id, F.faa_file AS endpoint
-        FROM meta_chain_faa F
-        LEFT JOIN pdb_chainid I
-        ON F.chain_id = I.chain_id
-        LEFT JOIN meta_pdb P
-        ON I.pdb_id = P.pdb_id
-        LEFT JOIN pdb_chain_seq S
-        ON I.chain_id = S.chain_id
-        WHERE P.pdb_group = {pdb_group}
-            AND F.faa_file IS NOT NULL
-            AND S.chain_seq IS NOT NULL
-            AND I.model_no = 0
-            AND F.chain_id NOT IN (
-                SELECT chain_id FROM {table_name}
-            )
-            AND P.pdb_id IN (
-                SELECT pdb_id from view_antibody
-            )
+        WITH tmp AS(
+            SELECT DISTINCT I.pdb_id, S.first_chain_id, F.relative_path
+                FROM pdb_chain_seq S
+                LEFT JOIN pdb_chainid I ON S.first_chain_id = I.chain_id
+                LEFT JOIN meta_chain_faa F ON S.first_chain_id = F.chain_id
+                WHERE F.relative_path IS NOT NULL
+                    AND S.first_chain_id IS NOT NULL
+                    AND S.first_chain_id NOT IN (
+                        SELECT chain_id FROM {table_name}
+                    )
+                    AND I.model_no = 0
+                    AND I.pdb_id IN (
+                        SELECT pdb_id from view_antibody
+                    )  
+        )
+        SELECT T.pdb_id, T.first_chain_id AS chain_id, T.relative_path
+        FROM tmp T
+        LEFT JOIN meta_pdb P ON T.pdb_id=P.pdb_id
+        where P.pdb_group = {pdb_group}
     ;"""
     rows = QueryComplex(args['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
@@ -51,8 +44,6 @@ def retrieve_pdb(args, meta):
     return rows
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
         'data_dir': os.getenv('data_dir'),
@@ -66,14 +57,14 @@ if __name__ == "__main__":
 
     for row in rows:
         t0 = datetime.now()
-        pdb_id, chain_id, = row['pdb_id'], row['chain_id'], 
+        pdb_id, chain_id = row['pdb_id'], row['chain_id']
         endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id, chain_id)
         outdir = os.path.join(args['predict_dir'], endpoint)
         Dir(outdir).init_dir()
 
         # predict
         _args = {
-            'faa_file': os.path.join(args['data_dir'], row['endpoint']),
+            'faa_file': os.path.join(args['data_dir'], row['relative_path']),
             'output_dir': outdir,
         }
         _args.update(args)
@@ -92,4 +83,5 @@ if __name__ == "__main__":
             print('### Try to insert ', rec)
         bc = BuildComplex([tuple(rec),], args['verbose'])
         bc.insert_batch_records(args['table_name'])
+
     print(meta)

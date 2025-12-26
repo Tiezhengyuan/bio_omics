@@ -92,3 +92,19 @@ class ProcessSeq:
             _end = match_cdr3.start()
             return seq_cdr[:_end]
         return seq_cdr
+
+    @staticmethod
+    def to_colabfold_csv(data:dict, outfile:str):
+        '''
+        Used as the input of colabfold for structure prediction
+        '''
+        try:
+            with open(outfile, 'w') as f:
+                f.write("id,sequence\n")
+                for seq_id, seq_pool in data.items():
+                    seq_str = ':'.join(seq_pool)
+                    text = f"{seq_id},{seq_str}\n"
+                    f.write(text)
+            return 'succeed'
+        except Exception as e:
+            return 'fail'

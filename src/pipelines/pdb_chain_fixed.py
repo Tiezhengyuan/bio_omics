@@ -1,48 +1,39 @@
 #!/usr/bin/python
 '''
 requirements:
-    - table pdb_chainid
+    - table meta_chain_pdb
 example:
-    - parallel -j1 python src/pipelines/pdb_chain_fixed.py ::: {0..116}
+    - parallel -j4 python src/pipelines/pdb_chain_fixed.py ::: {0..116}
     - python src/pipelines/pdb_chain_fixed.py 0
 function:
     - fix pdb files
     - insert data into table pdb_chain_fixed
+note:
+    - only consider model.id=0 and antibody for saving time.
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics.common import Dir
-from bioomics import BuildComplex, QueryComplex, OpenmmPdbfixer
-
+from helper import *
+from bioomics import OpenmmPdbfixer
 
 def retrieve_pdb(args, meta):
     pdb_group = args['pdb_group']
     table_name = args['table_name']
     query = f"""
-        SELECT C.pdb_id, M.chain_id, M.pdb_file
+        SELECT M.pdb_id, M.chain_id, M.relative_path
         FROM meta_chain_pdb M
-        LEFT JOIN pdb_chainid C
-        ON M.chain_id = C.chain_id
-        LEFT JOIN meta_pdb P
-        ON C.pdb_id = P.pdb_id
+        LEFT JOIN pdb_chainid C ON M.chain_id = C.chain_id
+        LEFT JOIN meta_pdb P ON M.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
-            AND M.pdb_file IS NOT NULL
+            AND C.model_no = 0
+            AND M.relative_path IS NOT NULL
             AND M.chain_id NOT IN (
-                SELECT chain_id
-                FROM {table_name}
+                SELECT chain_id FROM {table_name}
             )
-            AND C.pdb_id IN (
+            AND M.pdb_id IN (
                 SELECT pdb_id FROM view_antibody
             )
     ;"""
-    qc = QueryComplex(args['verbose'])
-    rows = qc.list_data(query)
+    rows = QueryComplex(args['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
     meta['pdb_group'] = int(pdb_group)
     meta['rows'] += len(rows)
@@ -50,40 +41,42 @@ def retrieve_pdb(args, meta):
 
 def run_fixer(rows, args, meta):
     for row in rows:
+        time0 = datetime.now()
         pdb_id = row['pdb_id']
-        pdb_endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id)
-        outdir = os.path.join(args['pdb_dir'], pdb_endpoint)
+        endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id)
+        outdir = os.path.join(args['pdb_dir'], endpoint)
         Dir(outdir).init_dir()
         
         chain_id = row['chain_id']
         file_name = chain_id + '.pdb'
         fixed_pdb_file = os.path.join(outdir, file_name)
         if args['overwrite'] or not os.path.isfile(fixed_pdb_file):
-            pdb_file = os.path.join(args['data_dir'], row['pdb_file'])
             # run pdbfixer
-            op = OpenmmPdbfixer(pdb_file, args['verbose'])
+            input_pdb = os.path.join(args['data_dir'], row['relative_path'])
+            op = OpenmmPdbfixer(input_pdb, args['verbose'])
             output_prefix = os.path.join(outdir, chain_id)
             info = op.fast_fixer(output_prefix)
             meta[info['status']] += 1
         else:
             meta['skip'] += 1
+        
+        # build record
         if os.path.isfile(fixed_pdb_file):
-            relative_path = os.path.join(pdb_endpoint, file_name)
-            yield chain_id, relative_path
+            meta['insert_fixed'] += 1
+            relative_path = os.path.join(endpoint, file_name)
+            yield chain_id, relative_path, time0
         else:
-            meta['null'] += 1
-            yield chain_id, None
+            meta['insert_null'] += 1
+            yield chain_id, None, time0
 
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
-        'overwrite': True,
+        'overwrite': False,
+        'chunk_size': 5,
         'pdb_dir': os.getenv('pdb_dir'),
         'data_dir': os.getenv('data_dir'),
-        'chunk_size': 5,
         'table_name': 'pdb_chain_fixed',
     }
     args['pdb_group'] = sys.argv[1]

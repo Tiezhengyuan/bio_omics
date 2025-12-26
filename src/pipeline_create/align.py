@@ -19,30 +19,46 @@ from bioomics import BuildComplex
 '''
 align_imgt: igblastp of pdb chains on IMGT V-region
 align_vregion: FR and CDR idetity in v-region
+
+pdb_faa -> meta_blastp5  -> align_uniprot
+        -> meta_igblastp -> align_imgt
+                         -> align_vregion
+
 '''
 
 SQL_TEXT = """
 DROP TABLE IF EXISTS meta_blastp5;
 CREATE TABLE meta_blastp5(
-    pdb_id          VARCHAR(20),
-    aln_file        VARCHAR(100) NOT NULL,
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    relative_aln    VARCHAR(60),
     CONSTRAINT fk_blastp_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)
 );
 //
 DROP TABLE IF EXISTS align_uniprot;
 CREATE TABLE align_uniprot(
-    chain_id        VARCHAR(20),
     pdb_id          VARCHAR(10),
+    chain_id        VARCHAR(20),
     uniprot_acc     VARCHAR(20),
     evalue          DOUBLE,
     bit_score       INT,
     identity        FLOAT,
-    CONSTRAINT pk_align_uniprot PRIMARY KEY (chain_id)
+    UNIQUE (chain_id)
+);
+//
+DROP TABLE IF EXISTS meta_igblastp;
+CREATE TABLE meta_igblastp(
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    relative_aln    VARCHAR(60),
+    CONSTRAINT fk_meta_igblastp_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
 );
 //
 DROP TABLE IF EXISTS align_imgt;
 CREATE TABLE align_imgt(
+    pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
     allele_name     VARCHAR(20),
     gene_name       VARCHAR(20),
@@ -51,23 +67,23 @@ CREATE TABLE align_imgt(
     isotype         VARCHAR(10),
     evalue          DOUBLE,
     bit_score       INT,
-    CONSTRAINT pk_imgt PRIMARY KEY (chain_id),
-    CONSTRAINT fk_imgt_chain FOREIGN KEY (chain_id)
-        REFERENCES pdb_chain(chain_id)
+    UNIQUE(chain_id),
+    CONSTRAINT fk_imgt_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
 );
 //
 DROP TABLE IF EXISTS align_vregion;
 CREATE TABLE align_vregion (
-    chain_id        VARCHAR(20),
     pdb_id          VARCHAR(10),
+    chain_id        VARCHAR(20),
     region_name     VARCHAR(20),
     identity        FLOAT,
     start           INT,
     end             INT,
     seq             TEXT,
-    CONSTRAINT pk_vregion PRIMARY KEY (chain_id, region_name),
-    CONSTRAINT fk_vregion_chain FOREIGN KEY (chain_id)
-        REFERENCES pdb_chain(chain_id)
+    UNIQUE(chain_id, region_name),
+    CONSTRAINT fk_vregion_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
 );
 //
 DROP TABLE IF EXISTS imgt_inn_blastp;

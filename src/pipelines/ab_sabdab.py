@@ -8,45 +8,64 @@ functions:
 '''
 from collections import defaultdict
 from dotenv import load_dotenv
+import numpy as np
+import pandas as pd
 import os
 import sys
 src_dir = os.path.dirname(os.path.dirname(__file__))
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-from bioomics import Sabdab, BuildComplex, QueryComplex
+from bioomics import BuildComplex, QueryComplex
 
+def prepare_data(rows):
+    for row in rows:
+        pdb_id = row['pdb_id']
+        path = row['summary_file']
+        df = pd.read_csv(path, sep='\t')
+        for _, row in df.iterrows():
+            row = row.replace({
+                np.nan: None,
+                'NOT': None,
+            })
+            if row.get('pdb'):
+                pdb_id = str(row['pdb']).upper()
+                resolution = row.get('resolution')
+                if resolution is None:
+                    resolution = 0
+                elif isinstance(resolution, str):
+                    resolution = float(resolution.split(',')[0])
+                record = (
+                    pdb_id,
+                    row['model'],
+                    row['Hchain'],
+                    row['Lchain'],
+                    row['antigen_chain'],
+                    row['antigen_type'],
+                    resolution,
+                )
+                yield record
+        
 
 if __name__ == '__main__':
     meta = defaultdict(int)
     load_dotenv()
     args = {
         'verbose': True,
-        'overwrite': False,
+        'chunk_size': 5,
         'download_dir': os.getenv("download_dir"),
-        'chunk_size': 50,
+        'table_name': 'ab_sabdab',
     }
-    sab = Sabdab(args['download_dir'], args['overwrite'])
-
-    # retrieve list of pdb_id from sabdab_pdbs_list.txt
-    # Warning: the list pdb in this file doesn't cover all pdb in sabdab.
-    sabdab_ids = sab.retrieve_sabdab_pdb_ids()
-    meta['sabdab_pdb_ids'] = len(sabdab_ids)
-
-    # filter pdb_ids
-    table_name = 'meta_sabdab'
-    pdb_ids = QueryComplex(args['verbose']).unique_values(table_name, 'pdb_id')
-    if pdb_ids:
-        sabdab_ids = list(set(sabdab_ids).difference(pdb_ids))
-    meta['filtered_pdb_ids'] = len(sabdab_ids)
-
-    # download summary/*.tsv
-    record_iter = sab.download_summary(sabdab_ids, meta)
+    # 
+    query = "SELECT * FROM meta_sabdab WHERE summary_file IS NOT NULL;"
+    rows = QueryComplex(args['verbose']).list_data(query)
+    meta['rows'] = len(rows)
 
     # insertion
-    table_name = 'meta_sabdab'
+    
+    record_iter = prepare_data(rows)
     bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
-    bc.empty_table(table_name)
-    bc.insert_meta_sabdab()
+    bc.empty_table(args['table_name'])
+    bc.insert_batch_records(args['table_name'])
 
     print(meta)

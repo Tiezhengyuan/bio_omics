@@ -1,5 +1,6 @@
 '''
 '''
+import os
 import json
 
 class ProcessJson:
@@ -24,14 +25,14 @@ class ProcessJson:
         return False
 
     @staticmethod
-    def iter_to_json(_iter, outprefix:str, chunk_size:int=10_000):
+    def iter_to_json(_iter, outdir:str, chunk_size:int=10_000):
         pool, file_list = [], []
         n, ix = 0, 0
         for record in _iter:
             pool.append(record)
             n += 1
             if len(pool) >= chunk_size:
-                outfile = f"{outprefix}_{ix}.json"
+                outfile = os.path.join(outdir, f"{ix}.json")
                 with open(outfile, 'w') as f:
                     json.dump(pool, f, indent=4)
                 pool = []
@@ -39,7 +40,7 @@ class ProcessJson:
                 file_list.append(outfile)
         else:
             if pool:
-                outfile = f"{outprefix}_{ix}.json"
+                outfile = os.path.join(outdir, f"{ix}.json")
                 with open(outfile, 'w') as f:
                     json.dump(pool, f, indent=4)
                 file_list.append(outfile)

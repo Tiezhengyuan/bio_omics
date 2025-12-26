@@ -9,28 +9,19 @@ function:
     - relax structure based on fixed pdb files
     - insert data into table relaxed_chain
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, BuildComplex, QueryComplex, OpenmmSimulation
-
+from helper import *
+from bioomics import OpenmmSimulation
 
 def retrieve_pdb(args, meta):
     pdb_group = args['pdb_group']
     table_name = args['table_name']
-    # fixed_pdb.pdb_file is relative path
     query = f"""
-        SELECT P.pdb_id, F.chain_id, F.pdb_file
+        SELECT DISTINCT P.pdb_id, F.chain_id, F.relative_pdb
         FROM fixed_chain F
-        LEFT JOIN meta_pdb P
-        ON F.pdb_id = P.pdb_id
+        LEFT JOIN meta_pdb P ON F.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
-            AND F.pdb_file IS NOT NULL
+            AND F.relative_pdb IS NOT NULL
             AND F.chain_id NOT IN (
                 SELECT chain_id FROM {table_name}
             )
@@ -46,14 +37,14 @@ def retrieve_pdb(args, meta):
 
 def run_simulation(rows, args, meta):
     for row in rows:
+        time0 = datetime.now()
         pdb_id, chain_id = row['pdb_id'], row['chain_id'], 
-        original_energy, relaxed_energy = None, None
         endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id, chain_id)
-        outdir = os.path.join(args['pdb_dir'], endpoint)
-        Dir(outdir).init_dir()
         
         # run simulation
-        input_pdb = os.path.join(args['pdb_dir'], row['pdb_file'])
+        input_pdb = os.path.join(args['pdb_dir'], row['relative_pdb'])
+        outdir = os.path.join(args['data_dir'], endpoint)
+        Dir(outdir).init_dir()
         curr_args = {
             'pdb_id': pdb_id,
             'outdir': outdir,
@@ -65,24 +56,23 @@ def run_simulation(rows, args, meta):
         relaxed_energy = info.get('relaxed_energy')
         
         # build record
-        rec0 = (row['chain_id'], original_energy, relaxed_energy,)
+        rec = (chain_id, original_energy, relaxed_energy, time0,)
         relax_pdb_file = os.path.join(outdir, 'relaxed.pdb')
         if os.path.isfile(relax_pdb_file):
-            yield rec0 + (endpoint,)
+            yield rec + (endpoint,)
         else:
             meta['null'] += 1
-            yield rec0 + (None,)
+            yield rec + (None,)
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
-        'pdb_dir': os.getenv('pdb_dir'),
         'chunk_size': 5,
+        'pdb_dir': os.getenv('pdb_dir'),
+        'data_dir': os.getenv('data_dir'),
         'table_name': 'relaxed_chain_amber14',
         'force_fields': ['amber14-all.xml', 'amber14/tip3pfb.xml'],
-        'max_iterations': 0,
+        'max_iterations': 5000,
         'steps': 100_000,
     }
     args['pdb_group'] = sys.argv[1]

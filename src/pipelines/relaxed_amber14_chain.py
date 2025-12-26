@@ -2,34 +2,25 @@
 requirements:
     - The table relaxed_pdb_amber14 is ready.
 example:
-    - parallel -j4 python src/pipelines/export_amber14_chain.py ::: {0..116}
-    - python src/pipelines/export_amber14_chain.py 0
+    - parallel -j4 python src/pipelines/relaxed_amber14_chain.py ::: {0..116}
+    - python src/pipelines/relaxed_amber14_chain.py 0
 function:
     - split relaxed PDB of complex to chain PDB.
 '''
-from dotenv import load_dotenv
-from collections import defaultdict
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import QueryComplex, BuildComplex, Dir, Pdb
-
+from helper import *
 
 def retrieve_data(pdb_group, args, meta):
     table_name = args['table_name']
     query = f"""
-        SELECT F.pdb_id, F.pdb_file
+        SELECT F.pdb_id, F.relative_pdb
         FROM relaxed_pdb_amber14 F
-        LEFT JOIN meta_pdb P
-        ON F.pdb_id = P.pdb_id
+        LEFT JOIN meta_pdb P ON F.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
             AND F.pdb_id NOT IN (
                 SELECT pdb_id FROM {table_name}
             )
-            AND F.pdb_file IS NOT NULL
+            AND F.relative_pdb IS NOT NULL
     ;"""
     rows = QueryComplex(args['verbose']).list_data(query)
     meta['pdb_group'] = int(pdb_group)
@@ -44,7 +35,7 @@ def pull_chain_pdb(rows, args, meta):
         Dir(outdir).init_dir()
 
         # input pdb
-        pdb_file = os.path.join(args['pdb_dir'], row['pdb_file'])
+        pdb_file = os.path.join(args['pdb_dir'], row['relative_pdb'])
         p = Pdb(pdb_file, None, args['verbose'])
         p.load_structure()
         chains = p.parse_chains(pdb_id)
@@ -65,17 +56,15 @@ def pull_chain_pdb(rows, args, meta):
 
 ##################################
 if __name__ == "__main__":
-    pdb_group = sys.argv[1]
-    load_dotenv()
     args = {
         'verbose': True,
         'overwrite': True,
+        'chunk_size': 50,
         'pdb_dir': os.getenv('pdb_dir'),
         'data_dir': os.getenv('data_dir'),
-        'chunk_size': 50,
         'table_name': 'relaxed_amber14_chain',
     }
-    meta = defaultdict(int)
+    pdb_group = sys.argv[1]
     rows = retrieve_data(pdb_group, args, meta)
 
     if len(rows) > 0:

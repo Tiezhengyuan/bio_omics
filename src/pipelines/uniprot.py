@@ -6,15 +6,9 @@ example:
 function:
     - synchronize PDB/UniProt/alignments with data in database COMPLEX.
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import QueryComplex,  BuildComplex, Uniprot
+from helper import *
+from bioomics import Uniprot, ParseDatRecord
 
 def get_record(args, meta):
     qc = QueryComplex(args['verbose'])

@@ -16,15 +16,18 @@ class PullPdb:
         self.pdb_dir = pdb_dir
         self.verbose = verbose
 
-    def synchronize_pdb(self, file_format:str=None):
+    def synchronize_pdb(self, data_format:str=None):
         '''
         download entire PDB files to the local
         file_format: pdb, mmCIF, xml
         '''
-        file_format = 'pdb' if file_format is None else file_format
+        data_format = 'pdb' if data_format is None else data_format
         url = "rsync.rcsb.org"
-        endpoint = f"ftp_data/structures/divided/{file_format}/"
-        cmd = f"rsync -rlpt -v -z --delete --port=33444 {url}::{endpoint} {self.pdb_dir}"
+        endpoint = f"ftp_data/structures/divided/{data_format}/"
+        # -r recursive, -l copy symlinks as symlinks
+        # -p keep permissions, -t keep time modifications
+        # -v verbose, -z compress file
+        cmd = f"rsync -rlpt -v -z --port=33444 {url}::{endpoint} {self.pdb_dir}"
         if self.verbose:
             print('Synchronize PDB data:', cmd)
         res = os.system(cmd)
@@ -83,11 +86,14 @@ class PullPdb:
     def pdb_id(self, path):
         file_name = os.path.basename(path)
         if path.endswith('.ent.gz'):
-            pdb_id = re.sub(r'^pdb|\.ent\.gz$', '', file_name).upper()
-            return pdb_id
+            pdb_id = re.sub(r'^pdb|\.ent\.gz$', '', file_name)
+            return pdb_id.upper()
+        elif path.endswith('.cif.gz'):
+            pdb_id = file_name.split('.')[0]
+            return pdb_id.upper()
         elif path.endswith('.pdb'):
-            pdb_id = re.sub(r'\pdb$', '', file_name).upper()
-            return pdb_id
+            pdb_id = re.sub(r'\pdb$', '', file_name)
+            return pdb_id.upper()
         return file_name
     
     def iter_raw_pdb_args(self, args:dict):

@@ -3,18 +3,11 @@
 requirements:
     - a empty database is created.
 example:
-    - python src/pipeline_create/pdb_simulation.py
+    - python src/pipeline_create/predict.py
 functions:
     - build tables
 '''
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
-
-
-from bioomics import BuildComplex
+from create_helper import *
 
 SQL_TEXT = """
 DROP TABLE IF EXISTS chain_alphafold;

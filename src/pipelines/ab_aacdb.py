@@ -1,20 +1,12 @@
 '''
 example: 
-    - python src/pipelines/aacdb.py
+    - python src/pipelines/ab_aacdb.py
 functions:
     - download data from AACDB
     - put data to table ab_aacdb
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import pandas as pd
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, BuildComplex
+from helper import *
 
 def download(args):
     outdir = os.path.join(args['download_dir'], 'AACDB')
@@ -52,12 +44,11 @@ def retrieve_data(args, meta):
 
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
-        'download_dir': os.getenv("download_dir"),
         'chunk_size': 50,
+        'download_dir': os.getenv("download_dir"),
+        'table_name': 'ab_aacdb',
     }
     download(args)
 
@@ -69,7 +60,7 @@ if __name__ == "__main__":
     print(f"Try to update data from AACDB into table {table_name}.")
     bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
     bc.empty_table(table_name)
-    bc.insert_ab_aacdb()
+    bc.insert_batch_records(args['table_name'])
 
     print(meta)
 

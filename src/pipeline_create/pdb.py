@@ -15,17 +15,34 @@ if src_dir not in sys.path:
 
 from bioomics import BuildComplex
 
+# deprecated
 '''
-pdb -> meta_pdb -> pdb_compound
+//
+CREATE TABLE pdb_chain(
+    chain_id        VARCHAR(20),
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    chain_no        VARCHAR(5),
+    chain_seq       TEXT,
+    CONSTRAINT pk_chain_pdb PRIMARY KEY (chain_id),
+    CONSTRAINT fk_chain_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+);
+'''
+
+'''
+pdb -> meta_pdb
+    -> meta_mmcif
+                -> pdb_compound
                 -> pdb_method
                 -> pdb_keyword
+                -> pdb_chainid
                 -> pdb_chain_seq
-                -> pdb_chainid -> meta_chain_pdb
-                               -> meta_chain_faa
-                               -> pdb_chain_type
-                               -> pdb_chain_fixed
-                -> meta_combo_pdb
-                -> meta_faa
+                -> pdb_faa
+                -> meta_chain_faa
+                -> meta_chain_pdb
+                -> meta_combo2_pdb
+                -> meta_combo2_seq
 '''
 
 SQL_TEXT = """
@@ -37,13 +54,23 @@ CREATE TABLE pdb(
     CONSTRAINT pk_pdb PRIMARY KEY (pdb_id)
 );
 //
-DROP TABLE IF EXISTS meta_pdb
+DROP TABLE IF EXISTS meta_pdb;
 CREATE TABLE meta_pdb(
     pdb_id          VARCHAR(10),
-    pdb_file        VARCHAR(60) NOT NULL,
+    relative_path   VARCHAR(60) NOT NULL,
     pdb_group       INT,
     UNIQUE (pdb_id),
     CONSTRAINT fk_meta_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS meta_mmcif;
+CREATE TABLE meta_mmcif(
+    pdb_id          VARCHAR(10),
+    relative_path   VARCHAR(60) NOT NULL,
+    pdb_group       INT,
+    UNIQUE (pdb_id),
+    CONSTRAINT fk_meta_mmcif FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)  ON DELETE CASCADE
 );
 //
@@ -76,97 +103,81 @@ CREATE TABLE pdb_keyword(
 //
 DROP TABLE IF EXISTS pdb_chainid;
 CREATE TABLE pdb_chainid(
-    chain_id        VARCHAR(20) PRIMARY KEY,
+    chain_id        VARCHAR(20),
     pdb_id          VARCHAR(10),
     model_no        INT,
     chain_no        VARCHAR(5),
+    idx             INT,
+    UNIQUE(chain_id),
     CONSTRAINT fk_chainid_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)  ON DELETE CASCADE
 );
-//
-CREATE TABLE pdb_chain(
-    chain_id        VARCHAR(20),
-    pdb_id          VARCHAR(10),
-    model_no        INT,
-    chain_no        VARCHAR(5),
-    chain_seq       TEXT,
-    CONSTRAINT pk_chain_pdb PRIMARY KEY (chain_id),
-    CONSTRAINT fk_chain_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
-);
-//
-DROP TABLE IF EXISTS meta_chain_pdb;
-CREATE TABLE meta_chain_pdb(
-    chain_id        VARCHAR(20),
-    pdb_file        VARCHAR(60),
-    CONSTRAINT pk_pdb_chain PRIMARY KEY (chain_id),
-    CONSTRAINT fk_pdb_chain FOREIGN KEY (chain_id)
-        REFERENCES pdb_chainid(chain_id)
-);
+
 //
 DROP TABLE IF EXISTS pdb_chain_seq;
 CREATE TABLE pdb_chain_seq(
+    pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
+    first_chain_id  VARCHAR(20),
     pro_len         INT,
     chain_seq       TEXT,
-    CONSTRAINT pk_chain_seq PRIMARY KEY (chain_id)
+    UNIQUE(chain_id),
+    CONSTRAINT fk_chainseq_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS meta_chain_faa;
 CREATE TABLE meta_chain_faa(
+    pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
-    faa_file        VARCHAR(60) NOT NULL,
-    UNIQUE (chain_id),
+    relative_path   VARCHAR(60),
+    UNIQUE (pdb_id, chain_id),
     CONSTRAINT fk_faa_chain FOREIGN KEY (chain_id)
         REFERENCES pdb_chainid(chain_id)
 );
 //
-DROP TABLE IF EXISTS meta_combo_pdb;
-CREATE TABLE meta_combo_pdb(
-    pdb_id          VARCHAR(10),
-    model_no        INT,
-    chain_combo     VARCHAR(10),
-    pdb_file        VARCHAR(60),
-    CONSTRAINT fk_combo_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
-);
-//
-DROP TABLE IF EXISTS meta_faa;
-CREATE TABLE meta_faa(
-    pdb_id          VARCHAR(10),
-    faa_file        VARCHAR(60),
-    UNIQUE (pdb_id),
-    CONSTRAINT fk_faa_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
-);
-//
-DROP TABLE IF EXISTS pdb_chain_type;
-CREATE TABLE pdb_chain_type(
+DROP TABLE IF EXISTS meta_chain_pdb;
+CREATE TABLE meta_chain_pdb(
     pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
-    chain_type      VARCHAR(20),
-    water_res       INT,
-    total_res       INT,
-    non_water_res   INT,
-    aa_res          INT,
-    dna_res         INT,
-    rna_res         INT,
-    ion_res         INT,
-    hetero_res      INT,
-    other_res       INT,
-    UNIQUE (chain_id),
-    CONSTRAINT fk_chain_type FOREIGN KEY (chain_id)
+    relative_path   VARCHAR(60),
+    UNIQUE (pdb_id, chain_id),
+    CONSTRAINT fk_pdb_chain FOREIGN KEY (chain_id)
         REFERENCES pdb_chainid(chain_id)
 );
 //
-DROP TABLE IF EXISTS pdb_chain_fixed;
-CREATE TABLE pdb_chain_fixed (
-    chain_id        VARCHAR(20) PRIMARY KEY,
-    pdb_file        VARCHAR(60),
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pdb_chain_fixed FOREIGN KEY (chain_id)
-        REFERENCES pdb_chainid(chain_id)
+DROP TABLE IF EXISTS meta_combo2_pdb;
+CREATE TABLE meta_combo2_pdb(
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    combo_id        VARCHAR(40),
+    chain_combo     VARCHAR(10),
+    relative_path   VARCHAR(60),
+    CONSTRAINT fk_combo2_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
 );
+//
+DROP TABLE IF EXISTS meta_combo2_seq;
+CREATE TABLE meta_combo2_seq(
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    combo_id        VARCHAR(40),
+    chain_combo     VARCHAR(10),
+    relative_csv    VARCHAR(60),
+    CONSTRAINT fk_combo2_seq FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
+);
+//
+DROP TABLE IF EXISTS pdb_faa;
+CREATE TABLE pdb_faa(
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    relative_faa    VARCHAR(60),
+    UNIQUE (pdb_id, model_no),
+    CONSTRAINT fk_pdb_faa FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)
+);
+
 """
 #####################################################################################
 

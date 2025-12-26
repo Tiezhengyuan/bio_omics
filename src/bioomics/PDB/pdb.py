@@ -33,48 +33,49 @@ class Pdb(ParseStructure):
         self.outdir = outdir if outdir else os.path.dirname(pdb_file)
         self.verbose = verbose
         # default objects should be updated
-        self.structure_id = None
         self.annot = {}
         self.info = []
-        # load structure
-        # self.load_structure()
 
-    def get_parser(self):
-        '''
-        update self.pdb_file_name, self.parser
-        '''
-        self.pdb_file_name = os.path.basename(self.pdb_file)
-        file_type = 'cif' if self.pdb_file_name.endswith('.cif') or \
-            self.pdb_file_name.endswith('.cif.gzs')else 'pdb'
+    def load_pdb(self):
+        self.parser = PDBParser(PERMISSIVE=1)
+        self.structure = self.parser.get_structure(
+            self.pdb_file_name, self.pdb_file
+        )
 
-        self.parse = None
-        if file_type == 'pdb':
-            self.parser = PDBParser(PERMISSIVE=1)
-        elif file_type == 'cif':
-            self.parser = MMCIFParser(QUIET=True)
+    def load_pdb_gz(self):
+        self.parser = PDBParser(PERMISSIVE=1)
+        with gzip.open(self.pdb_file, "rt") as f:
+            self.structure = self.parser.get_structure(self.pdb_file_name, f)
+
+    def load_cif(self):
+        self.parser = MMCIFParser(QUIET=True, auth_chains=True)
+        self.structure = self.parser.get_structure(self.pdb_file_name, self.pdb_file)
+
+    def load_cif_gz(self):
+        self.parser = MMCIFParser(QUIET=True, auth_chains=False)
+        with gzip.open(self.pdb_file, "rt") as f:
+             self.structure = self.parser.get_structure(self.pdb_file_name, f)
 
     def load_structure(self):
-        """
-        update self.structure, self.structure_id
-        """
-        # initialize parser
-        self.get_parser()
-        # load structure
-        if self.pdb_file.endswith('.gz'):
-            with gzip.open(self.pdb_file, 'rt') as gzf:
-                self.structure = self.parser.get_structure(
-                    self.pdb_file_name,
-                    gzf
-                )
-        else:
-            self.structure = self.parser.get_structure(
-                self.pdb_file_name,
-                self.pdb_file
-            )
-        if self.structure:
-            self.structure_id = self.structure.header.get('idcode', '').upper()
-            if self.verbose:
-                print(f"Successfully retrieve structure of {self.structure_id}")
+        try:
+            self.pdb_file_name = os.path.basename(self.pdb_file)
+            if self.pdb_file.endswith('.cif.gz'):
+                self.load_cif_gz()
+            elif self.pdb_file.endswith('.cif'):
+                self.load_cif()
+            elif self.pdb_file.endswith('.pdb.gz') or self.pdb_file.endswith('.ent.gz'):
+                self.load_pdb_gz()
+            else:
+                self.load_pdb()
+
+            if self.structure:
+                self.structure_id = self.structure.header.get('idcode', '').upper()
+                if self.verbose:
+                    print(f"Successfully retrieve structure of {self.structure_id}")
+        except Exception as e:
+            print(f"Error: {self.pdb_file} is invalid. error={e}")
+            self.structure = []
+            self.structure_id = None
 
     def init_cascade_outdir(self, pdb_id:str=None):
         if pdb_id is None:
@@ -238,6 +239,8 @@ class Pdb(ParseStructure):
                 db_records.append(rec)
         return db_records
 
+    # TODO: deprecated in the future
+
     def export_chain_pdb(self, meta:defaultdict=None, overwrite:bool=False):
         """
         export by single chain in .pdb
@@ -314,15 +317,14 @@ class Pdb(ParseStructure):
         meta['fail_faa'] += len(fail)
         return records
 
-
-    def to_chain_pdb(self, chain_no_pool:list, outfile):
+    def to_chain_pdb(self, model_no:int, chain_no_pool:list, outfile):
         """
         Save chain while preserving original header information
         TODO: comfirm 1BAG A chain B is oligo
         """
         try:
             # Write output with header
-            io = PDBIO()
+            io = PDBIO(use_model_flag=model_no)
             io.set_structure(self.structure)
             # selector
             _ids = ''.join(chain_no_pool)

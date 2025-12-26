@@ -7,16 +7,9 @@ example:
 functions:
     - collect data from tables and perform MSA
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, QueryComplex, AlignSeq, CalPhylo, \
-    QueryComplex, ProcessSeq, ProcessPickle, BuildComplex
+from helper import *
+from bioomics import AlignSeq, CalPhylo, ProcessSeq, ProcessPickle
 
 def antibody_seq(pdb_group, chain_type, cond):
     qc = QueryComplex(args['verbose'])
@@ -113,9 +106,10 @@ if __name__ == "__main__":
     args = {
         'verbose':True,
         'overwrite':False,
+        'chunk_size': 10,
         'data_dir': os.getenv("data_dir"),
         'muscle_bin': os.getenv('muscle_bin'),
-        'chunk_size': 10,
+        'table_name': 'msa_vregion',
     }
     pdb_group = sys.argv[1]
     row_iter = germline_human_vregion(pdb_group, args, meta)
@@ -125,6 +119,6 @@ if __name__ == "__main__":
 
     # put meta data to table msa_antibody
     bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
-    bc.insert_msa_vregion()
+    bc.insert_batch_records(args['table_name'])
 
     print(meta)

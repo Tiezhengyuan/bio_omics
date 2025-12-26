@@ -8,27 +8,21 @@ functions:
 '''
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
-from dotenv import load_dotenv
-from collections import defaultdict
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import BuildComplex, QueryComplex, Dir, ProcessFasta
+from helper import *
+from bioomics import ProcessFasta
 
 def get_data(idx, args, meta):
     end = (idx + 1 ) * 10_000
     start = end - 10_000
+    table_name = args['table_name']
     query = f"""
         SELECT seq_id , pro_seq
         FROM absd_seq
         WHERE seq_id >= {start}
             AND seq_id < {end}
             AND seq_id NOT IN (
-                SELECT seq_id
-                FROM absd_faa
+                SELECT seq_id FROM {table_name}
             );
     """
     rows= QueryComplex(args['verbose']).list_data(query)
@@ -58,13 +52,12 @@ def to_fasta(rows, args):
 
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
         'overwrite': False,
         'chunk_size': 100,
         'absd_dir': os.getenv('absd_dir'),
+        'table_name': 'absd_faa',
     }
     idx = int(sys.argv[1])
     rows = get_data(idx, args, meta)
@@ -72,9 +65,8 @@ if __name__ == "__main__":
         record_iter = to_fasta(rows, args)
     
         # insertion
-        table_name = 'absd_faa'
         bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
-        bc.insert_absd_faa()
+        bc.insert_batch_records(args['table_name'])
     
     print(meta)
 

@@ -6,15 +6,9 @@ functions:
     - download data from ABSD
     - put data to table absd_seq
 '''
-from dotenv import load_dotenv
-from collections import defaultdict
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import BuildComplex, Absd, QueryComplex
+from helper import *
+from bioomics import Absd
 
 def update_pool(seq_pool:dict, seq:str):
     prefix = seq[:4]
@@ -40,17 +34,15 @@ def get_data(seq_pool:dict, args):
 
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
         'chunk_size': 100,
         'absd_dir': os.getenv('absd_dir'),
         'absd_version': os.getenv('absd_version'),
+        'table_name': 'absd_seq',
     }
-    table_name = 'absd_source'
     seq_pool = {}
-    seqs = QueryComplex(args['verbose']).unique_values(table_name, 'pro_seq')
+    seqs = QueryComplex(args['verbose']).unique_values('absd_source', 'pro_seq')
     for seq in seqs:
         update_pool(seq_pool, seq)
 
@@ -59,7 +51,7 @@ if __name__ == "__main__":
 
     # insertion
     bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
-    bc.insert_absd_seq()
+    bc.insert_batch_records(args['table_name'])
     
     print(meta)
 

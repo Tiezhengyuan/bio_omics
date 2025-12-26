@@ -5,15 +5,9 @@ example: python src/pipelines/imgt_gene.py
 functions:
     - build table imgt_gene
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import ImgtGenedb, BuildComplex
+from helper import *
+from bioomics import ImgtGenedb
 
 def build_records(args, meta):
     ig = ImgtGenedb(args['imgt_dir'], args['verbose'])
@@ -45,6 +39,7 @@ if __name__ == "__main__":
         'verbose':True,
         'chunk_size': 50,
         'imgt_dir': os.getenv("imgt_dir"),
+        'table_name': 'imgt_gene',
     }
     record_iter = build_records(args, meta)
 
@@ -52,6 +47,6 @@ if __name__ == "__main__":
     print(f"Try to insert genelist into table {table_name}")
     bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
     bc.empty_table(table_name)
-    bc.insert_imgt_gene()
+    bc.insert_batch_records(args['table_name'])
 
     print(meta)

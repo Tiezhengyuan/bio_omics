@@ -9,17 +9,12 @@ example:
 functions:
     - similarity between model and sample structure
 '''
-from collections import defaultdict
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import QueryComplex, AnalyzeModel, BuildComplex
-
+from helper import *
+from bioomics import AnalyzeModel
 
 def search_pdb(pdb_group, args, meta):
+    table_name = args['table_name']
     query = f"""
         SELECT C.chain_id, C.pdb_id, U.uniprot_acc, 
             C.pdb_file as native_pdb, A.pdb_path as model_pdb
@@ -37,8 +32,7 @@ def search_pdb(pdb_group, args, meta):
             AND A.pdb_path IS NOT NULL
             AND C.pdb_file IS NOT NULL
             AND C.chain_id NOT IN (
-                SELECT DISTINCT chain_id
-                FROM uniprot_alphafold_rmsd
+                SELECT DISTINCT chain_id FROM {table_name}
             );
     """
     rows = QueryComplex(args['verbose']).list_data(query)
@@ -67,8 +61,8 @@ if __name__ == "__main__":
     args = {
         'verbose': True,
         'chunk_size': 10,
+        'table_name': 'uniprot_alphafold_rmsd',
     }
-    meta = defaultdict(int)
 
     # retrieve input
     pdb_group = sys.argv[1]
@@ -79,6 +73,6 @@ if __name__ == "__main__":
 
     # insert data
     bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
-    bc.insert_uniprot_alphafold_rmsd()
+    bc.insert_batch_records(args['table_name'])
 
     print(meta)

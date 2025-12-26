@@ -9,28 +9,20 @@ function:
     - relax structure based on fixed pdb files
     - insert data into table relaxed_pdb_amber14
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, BuildComplex, QueryComplex, OpenmmSimulation
+from helper import *
+from bioomics import OpenmmSimulation
 
 
 def retrieve_pdb(args, meta):
     pdb_group = args['pdb_group']
     table_name = args['table_name']
-    # fixed_pdb.pdb_file is relative path
     query = f"""
-        SELECT F.pdb_id, F.pdb_file
+        SELECT F.pdb_id, F.relative_path
         FROM fixed_pdb F
-        LEFT JOIN meta_pdb P
-        ON F.pdb_id = P.pdb_id
+        LEFT JOIN meta_pdb P ON F.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
-            AND F.pdb_file IS NOT NULL
+            AND F.relative_path IS NOT NULL
             AND F.pdb_id NOT IN (
                 SELECT pdb_id FROM {table_name}
             )
@@ -46,16 +38,14 @@ def retrieve_pdb(args, meta):
 
 def run_simulation(rows, args, meta):
     for row in rows:
+        time0 = datetime.now()
         pdb_id = row['pdb_id']
-        original_energy, relaxed_energy = None, None
         endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id)
         outdir = os.path.join(args['pdb_dir'], endpoint)
         Dir(outdir).init_dir()
-        file_name = "relaxed.pdb"
-        relax_pdb_file = os.path.join(outdir, file_name)
-        
+
         # run simulation
-        input_pdb = os.path.join(args['pdb_dir'], row['pdb_file'])
+        input_pdb = os.path.join(args['pdb_dir'], row['relative_path'])
         curr_args = {
             'pdb_id': pdb_id,
             'outdir': outdir,
@@ -67,7 +57,9 @@ def run_simulation(rows, args, meta):
         relaxed_energy = info.get('relaxed_energy')
         
         # build record
-        rec0 = (pdb_id, original_energy, relaxed_energy,)
+        file_name = "relaxed.pdb"
+        relax_pdb_file = os.path.join(outdir, file_name)
+        rec0 = (pdb_id, original_energy, relaxed_energy, time0)
         if os.path.isfile(relax_pdb_file):
             relative_path = os.path.join(endpoint, file_name)
             yield rec0 + (relative_path,)
@@ -76,15 +68,13 @@ def run_simulation(rows, args, meta):
             yield rec0 + (None,)
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
-        'pdb_dir': os.getenv('pdb_dir'),
         'chunk_size': 5,
+        'pdb_dir': os.getenv('pdb_dir'),
         'table_name': 'relaxed_pdb_amber14',
         'force_fields': ['amber14-all.xml', 'amber14/tip3pfb.xml'],
-        'max_iterations': 500,
+        'max_iterations': 5000,
         'steps': 100_000,
     }
     args['pdb_group'] = sys.argv[1]

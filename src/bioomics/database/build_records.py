@@ -86,19 +86,21 @@ class BuildRecords:
         '''
         chain_id is unique and could be null
         '''
+        cols = ('chain_id', 'pdb_id', 'model_no', 'chain_no', 'idx')
         pdb_id = args['pdb_id']
         pdb_file = args['pdb_file']
         p = Pdb(pdb_file, None, self.verbose)
         p.load_structure()
         records = []
-        for chain_id, pdb_id, model_no, chain_no, chain in p.parse_chains():
-            rec = (pdb_id, model_no, chain_no, chain_id)
+        for item in p.parse_chains():
+            rec = [item[i] for i in cols]
             records.append(rec)
         if records:
             return records
+
         if self.verbose:
-            print(f"Warning: no chains are detectin in {pdb_id}:{pdb_file}")
-        return [(pdb_id, None, None, None),]
+            print(f"Warning: no chains detected in {pdb_file}, error={e}")
+        return [(pdb_id,) + (None,) * (len(cols)-1),]
 
     def pdb_chain_seq(self, args):
         pdb_id = args['pdb_id']
@@ -106,17 +108,19 @@ class BuildRecords:
         p = Pdb(pdb_file, None, self.verbose)
         p.load_structure()
         records = []
-        for chain_id, _pdb_id, model_no, chain_no, chain in p.parse_chains():
+        for item in p.parse_chains():
             # the column pro_seq is not null
-            chain_seq = p._chain_seq(chain)
+            chain_seq = p._chain_seq(item['chain'])
             pro_len = len(chain_seq)
-            rec = (chain_id, pro_len, chain_seq) if chain_seq \
-                else (chain_id, None, None)
+            rec0 = (pdb_id, item['chain_id'])
+            rec =  rec0 + (pro_len, chain_seq) if chain_seq else rec0 + (None, None)
             records.append(rec)
-        if not records and self.verbose:
+        if records:
+            return records
+        
+        if self.verbose:
             print(f"Warning: no chains {pdb_id} are detectin in {pdb_file}")
-        return records
-
+        return [(pdb_id, None, None, None),]
                  
     def pdb_bfactor(self, args):
         records = []
@@ -135,17 +139,16 @@ class BuildRecords:
             if os.path.isfile(pfile):
                 os.remove(pfile)
             print(f"Warning: pfile={pfile}, error={e}")
-        if records == []:
-            records = [(pdb_id, None, None, None,), ]
-        return records
+        if records:
+            return records
+        return [(pdb_id, None, None, None,), ]
 
-    def pdb_secondary(self, args):
+    def pdb_dssp(self, args):
         pdb_id = args['pdb_id']
-        # note: pdb_file contains only one chain
-        pdb_file = args['pdb_file']
         records = []
         try:
-            ad = AnalyzeDssp(pdb_file)
+            # note: pdb_file contains only one chain
+            ad = AnalyzeDssp(args['pdb_file'])
             for model, dssp_data in ad.dssp_iter():
                 model_no = model.id
                 for chain_no, dssp in dssp_data.items():
@@ -155,9 +158,11 @@ class BuildRecords:
                         records.append(rec)
         except Exception as e:
             print(f"ERROR: Fail in pdb_secondary(). error={e}")
-        if records == []:
-            records = [(pdb_id, args['model_no'], args['chain_no'], None),]
-        return records
+        if self.verbose:
+            print('pdb_dssp', pdb_id, records)
+        if records:
+            return records
+        return [(pdb_id, args['model_no'], args['chain_no'], None),]
 
     def align_uniprot(self, args):
         pdb_id = args['pdb_id']
@@ -166,22 +171,19 @@ class BuildRecords:
         best_hits = ParseBlastXml(aln_file).best_hits()
         for hit in best_hits:
             chain_id = hit['query']
-            rec0 = (chain_id, pdb_id)
+            rec = (pdb_id, chain_id)
             if 'hit_desc' in hit:
                 uniprot_acc = hit['hit_desc'].split('|')[1]
-                rec = rec0 + (
+                rec += (
                     uniprot_acc,
                     float(hit['evalue']),
                     int(hit['bit_score']),
-                    float(hit['identity'])
+                    float(hit['identity']),
                 )
-                if rec not in records:
-                    records.append(rec)
             else:
                 # insert null if not hits detected
-                rec0 += (None,) * 4
-                if rec0 not in records:
-                    records.append(rec0)
+                rec += (None,) * 4
+            records.append(rec)
         return records
 
     def uniprot(self, record):
@@ -244,15 +246,16 @@ class BuildRecords:
 
     def align_imgt(self, args:dict):
         pdb_id = args['pdb_id']
+        records = []
+
         faa_file = args['faa_file']
         aln_file = args['aln_file']
         pi = ParseIgblast(aln_file, faa_file, self.verbose)
-        records = []
         for hit in pi.retrieve_hits():
-            chain_id = hit['query_id']
-            rec0 = (chain_id, pdb_id)
+            query_id = hit['query_id']
+            rec = (pdb_id, query_id,)
             if 'allele_name' in hit:
-                rec = rec0 + (
+                rec += (
                     hit['allele_name'].split('|')[0],
                     hit['gene_name'],
                     hit['gene_family'],
@@ -261,13 +264,10 @@ class BuildRecords:
                     float(hit['e-value']),
                     float(hit['bits-score']),
                 )
-                if rec not in records:
-                    records.append(rec)
             else:
                 # insert null if not hits detected
-                rec0 += (None,) * 7
-                if rec0 not in records:
-                    records.append(rec0)
+                rec += (None,) * 7
+            records.append(rec)
         return records
 
     def align_vregion(self, args:dict):
@@ -278,12 +278,10 @@ class BuildRecords:
         pi = ParseIgblast(aln_file, faa_file, self.verbose)
         records = []
         for region in pi.retrieve_regions():
-            chain_id = region['query_id']
-            pdb_id = chain_id.split('_')[0]
+            query_id = region['query_id']
+            rec0 = (pdb_id, query_id,)
             if 'percent identity' in region:
-                rec = (
-                    chain_id,
-                    pdb_id,
+                rec = rec0 + (
                     region['region'],
                     region['percent identity'],
                     region['from'],
@@ -294,7 +292,7 @@ class BuildRecords:
                     records.append(rec)
             else:
                 # region name is composite primary key
-                rec = (chain_id, pdb_id, 'UN', None, None, None, None)
+                rec = rec0 + (None,) * 5
                 if rec not in records:
                     records.append(rec)
         return records

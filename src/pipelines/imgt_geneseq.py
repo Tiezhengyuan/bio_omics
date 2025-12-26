@@ -5,15 +5,9 @@ example: python src/pipelines/imgt_geneseq.py
 functions:
     - build table imgt_geneseq
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import ImgtGenedb, BuildComplex
+from helper import *
+from bioomics import ImgtGenedb
 
 def build_records(args, meta):
     ig = ImgtGenedb(args['imgt_dir'], args['verbose'])
@@ -36,19 +30,18 @@ def build_records(args, meta):
                         
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose':True,
         'chunk_size': 50,
         'imgt_dir': os.getenv("imgt_dir"),
+        'table_name': 'imgt_geneseq',
     }
     record_iter = build_records(args, meta)
 
-    table_name = 'imgt_geneseq'
-    print(f"Try to insert genelist into table {table_name}")
+
+    print(f"Try to insert genelist into table {args['table_name']}")
     bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
-    bc.empty_table(table_name)
-    bc.insert_imgt_geneseq()
+    bc.empty_table(args['table_name'])
+    bc.insert_batch_records(args['table_name'])
 
     print(meta)

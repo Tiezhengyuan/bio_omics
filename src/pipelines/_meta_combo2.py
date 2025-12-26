@@ -1,22 +1,16 @@
 '''
 example: 
-    - parallel -j4 python src/pipelines/export_pair_pdb.py ::: {0..46}
-    - python src/pipelines/export_pair_pdb.py 46
+    - parallel -j4 python src/pipelines/meta_combo2.py ::: {0..116}
+    - python src/pipelines/meta_combo2.py 0
 functions:
     - retrieve pdb to pdb by chains
     - for B-factor, DSSP analysis
 '''
-from dotenv import load_dotenv
-from collections import defaultdict
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
-
-from bioomics import Pdb, QueryComplex, BuildComplex
+from helper import *
+from bioomics import Pdb
 
 def retrieve_pdb(pdb_group, args, meta):
+    table_name = args['table_name']
     query = f"""
         SELECT DISTINCT P.pdb_id, M.pdb_file
         FROM pdb_chain P 
@@ -25,8 +19,7 @@ def retrieve_pdb(pdb_group, args, meta):
         WHERE M.pdb_group = {pdb_group}
             AND P.chain_seq IS NOT NULL
             AND P.pdb_id NOT IN (
-                SELECT pdb_id
-                FROM meta_combo_pdb
+                SELECT pdb_id FROM {table_name}
             );
     """
     rows = QueryComplex(args['verbose']).list_data(query)
@@ -36,13 +29,12 @@ def retrieve_pdb(pdb_group, args, meta):
     return rows
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
         'overwrite': False,
         'outdir': os.path.join(os.getenv("data_dir"), 'data'),
         'chunk_size': 10,
+        'table_name': 'meta_combo2',
     }
 
     pdb_group = sys.argv[1]

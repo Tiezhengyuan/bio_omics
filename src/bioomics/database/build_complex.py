@@ -5,19 +5,112 @@ import os
 from .build_db import BuildDb
 from .build_records import BuildRecords
 
+# build SQL query string
+TABLE_COLUMNS = {
+    'meta_pdb': ['pdb_id', 'relative_path', 'pdb_group'],
+    'meta_mmcif': ['pdb_id', 'relative_path', 'pdb_group'],
+    'pdb_chain_type': ['pdb_id', 'chain_id', 'chain_type', 'total_res', 
+        'non_water_res', 'aa_res', 'dna_res', 'rna_res', 'water_res',
+        'ion_res', 'hetero_res', 'other_res'],
+    'pdb_faa': ['pdb_id', 'model_no', 'relative_faa'],
+    'meta_chain_faa': ['pdb_id', 'chain_id', 'relative_path'],
+    'meta_chain_pdb': ['pdb_id', 'chain_id', 'relative_path'],
+    'meta_combo2_pdb': ['pdb_id', 'model_no', 'combo_id',
+        'chain_combo', 'relative_path'],
+    'meta_combo2_seq': ['pdb_id', 'model_no', 'combo_id',
+        'chain_combo', 'relative_csv'],
+
+    #analyze
+    'meta_bfactor': ['pdb_id', 'relative_pkl'],
+    'meta_pdb_distance': ['pdb_id', 'relative_pkl'],
+    'meta_pdb_sasa': ['pdb_id', 'relative_pkl'],
+
+    # fix
+    'fixed_pdb': ['pdb_id', 'relative_path', 'time0'],
+    'fixed_chainid': ['pdb_id', 'model_no', 'fixed_model_no',
+        'chain_no', 'fixed_chain_no'],
+    'fixed_chain': ['pdb_id', 'chain_id', 'model_no',
+        'chain_no', 'relative_pdb'],
+    'fixed_combo2': ['pdb_id', 'model_no', 'combo_id',
+        'chain_combo', 'relative_pdb'],
+    'fixed_combo3': ['pdb_id', 'model_no', 'combo_id',
+        'chain_combo', 'relative_pdb'],
+    'pdb_chain_fixed': ['chain_id', 'relative_pdb', 'time0'],
+
+    # simulate
+    'relaxed_pdb_amber99sb': ['pdb_id', 'original_energy',
+        'relaxed_energy', 'time0', 'relative_pdb'],
+    'relaxed_pdb_amber14': ['pdb_id', 'original_energy',
+        'relaxed_energy', 'time0', 'relative_pdb'],
+    'relaxed_amber14_chain': ['chain_id', 'pdb_id',
+        'model_no', 'chain_no', 'relative_path'],
+    'relaxed_amber14_combo2': ['pdb_id', 'combo_id',
+        'model_no', 'chain_combo', 'endpoint_prefix'],
+    'relaxed_amber14_combo3': ['pdb_id', 'combo_id',
+        'model_no', 'chain_combo', 'endpoint_prefix'],
+    'relaxed_chain_amber14': ['chain_id', 'original_energy',
+        'relaxed_energy', 'time0', 'endpoint'],
+
+    #align
+    'meta_blastp5': ['pdb_id', 'model_no', 'relative_aln'],
+    'meta_igblastp': ['pdb_id', 'model_no', 'relative_aln'],
+
+    #predict
+    'chain_alphafold': ['chain_id', 'endpoint', 'predicted_at'],
+
+    # uniprot
+    'uniprot_meta_alphafold': ['uniprot_acc', 'pdb_path'],
+    'uniprot_alphafold_rmsd': ['chain_id', 'uniprot_acc', 'ca_rmsd', 
+        'native_pdb', 'model_pdb'],
+    'uniprot_rmsd': ['chain_id', 'native_pdb', 'uniprot_acc', 
+        'model_pdb', 'ca_rmsd'],
+
+    # imgt
+    'imgt_gene': ['record_id', 'specie', 'isotype', 'chain_type',
+        'gene_name', 'allele_name', 'region_name'],
+    'imgt_geneseq': ['record_id', 'seq_type', 'seq'],
+    'msa_vregion': ['chain_id', 'chain_types', 'query_fa',
+        'aln_file', 'pickle_file'],
+
+    # antibody
+    'ab_aacdb': ['pdb_id', 'antibody_chains', 'antigen_chains',
+        'antibody', 'protein', 'drug', 'targets', 'method',
+        'organism', 'resolution', 'reference'],
+    'meta_sabdab': ['pdb_id', 'summary_file'],
+    'ab_sabdab': ['pdb_id', 'model', 'heavy_chain', 'light_chain',
+        'antigen_chain', 'antigen_type', 'resolution'],
+    'ab_abybank': ['pdb_id', 'chain_type', 'chain_numbering'],
+    'absd_seq': ['absd_id', 'specie', 'version', 'pro_len', 
+        'pro_seq', 'record_id'],
+    'absd_faa': ['seq_id', 'faa_file'],
+    'absd_igblastp': ['seq_id', 'aln_file'],
+}
+
 
 class BuildComplex(BuildDb):
 
     def __init__(self, data:list=None, verbose:bool=False, chunk_size:int=None):
         '''
-        args: data is iterable of pdb_file, or dat_record
+        args: data is iterable object of pdb_file, or record
         '''
         super().__init__(data, verbose, chunk_size)
         self.config['database'] = os.getenv('MYSQL_DB', 'COMPLEX2')
         self.recorder = BuildRecords(verbose)
     
+    def insert_batch_records(self, table_name:str):
+        cols = TABLE_COLUMNS[table_name]
+        fmt = ['%s',] * len(cols)
+        cols_str = ', '.join(cols)
+        fmt_str= ', '.join(fmt)
+        insert_query = f"""
+            INSERT INTO {table_name} ({cols_str})
+            VALUES ({fmt_str})
+        """
+        # load insertion
+        func = lambda rec: [rec,]
+        self.insert(table_name, insert_query, func)
+
     def insert_pdb(self):
-        # insert data into table pdb
         table_name = 'pdb'
         insert_query = f"""INSERT INTO {table_name}
             (pdb_id, pdb_url, release_date, name)
@@ -25,9 +118,7 @@ class BuildComplex(BuildDb):
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
-
     def insert_pdb_method(self):
-        # insert data into table pdb
         table_name = 'pdb_method'
         insert_query = f"""INSERT INTO {table_name}
             (pdb_id, structure_method, resolution)
@@ -53,8 +144,8 @@ class BuildComplex(BuildDb):
     def insert_pdb_chainid(self) -> tuple:
         table_name = 'pdb_chainid'
         insert_query = f"""INSERT INTO {table_name} 
-            (pdb_id, model_no, chain_no, chain_id)
-            VALUES (%s, %s, %s, %s)"""
+            (chain_id, pdb_id, model_no, chain_no, idx)
+            VALUES (%s, %s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         return self.insert(table_name, insert_query, func)
     
@@ -69,17 +160,10 @@ class BuildComplex(BuildDb):
     def insert_pdb_chain_seq(self) -> tuple:
         table_name = 'pdb_chain_seq'
         insert_query = f"""INSERT INTO {table_name} 
-            (chain_id, pro_len, chain_seq)
-            VALUES (%s, %s, %s)"""
+            (pdb_id, chain_id, pro_len, chain_seq)
+            VALUES (%s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         return self.insert(table_name, insert_query, func)
-
-    def insert_meta_bfactor(self) -> tuple:
-        table_name = 'meta_bfactor'
-        insert_query = f"""INSERT INTO {table_name} 
-            (pdb_id, pickle_file) VALUES (%s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
 
     def insert_pdb_bfactor(self) -> tuple:
         table_name = 'pdb_bfactor'
@@ -89,8 +173,8 @@ class BuildComplex(BuildDb):
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
-    def insert_pdb_secondary(self) -> tuple:
-        table_name = 'pdb_secondary'
+    def insert_pdb_dssp(self) -> tuple:
+        table_name = 'pdb_dssp'
         insert_query = f"""INSERT INTO {table_name} 
             (pdb_id, model_no, chain_no, dssp_seq)
             VALUES (%s, %s, %s, %s)"""
@@ -100,161 +184,10 @@ class BuildComplex(BuildDb):
     def insert_align_uniprot(self) -> tuple:
         table_name = 'align_uniprot'
         insert_query = f"""INSERT INTO {table_name}
-            (chain_id, pdb_id, uniprot_acc, evalue, 
-                bit_score, identity)
+            (pdb_id, chain_id, uniprot_acc, evalue, bit_score, identity)
             VALUES (%s, %s, %s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func, 2)
-
-    def insert_pdb_chain_type(self) -> tuple:
-        table_name = 'pdb_chain_type'
-        insert_query = f"""INSERT INTO {table_name} 
-            (pdb_id, chain_id, chain_type, total_res, 
-                non_water_res, aa_res, dna_res, rna_res, 
-                water_res, ion_res, hetero_res, other_res)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, 
-                %s, %s, %s, %s, %s)
-        """
-        func = lambda rec: [rec,]
-        return self.insert(table_name, insert_query, func)
-    
-########################
-    def insert_meta_pdb(self):
-        table_name = 'meta_pdb'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, pdb_file, pdb_group)
-            VALUES (%s, %s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_faa(self):
-        table_name = 'meta_faa'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, faa_file) VALUES (%s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_chain_faa(self):
-        table_name = 'meta_chain_faa'
-        insert_query = f"""INSERT INTO {table_name}
-            (chain_id, faa_file) VALUES (%s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_chain_pdb(self):
-        table_name = 'meta_chain_pdb'
-        # chain_no is case sensitive in PDB
-        insert_query = f"""INSERT INTO {table_name}
-            (chain_id, pdb_file) VALUES (%s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_combo_pdb(self):
-        table_name = 'meta_combo_pdb'
-        # chain_no is case sensitive in PDB
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, model_no, chain_combo, pdb_file)
-            VALUES (%s, %s, %s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_blastp5(self):
-        table_name = 'meta_blastp5'
-        # chain_no is case sensitive in PDB
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, aln_file) VALUES (%s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_pdb_igblastp(self):
-        table_name = 'meta_pdb_igblastp'
-        # chain_no is case sensitive in PDB
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, aln_file) VALUES (%s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_pdb_distance(self):
-        table_name = 'meta_pdb_distance'
-        # chain_no is case sensitive in PDB
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, pickle_file) VALUES (%s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_pdb_sasa(self):
-        table_name = 'meta_pdb_sasa'
-        # chain_no is case sensitive in PDB
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, pickle_file) VALUES (%s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_batch_records(self, table_name:str):
-        query_pool = {
-            'fixed_pdb': f"""
-                INSERT INTO {table_name}
-                    (pdb_id, pdb_file) VALUES (%s, %s)
-            """,
-            'fixed_chain': f"""
-                INSERT INTO {table_name}
-                    (chain_id, pdb_id, model_no, chain_no, pdb_file)
-                VALUES (%s, %s, %s, %s, %s)
-            """,
-            'fixed_combo2': f"""
-                INSERT INTO {table_name}
-                    (pdb_id, model_no, chain_combo, pdb_file)
-                VALUES (%s, %s, %s, %s)
-            """,
-            'fixed_combo3': f"""
-                INSERT INTO {table_name}
-                    (pdb_id, model_no, chain_combo, pdb_file)
-                VALUES (%s, %s, %s, %s)
-            """,
-            'relaxed_pdb_amber99sb': f"""
-                INSERT INTO {table_name}
-                    (pdb_id, original_energy, relaxed_energy, pdb_file)
-                VALUES (%s, %s, %s, %s)
-            """,
-            'relaxed_pdb_amber14': f"""
-                INSERT INTO {table_name}
-                    (pdb_id, original_energy, relaxed_energy, pdb_file)
-                VALUES (%s, %s, %s, %s)
-            """,
-            'relaxed_amber14_chain': f"""
-                INSERT INTO {table_name}
-                    (chain_id, pdb_id, model_no, chain_no, relative_path)
-                VALUES (%s, %s, %s, %s, %s)
-            """,
-            'relaxed_amber14_combo2': f"""
-                INSERT INTO {table_name}
-                    (pdb_id, combo_id, model_no, chain_combo, endpoint_prefix)
-                VALUES (%s, %s, %s, %s, %s)
-            """,
-            'relaxed_amber14_combo3': f"""
-                INSERT INTO {table_name}
-                    (pdb_id, combo_id, model_no, chain_combo, endpoint_prefix)
-                VALUES (%s, %s, %s, %s, %s)
-            """,
-            'relaxed_chain_amber14': f"""
-                INSERT INTO {table_name}
-                    (chain_id, original_energy, relaxed_energy, endpoint)
-                VALUES (%s, %s, %s, %s)
-            """,
-            'pdb_chain_fixed': f"""
-                INSERT INTO {table_name}
-                    (chain_id, pdb_file) VALUES (%s, %s)
-            """,
-            'chain_alphafold': f"""
-                INSERT INTO {table_name}
-                    (chain_id, endpoint, predicted_at)
-                VALUES (%s, %s, %s)
-            """,
-        }
-        insert_query = query_pool[table_name]
-        # load insertion
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
 
 ######################
     def insert_imgt_genelist(self) -> tuple:
@@ -266,30 +199,6 @@ class BuildComplex(BuildDb):
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
-        self.insert(table_name, insert_query, func)
-
-    def insert_imgt_gene(self) -> tuple:
-        table_name = 'imgt_gene'
-        insert_query = f"""INSERT INTO {table_name}
-            (record_id, specie, isotype, chain_type,
-                gene_name, allele_name, region_name)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_imgt_geneseq(self) -> tuple:
-        table_name = 'imgt_geneseq'
-        insert_query = f"""INSERT INTO {table_name}
-            (record_id, seq_type, seq) VALUES (%s, %s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_msa_vregion(self) -> tuple:
-        table_name = 'msa_vregion'
-        insert_query = f"""INSERT INTO {table_name}
-            (chain_id, chain_types, query_fa, aln_file, pickle_file)
-            VALUES (%s, %s, %s, %s, %s)"""
-        func = lambda rec: [rec,]
         self.insert(table_name, insert_query, func)
 
     def insert_imgt_inn(self) -> tuple:
@@ -398,13 +307,6 @@ class BuildComplex(BuildDb):
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
-    def insert_uniprot_meta_alphafold(self) -> tuple:
-        table_name = 'uniprot_meta_alphafold'
-        insert_query = f"""INSERT INTO {table_name}
-            (uniprot_acc, pdb_path) VALUES (%s, %s)"""
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
     def insert_uniprot_alphafold_plddt(self) -> tuple:
         table_name = 'uniprot_alphafold_plddt'
         insert_query = f"""INSERT INTO {table_name}
@@ -415,9 +317,9 @@ class BuildComplex(BuildDb):
 
     def insert_align_imgt(self) -> tuple:
         table_name = 'align_imgt'
-        insert_query = f"""INSERT INTO {table_name} (chain_id,
-            pdb_id, allele_name, gene_name, gene_family,
-            chain_type, isotype, evalue, bit_score)
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, chain_id, allele_name, gene_name, gene_family,
+                chain_type, isotype, evalue, bit_score)
             VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
@@ -426,75 +328,15 @@ class BuildComplex(BuildDb):
     def insert_align_vregion(self) -> tuple:
         table_name = 'align_vregion'
         insert_query = f"""INSERT INTO {table_name}
-            (chain_id, pdb_id, region_name, identity, 
+            (pdb_id, chain_id, region_name, identity, 
                 start, end, seq)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
-    def insert_uniprot_alphafold_rmsd(self):
-        table_name = 'uniprot_alphafold_rmsd'
-        insert_query = f"""INSERT INTO {table_name}
-            (chain_id, uniprot_acc, ca_rmsd, 
-                native_pdb, model_pdb)
-            VALUES (%s, %s, %s, %s, %s)
-        """
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_uniprot_rmsd(self):
-        table_name = 'uniprot_rmsd'
-        insert_query = f"""INSERT INTO {table_name}
-            (chain_id, native_pdb, uniprot_acc, 
-                model_pdb, ca_rmsd)
-            VALUES (%s, %s, %s, %s, %s)
-        """
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
 
 #####################
-    def insert_ab_aacdb(self):
-        # AACDB
-        table_name = 'ab_aacdb'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, antibody_chains, antigen_chains,
-                antibody, protein, drug, targets, method,
-                organism, resolution, reference)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_meta_sabdab(self):
-        # SAbDab
-        table_name = 'meta_sabdab'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, summary_file) VALUES (%s, %s)
-        """
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_ab_sabdab(self):
-        # SAbDab
-        table_name = 'ab_sabdab'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, model, heavy_chain, light_chain,
-                antigen_chain, antigen_type, resolution)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
-        """
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_ab_abybank(self):
-        # abYbank
-        table_name = 'ab_abybank'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, chain_type, chain_numbering)
-            VALUES (%s, %s, %s)
-        """
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
     
     def insert_absd_source(self):
         table_name = 'absd_source'
@@ -504,32 +346,6 @@ class BuildComplex(BuildDb):
             VALUES (%s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
-        self.insert(table_name, insert_query, func)
-
-    def insert_absd_seq(self):
-        table_name = 'absd_seq'
-        insert_query = f"""INSERT INTO {table_name}
-            (absd_id, specie, version, pro_len, 
-                pro_seq, record_id)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_absd_faa(self):
-        table_name = 'absd_faa'
-        insert_query = f"""INSERT INTO {table_name}
-            (seq_id, faa_file) VALUES (%s, %s)
-        """
-        func = lambda rec: [rec,]
-        self.insert(table_name, insert_query, func)
-
-    def insert_absd_igblastp(self):
-        table_name = 'absd_igblastp'
-        insert_query = f"""INSERT INTO {table_name}
-            (seq_id, aln_file) VALUES (%s, %s)
-        """
-        func = lambda rec: [rec,]
         self.insert(table_name, insert_query, func)
 
     def insert_absd_align_imgt(self) -> tuple:
