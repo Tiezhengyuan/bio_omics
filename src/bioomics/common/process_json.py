@@ -46,3 +46,15 @@ class ProcessJson:
                 file_list.append(outfile)
         print('total', n)
         return file_list
+    
+    @staticmethod
+    def get_value(infile:str, keys:list):
+        if os.path.isfile(infile) and keys:
+            data = ProcessJson.load_json(infile)
+            for key in keys[:-1]:
+                if key in data:
+                    data = data[key]
+                else:
+                    return None
+            return data.get(keys[-1])
+        return None

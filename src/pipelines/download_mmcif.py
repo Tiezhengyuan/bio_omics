@@ -7,15 +7,9 @@ functions:
  - download the latest pdb files
  - wrap the commands for running pipelines in multi-rocessing
 '''
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import PullPdb, ProcessJson, Dir
-
+from helper import *
+from bioomics import PullPdb, ProcessJson
 
 if __name__ == "__main__":
     load_dotenv()

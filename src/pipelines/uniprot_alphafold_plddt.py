@@ -8,15 +8,9 @@ functions:
     - calculate pLDDT by uniprot protein
     - put pLDDT to table uniprot_alphafold_plddt
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, ProcessPickle, CalculatePlddt, QueryComplex, BuildComplex
+from helper import *
+from bioomics import ProcessPickle, CalculatePlddt
 
 def retrieve_rows(meta):
     query = f"""
@@ -65,8 +59,6 @@ def cal_plddt(rows, args, meta):
             yield data
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
         'overwrite': False,

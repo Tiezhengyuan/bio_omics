@@ -4,12 +4,8 @@ functions:
     - build table imgt_genelist
     - retrieve v-region sequence in fasta
 '''
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
+from helper import *
 from bioomics import ImgtGenedb
 
 def build_genedb_json(args):

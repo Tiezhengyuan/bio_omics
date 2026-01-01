@@ -33,7 +33,6 @@ def retrieve_pdb(pdb_group, args, meta):
         if os.path.isfile(row['pickle_file']):
             yield row
 
-
 if __name__ == "__main__":
     args = {
         'verbose': True,
@@ -49,4 +48,3 @@ if __name__ == "__main__":
     bc.insert_pdb_bfactor()
 
     print(meta)
-

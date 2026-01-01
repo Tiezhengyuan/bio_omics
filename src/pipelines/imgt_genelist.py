@@ -6,16 +6,9 @@ example:
 functions:
     - build table imgt_genelist
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import ImgtGenedb, BuildComplex
-
+from helper import *
+from bioomics import ImgtGenedb
 
 if __name__ == "__main__":
     meta = defaultdict(int)

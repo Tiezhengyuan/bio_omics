@@ -1,6 +1,7 @@
 
 import os
 import re
+import subprocess
 
 class Dir:
     def __init__(self, indir):
@@ -24,6 +25,31 @@ class Dir:
                 else:
                     pool = [parent_dir, curr_dir] + pool
         return True
+
+    def recursive_files(self): 
+        '''
+        list all files with a given directory and sub directories
+        get all files
+        '''
+        for root, dirs, files in os.walk(self.indir):
+            for filename in list(files):
+                out_file = os.path.join(root, filename)
+                if os.path.isfile(out_file) and out_file.find('/.') == -1:
+                    yield out_file
+
+    def compress_files(self, file_extension:str):
+        '''
+        compress files to *.gz
+        '''
+        info = {}
+        for file_name in os.listdir(self.indir):
+            path = os.path.join(self.indir, file_name)
+            if path.endswith(file_extension):
+                cmd = ['gzip', path]
+                result = subprocess.run(cmd, capture_output=True, text=True)
+                info[path].append(result)
+        return info
+
 
     def format_dir(self):
         '''
@@ -58,17 +84,6 @@ class Dir:
             except:
                 pass
 
-    def recursive_files(self): 
-        '''
-        list all files with a given directory and sub directories
-        get all files
-        '''
-        for root, dirs, files in os.walk(self.indir):
-            for filename in list(files):
-                out_file = os.path.join(root, filename)
-                if os.path.isfile(out_file) and out_file.find('/.') == -1:
-                    yield out_file
-
     def filter_recursive_files(self, extension:str):
         for path in self.recursive_files():
             if path.endswith(extension):
@@ -91,4 +106,3 @@ class Dir:
             return parent_dir
         next_dir = os.path.join(parent_dir, id_str[:num])
         return Dir.cascade_dir(next_dir, id_str[num:], num)
-

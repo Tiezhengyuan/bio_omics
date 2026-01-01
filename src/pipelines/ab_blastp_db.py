@@ -5,15 +5,9 @@ functions:
     - collect antibody chain sequences
     - build igblastp database as reference
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, QueryComplex, ProcessFasta, ProcessBlast
+from helper import *
+from bioomics import ProcessFasta, ProcessBlast
 
 def pull_data(args, meta):
     query = '''
@@ -27,8 +21,6 @@ def pull_data(args, meta):
     return rows
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
         'overwrite': True,

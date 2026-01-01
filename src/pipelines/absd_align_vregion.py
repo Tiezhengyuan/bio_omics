@@ -9,14 +9,8 @@ example:
 function:
     - build table pdb and insert data into table absd_align_vregion
 '''
-from collections import defaultdict
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import BuildComplex, QueryComplex
+from helper import *
 
 def retrieve_data(idx, args, meta):
     end = (idx + 1 ) * 10_000
@@ -40,7 +34,6 @@ def retrieve_data(idx, args, meta):
     return rows
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
     args = {
         'verbose': True,
     }

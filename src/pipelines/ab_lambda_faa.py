@@ -5,15 +5,9 @@ functions:
     - collect antibody chain sequences and export to collect/
     - do multiple alignment
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, QueryComplex, AlignSeq, ProcessFasta
+from helper import *
+from bioomics import AlignSeq, ProcessFasta
 
 def pull_data(args, meta):
     query = '''
@@ -26,8 +20,6 @@ def pull_data(args, meta):
     return df
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
         'data_dir': os.getenv('data_dir'),

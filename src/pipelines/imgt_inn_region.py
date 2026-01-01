@@ -5,15 +5,9 @@ functions:
     - download data from IMGT
     - put data to table imgt_inn_region
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, ParseImgtAnnot, BuildComplex
+from helper import *
+from bioomics import ParseImgtAnnot
 
 def pull_data(args, meta):
     indir = os.path.join(args['imgt_dir'], '3Dstructure-DB', 'IMGT3DFlatFiles')
@@ -34,14 +28,14 @@ if __name__ == "__main__":
         'verbose': True,
         'chunk_size': 50,
         'imgt_dir': os.getenv('imgt_dir'),
+        'table_name': 'imgt_inn_region',
     }
     # pull records from IMGT
     data_iter = pull_data(args, meta)
 
     # insertion
-    table_name = 'imgt_inn_region'
     bc = BuildComplex(data_iter, args['verbose'], args['chunk_size'])
-    bc.empty_table(table_name)
+    bc.empty_table(args['table_name'])
     bc.insert_imgt_inn_region()
     
     print(meta)

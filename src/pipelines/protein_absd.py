@@ -7,14 +7,8 @@ example:
 function:
     - put ABSD sequences into table pro_seq and pro_source
 '''
-from collections import defaultdict
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import BuildComplex, QueryComplex
+from helper import *
 
 def pull_seq(min_len, max_len, args, meta):
     table_name = args['table_name']
@@ -72,7 +66,6 @@ def pull_id(min_len, max_len, args, meta):
         yield rec
         
 if __name__ == "__main__":
-    meta = defaultdict(int)
     args = {
         'verbose': True,
         'chunk_size': 500,

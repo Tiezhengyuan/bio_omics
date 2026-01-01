@@ -49,6 +49,7 @@ if __name__ == "__main__":
         'data_dir': os.getenv('data_dir'),
         'predict_dir': os.getenv('predict_dir'),
         'table_name': 'chain_alphafold',
+        'relax': True,
         'max_iterations': '5000',
         'num_recycle': '3',
     }
@@ -68,6 +69,8 @@ if __name__ == "__main__":
             'output_dir': outdir,
         }
         _args.update(args)
+        if args['verbose']:
+            print('Arguments for prediction: ', _args)
         Predictor(_args).colabfold()
 
         # build record

@@ -61,6 +61,7 @@ CREATE TABLE align_imgt(
     pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
     allele_name     VARCHAR(20),
+    specie          VARCHAR(40),
     gene_name       VARCHAR(20),
     gene_family     VARCHAR(20),
     chain_type      VARCHAR(10),

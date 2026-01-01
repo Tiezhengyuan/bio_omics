@@ -6,17 +6,8 @@ functions:
     - download data from SAbDab
     - put data to table ab_sabdab
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import numpy as np
-import pandas as pd
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import BuildComplex, QueryComplex
+from helper import *
 
 def prepare_data(rows):
     for row in rows:
@@ -48,8 +39,6 @@ def prepare_data(rows):
         
 
 if __name__ == '__main__':
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
         'chunk_size': 5,

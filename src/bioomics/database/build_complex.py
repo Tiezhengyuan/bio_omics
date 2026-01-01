@@ -42,14 +42,17 @@ TABLE_COLUMNS = {
         'relaxed_energy', 'time0', 'relative_pdb'],
     'relaxed_pdb_amber14': ['pdb_id', 'original_energy',
         'relaxed_energy', 'time0', 'relative_pdb'],
-    'relaxed_amber14_chain': ['chain_id', 'pdb_id',
-        'model_no', 'chain_no', 'relative_path'],
-    'relaxed_amber14_combo2': ['pdb_id', 'combo_id',
-        'model_no', 'chain_combo', 'endpoint_prefix'],
-    'relaxed_amber14_combo3': ['pdb_id', 'combo_id',
-        'model_no', 'chain_combo', 'endpoint_prefix'],
-    'relaxed_chain_amber14': ['chain_id', 'original_energy',
+    'relaxed_amber14_chain': ['pdb_id', 'chain_id', 'model_no',
+        'chain_no', 'relative_pdb'],
+    'relaxed_amber14_combo2': ['pdb_id', 'combo_id', 'model_no',
+        'chain_combo', 'endpoint_prefix'],
+    'relaxed_amber14_combo3': ['pdb_id', 'combo_id', 'model_no',
+        'chain_combo', 'endpoint_prefix'],
+    'chain_relaxed_amber14': ['chain_id', 'original_energy',
         'relaxed_energy', 'time0', 'endpoint'],
+
+    'meta_chain_relaxed': ['pdb_id', 'chain_id', 'time0', 'fixed_pdb', 
+        'relaxed_pdb', 'original_energy', 'relaxed_energy',],
 
     #align
     'meta_blastp5': ['pdb_id', 'model_no', 'relative_aln'],
@@ -168,8 +171,8 @@ class BuildComplex(BuildDb):
     def insert_pdb_bfactor(self) -> tuple:
         table_name = 'pdb_bfactor'
         insert_query = f"""INSERT INTO {table_name} 
-            (pdb_id, model_no, chain_no, avg_bfactor)
-            VALUES (%s, %s, %s, %s)"""
+            (pdb_id, model_no, chain_no, avg_bfactor, bfactor)
+            VALUES (%s, %s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
@@ -318,9 +321,9 @@ class BuildComplex(BuildDb):
     def insert_align_imgt(self) -> tuple:
         table_name = 'align_imgt'
         insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, chain_id, allele_name, gene_name, gene_family,
+            (pdb_id, chain_id, allele_name, specie, gene_name, gene_family,
                 chain_type, isotype, evalue, bit_score)
-            VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s)
+            VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)

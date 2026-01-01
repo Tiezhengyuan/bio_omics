@@ -6,14 +6,17 @@ from datetime import datetime
 import gzip
 from pdbfixer import PDBFixer
 from openmm import app
+import os
 
 from .timeout import timeout
-from ..common import ProcessJson
+from ..common import Dir, ProcessJson
 
 class OpenmmPdbfixer:
-    def __init__(self, pdb_file, verbose:bool=False):
+    def __init__(self, pdb_file, args:dict):
         self.pdb_file = pdb_file
-        self.verbose = verbose
+        self.verbose = args.get('verbose', False)
+        self.outdir = args.get('outdir')
+        Dir(self.outdir).init_dir()
         self.info = {
             'status': 'fail',
             'pdb_file': self.pdb_file,
@@ -34,7 +37,7 @@ class OpenmmPdbfixer:
             self.info['error_init_fixer'] = str(e)
 
     @timeout(10)
-    def fast_fixer(self, output_prefix:str):
+    def fast_fixer(self):
         '''
         timeout is 10 minutes for large-scale fixing
         '''
@@ -46,7 +49,7 @@ class OpenmmPdbfixer:
             # 1. fix PDB
             self.fix_pdb()
             # 2. save data
-            self.save_fixer(output_prefix)
+            self.save_fixer()
             self.info['status'] = 'succeed'
 
             delta = datetime.now() - start_time
@@ -57,7 +60,7 @@ class OpenmmPdbfixer:
             self.info['timeout_fix_pdb'] = str(e)
         except Exception as e:
             self.info['fail_fix_pdb'] = str(e)
-        self.save_info(output_prefix)
+        self.save_info()
         return self.info
 
     def fix_pdb(self):
@@ -129,19 +132,20 @@ class OpenmmPdbfixer:
         except Exception as e:
             self.info['error_add_hydrogens'] = str(e)
 
-    def save_fixer(self, output_prefix:str):
-        outfile = output_prefix + '.pdb'
+    def save_fixer(self):
+        outfile = os.path.join(self.outdir, 'fixed.pdb')
         # Save the fixed structure
         try:
             if self.fixer:
                 with open(outfile, 'w') as f:
                     app.PDBFile.writeFile(self.fixer.topology, self.fixer.positions, f)
+                self.info['fixed_pdb'] = outfile
         except Exception as e:
             print(f"Warning: cannot save fixed pdb to {outfile}")
             self.info['error_save_fixer'] = str(e)
     
-    def save_info(self, output_prefix:str):
-        outfile = output_prefix + '_fixed.json'
+    def save_info(self):
+        outfile = os.path.join(self.outdir, 'fixed_info.json')
         ProcessJson.save_json(self.info, outfile)
         if self.verbose:
             print(self.info)

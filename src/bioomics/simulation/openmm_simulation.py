@@ -12,7 +12,7 @@ import os
 from sys import stdout
 
 from .timeout import timeout
-from ..common import ProcessJson
+from ..common import Dir, ProcessJson
 
 FORCE_FIELDS = {
     # a comprehensive set of Amber14 force field files
@@ -53,6 +53,7 @@ class OpenmmSimulation:
         self.pdb_file = pdb_file
         self.args = args
         self.outdir = self.args.get('outdir')
+        Dir(self.outdir).init_dir()
         self.verbose = self.args.get('verbose', False)
         self.pdb = None
         self.simulation = None 
@@ -94,7 +95,7 @@ class OpenmmSimulation:
         if self.verbose:
             print(self.info)
         if os.path.isdir(self.outdir):
-            json_file = os.path.join(self.outdir, 'info.json')
+            json_file = os.path.join(self.outdir, 'relaxed_info.json')
             ProcessJson.save_json(self.info, json_file)
         return self.info
 

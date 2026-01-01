@@ -6,15 +6,9 @@ example:
 function:
     - synchronize PDB/UniProt/alignments with data in database COMPLEX.
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import QueryComplex,  BuildComplex, Uniprot
+from helper import *
+from bioomics import Uniprot
 
 def get_record(args, meta):
     qc = QueryComplex(args['verbose'])
@@ -30,13 +24,11 @@ def get_record(args, meta):
 
 ##################################
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
-        'table_name': 'uniprot_keyword',
-        'uniprot_sprot_dat': os.getenv('uniprot_sprot_dat'),
         'chunk_size': 100,
+        'uniprot_sprot_dat': os.getenv('uniprot_sprot_dat'),
+        'table_name': 'uniprot_keyword',
     }
     # prepare record
     records_iter = get_record(args, meta)

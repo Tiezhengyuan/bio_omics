@@ -132,7 +132,8 @@ class BuildRecords:
                 model_no = item['model'].id
                 chain_no = item['chain'].id
                 avg = item['stats'].get('mean')
-                rec = (pdb_id, model_no, chain_no, avg)
+                bfactor = item['bfactor']['bfactor'].astype(str).str.cat(sep=',')
+                rec = (pdb_id, model_no, chain_no, avg, bfactor)
                 if rec not in records:
                     records.append(rec)
         except Exception as e:
@@ -141,7 +142,7 @@ class BuildRecords:
             print(f"Warning: pfile={pfile}, error={e}")
         if records:
             return records
-        return [(pdb_id, None, None, None,), ]
+        return [(pdb_id, None, None, None, None,), ]
 
     def pdb_dssp(self, args):
         pdb_id = args['pdb_id']
@@ -255,8 +256,10 @@ class BuildRecords:
             query_id = hit['query_id']
             rec = (pdb_id, query_id,)
             if 'allele_name' in hit:
+                allele_name, specie = hit['allele_name'].split('|')
                 rec += (
-                    hit['allele_name'].split('|')[0],
+                    allele_name,
+                    specie,
                     hit['gene_name'],
                     hit['gene_family'],
                     hit['chain_type'].upper(),
@@ -266,7 +269,7 @@ class BuildRecords:
                 )
             else:
                 # insert null if not hits detected
-                rec += (None,) * 7
+                rec += (None,) * 8
             records.append(rec)
         return records
 

@@ -9,17 +9,9 @@ function:
     - fix pdb files by chain
     - insert data into table chain_fix
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics.common import Dir
-from bioomics import BuildComplex, QueryComplex, OpenmmPdbfixer
-
+from helper import *
+from bioomics import OpenmmPdbfixer
 
 def retrieve_pdb(args, meta):
     pdb_group = args['pdb_group']
@@ -72,8 +64,6 @@ def run_fixer(rows, args, meta):
             yield chain_id, None
 
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    load_dotenv()
     args = {
         'verbose': True,
         'overwrite': True,

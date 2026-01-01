@@ -21,3 +21,6 @@ parallel -j4 python ${PIPELINE_DIR}/relaxed_amber14_chain.py ::: {0..116}
 
 # relax chain
 parallel -j4 python ${PIPELINE_DIR}/chain_relaxed_amber14.py ::: {0..116}
+
+# fix + relax
+parallel -j4 python ${PIPELINE_DIR}/meta_chain_relaxed.py ::: {0..116}

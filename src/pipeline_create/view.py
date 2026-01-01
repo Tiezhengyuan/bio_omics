@@ -50,22 +50,20 @@ CREATE VIEW view_protein AS
 //
 DROP VIEW IF EXISTS view_pdb_chain;
 CREATE VIEW view_pdb_chain AS
-    SELECT C.chain_id, X.pro_id, C.pdb_id, C.model_no,
-        C.chain_no, D.structure_method, D.resolution,
-        S.chain_seq, D.release_date, D.pdb_group,
+    SELECT C.chain_id, X.pro_id, C.pdb_id, C.model_no, C.chain_no,
+        D.structure_method, D.resolution, B.avg_bfactor,
+        D.release_date, D.pdb_group,
+        S.chain_seq, S.pro_len,
         F.relative_path AS relative_faa,
         P.relative_path AS relative_pdb
     FROM pdb_chainid C
-    LEFT JOIN pdb_chain_seq S
-        ON C.chain_id = S.chain_id
-    LEFT JOIN meta_chain_faa F
-        ON C.chain_id = F.chain_id
-    LEFT JOIN meta_chain_pdb P
-        ON C.chain_id = P.chain_id
-    LEFT JOIN view_pdb D
-        ON C.pdb_id = D.pdb_id
-    LEFT JOIN view_protein X
-        ON C.chain_id = X.source_id
+    LEFT JOIN pdb_chain_seq     S ON C.chain_id = S.chain_id
+    LEFT JOIN meta_chain_faa    F ON C.chain_id = F.chain_id
+    LEFT JOIN meta_chain_pdb    P ON C.chain_id = P.chain_id
+    LEFT JOIN view_pdb D ON     C.pdb_id = D.pdb_id
+    LEFT JOIN view_protein      X ON C.chain_id = X.source_id
+    LEFT JOIN pdb_bfactor       B ON C.pdb_id = B.pdb_id 
+        AND C.model_no = B.model_no AND C.chain_no = B.chain_no
     WHERE S.chain_seq IS NOT NULL
         AND X.source_name = 'pdb_chain_seq'
 ;
@@ -127,7 +125,6 @@ CREATE VIEW view_complex AS
     GROUP BY pdb_id
     ORDER BY num_chains, complex_type
 ;
-//
 
 """
 

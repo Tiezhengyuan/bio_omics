@@ -6,10 +6,12 @@ class Predictor:
         self.args = args
     
     def colabfold(self):
-        cmd = ['colabfold_batch', 
-            '--templates', '--save-all',
-            '--amber', '--use-gpu-relax',
-            '--random-seed', '42',
+        cmd = ['colabfold_batch', '--templates', '--random-seed', '42',]
+        if self.args.get('save_all', False):
+            cmd.append('--save-all')
+        if self.args.get('relax', True):
+            cmd += ['--amber', '--use-gpu-relax',]
+        cmd += [
             '--model-type', self.args.get('model_type', 'auto'),
             '--relax-max-iterations', self.args.get('max_iterations', '2000'), 
             '--num-recycle', self.args.get('num_recycle'),

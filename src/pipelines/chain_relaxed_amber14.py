@@ -3,8 +3,8 @@
 requirements:
     - pdb fixed: table fixed_chain
 example:
-    - parallel -j4 python src/pipelines/relaxed_chain_amber14.py ::: {0..116}
-    - python src/pipelines/relaxed_chain_amber14.py 0
+    - parallel -j4 python src/pipelines/chain_relaxed_amber14.py ::: {0..116}
+    - python src/pipelines/chain_relaxed_amber14.py 0
 function:
     - relax structure based on fixed pdb files
     - insert data into table relaxed_chain
@@ -22,13 +22,14 @@ def retrieve_pdb(args, meta):
         LEFT JOIN meta_pdb P ON F.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
             AND F.relative_pdb IS NOT NULL
+            AND F.model_no = 0
             AND F.chain_id NOT IN (
                 SELECT chain_id FROM {table_name}
             )
             AND F.pdb_id IN (
                 SELECT pdb_id from view_antibody
-            );
-    """
+            )
+    ;"""
     rows = QueryComplex(args['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
     meta['pdb_group'] = int(pdb_group)
@@ -70,7 +71,7 @@ if __name__ == "__main__":
         'chunk_size': 5,
         'pdb_dir': os.getenv('pdb_dir'),
         'data_dir': os.getenv('data_dir'),
-        'table_name': 'relaxed_chain_amber14',
+        'table_name': 'chain_relaxed_amber14',
         'force_fields': ['amber14-all.xml', 'amber14/tip3pfb.xml'],
         'max_iterations': 5000,
         'steps': 100_000,

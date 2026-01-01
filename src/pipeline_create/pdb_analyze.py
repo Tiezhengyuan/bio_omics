@@ -39,7 +39,8 @@ CREATE TABLE pdb_bfactor(
     pdb_id          VARCHAR(10),
     model_no        INT,
     chain_no        VARCHAR(5),
-    avg_bfactor     FLOAT
+    avg_bfactor     FLOAT,
+    bfactor         TEXT
 );
 //
 DROP TABLE IF EXISTS pdb_chain_type;

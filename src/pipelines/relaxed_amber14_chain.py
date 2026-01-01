@@ -31,28 +31,33 @@ def pull_chain_pdb(rows, args, meta):
     for row in rows:
         pdb_id = row['pdb_id']
         dir_endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id) 
-        outdir = os.path.join(args['data_dir'], dir_endpoint)
+        outdir = os.path.join(args['pdb_dir'], dir_endpoint)
         Dir(outdir).init_dir()
 
-        # input pdb
-        pdb_file = os.path.join(args['pdb_dir'], row['relative_pdb'])
-        p = Pdb(pdb_file, None, args['verbose'])
+        input_pdb = os.path.join(args['pdb_dir'], row['relative_pdb'])
+        p = Pdb(input_pdb, None, args['verbose'])
         p.load_structure()
         chains = p.parse_chains(pdb_id)
-        for chain_id, _pdb_id, model_no, chain_no, chain in chains:
-            file_name = f"{chain_id}.pdb"
-            outfile = os.path.join(outdir, file_name)
-            if args['overwrite'] or (not os.path.isfile(outfile)):
-                status = p.to_chain_pdb([chain_no,], outfile)
-                meta[status] += 1
-            else:
-                meta['skip'] += 1
-            rec0 = (chain_id, pdb_id, model_no, chain_no)
-            if os.path.isfile(outfile):
-                relative_path = os.path.join(dir_endpoint, file_name)
-                yield rec0 + (relative_path,)
-            else:
-                yield rec0 + (None,)
+        if chains:
+            for item in chains:
+                chain_no = item['chain_no']
+                model_no = item['model_no']
+                chain_id = item['chain_id']
+                file_name = f"{chain_id}.pdb"
+                outfile = os.path.join(outdir, file_name)
+                if args['overwrite'] or (not os.path.isfile(outfile)):
+                    status = p.to_chain_pdb(model_no, [chain_no,], outfile)
+                    meta[status] += 1
+                else:
+                    meta['skip'] += 1
+                rec0 = (pdb_id, chain_id, model_no, chain_no)
+                if os.path.isfile(outfile):
+                    relative_path = os.path.join(dir_endpoint, file_name)
+                    yield rec0 + (relative_path,)
+                else:
+                    yield rec0 + (None,)
+        else:
+            yield pdb_id, None, None, None, None
 
 ##################################
 if __name__ == "__main__":

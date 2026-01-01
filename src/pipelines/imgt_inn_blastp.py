@@ -6,15 +6,9 @@ functions:
     - blastp against pdb antibody
     - put alignment to table
 '''
-from collections import defaultdict
-from dotenv import load_dotenv
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
 
-from bioomics import Dir, QueryComplex, ProcessFasta, ProcessBlast, BuildComplex
+from helper import *
+from bioomics import ProcessFasta, ProcessBlast
 
 def pull_data(args, meta):
     query = '''
