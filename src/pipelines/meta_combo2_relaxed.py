@@ -1,7 +1,7 @@
 #!/usr/bin/python
 '''
 requirements:
-    - table meta_chain_pdb
+    - table meta_combo2_pdb
 example:
     - parallel -j4 python src/pipelines/meta_combo2_relaxed.py ::: {0..116}
     - python src/pipelines/meta_combo2_relaxed.py 0
@@ -17,16 +17,15 @@ def retrieve_pdb(args, meta):
     pdb_group = args['pdb_group']
     table_name = args['table_name']
     query = f"""
-        SELECT C.pdb_id, C.chain_id, C.relative_path
-        FROM meta_chain_pdb C
-        LEFT JOIN pdb_chainid   I ON C.chain_id = I.chain_id
-        LEFT JOIN pdb_chain_seq S ON C.chain_id = S.chain_id
+        SELECT C.pdb_id, C.combo_id, C.relative_path
+        FROM meta_combo2_pdb C
+        LEFT JOIN meta_combo_seq S ON C.combo_id = S.combo_id
         LEFT JOIN meta_pdb P ON C.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
-            AND I.model_no = 0
-            AND S.chain_seq IS NOT NULL
-            AND C.chain_id NOT IN (
-                SELECT chain_id FROM {table_name}
+            AND C.model_no = 0
+            AND S.chain_combo IS NOT NULL
+            AND C.combo_id NOT IN (
+                SELECT combo_id FROM {table_name}
             )
             AND C.pdb_id IN (
                 SELECT pdb_id from view_antibody
@@ -41,12 +40,12 @@ def retrieve_pdb(args, meta):
 
 def fix_and_relax(row, args, meta):
     time0 = datetime.now()
-    pdb_id, chain_id = row['pdb_id'], row['chain_id']
-    endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id, chain_id)
+    pdb_id, combo_id = row['pdb_id'], row['combo_id']
+    endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id, combo_id)
     outdir = os.path.join(args['data_dir'], endpoint)
     info = {
         'pdb_id': pdb_id,
-        'chain_id': chain_id,
+        'combo_id': combo_id,
         'endpoint': endpoint,
         'outdir': outdir,
         'time0': time0.strftime("%Y-%m-%d %H:%M:%S"),
@@ -62,6 +61,7 @@ def fix_and_relax(row, args, meta):
         }
         op = OpenmmPdbfixer(input_pdb, curr_args)
         fix_info = op.fast_fixer()
+        info['input_pdb_file'] = input_pdb
         info['fix'] = fix_info
         meta['fix_' + fix_info['status']] += 1
     else:
@@ -102,7 +102,7 @@ def fix_and_relax(row, args, meta):
         ProcessJson.save_json(info, info_json)
 
     # update record
-    rec = (pdb_id, chain_id, time0,
+    rec = (pdb_id, combo_id, time0,
         info.get('fixed_pdb'), info.get('relaxed_pdb'),
         info['relax'].get('original_energy') if 'relax' in info else None,
         info['relax'].get('relaxed_energy') if 'relax' in info else None,
@@ -117,7 +117,7 @@ if __name__ == "__main__":
         'verbose': True,
         'overwrite': False,
         'data_dir': os.getenv('data_dir'),
-        'table_name': 'meta_chain_relaxed',
+        'table_name': 'meta_combo2_relaxed',
         'force_fields': ['amber14-all.xml', 'amber14/tip3pfb.xml'],
         'max_iterations': 5000,
         'steps': 100_000,

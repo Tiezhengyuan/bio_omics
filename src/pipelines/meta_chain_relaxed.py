@@ -62,6 +62,7 @@ def fix_and_relax(row, args, meta):
         }
         op = OpenmmPdbfixer(input_pdb, curr_args)
         fix_info = op.fast_fixer()
+        info['input_pdb_file'] = input_pdb
         info['fix'] = fix_info
         meta['fix_' + fix_info['status']] += 1
     else:

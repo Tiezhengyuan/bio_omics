@@ -112,11 +112,25 @@ CREATE TABLE meta_chain_relaxed (
     time0               DATETIME,
     fixed_pdb           VARCHAR(80),
     relaxed_pdb         VARCHAR(80),
-    original_energy     VARCHAR(50),
-    relaxed_energy      VARCHAR(50),
+    original_energy     VARCHAR(60),
+    relaxed_energy      VARCHAR(60),
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (chain_id)
 );
+//
+DROP TABLE IF EXISTS meta_combo2_relaxed;
+CREATE TABLE meta_combo2_relaxed (
+    pdb_id              VARCHAR(10),
+    combo_id            VARCHAR(40),
+    time0               DATETIME,
+    fixed_pdb           VARCHAR(80),
+    relaxed_pdb         VARCHAR(80),
+    original_energy     VARCHAR(60),
+    relaxed_energy      VARCHAR(60),
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (combo_id)
+);
+
 """
 #####################################################################################
 

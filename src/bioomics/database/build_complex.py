@@ -50,8 +50,9 @@ TABLE_COLUMNS = {
         'chain_combo', 'endpoint_prefix'],
     'chain_relaxed_amber14': ['chain_id', 'original_energy',
         'relaxed_energy', 'time0', 'endpoint'],
-
     'meta_chain_relaxed': ['pdb_id', 'chain_id', 'time0', 'fixed_pdb', 
+        'relaxed_pdb', 'original_energy', 'relaxed_energy',],
+    'meta_combo2_relaxed': ['pdb_id', 'combo_id', 'time0', 'fixed_pdb', 
         'relaxed_pdb', 'original_energy', 'relaxed_energy',],
 
     #align

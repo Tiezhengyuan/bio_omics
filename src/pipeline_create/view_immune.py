@@ -37,8 +37,9 @@ CREATE VIEW view_antibody AS
         C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
         C.release_date, C.structure_method, C.resolution, C.avg_bfactor,
         C.relative_faa, C.relative_pdb, C.pdb_group
-    FROM view_pdb_chain C, align_imgt I
-    WHERE C.chain_id = I.chain_id
+    FROM view_pdb_chain C
+    LEFT JOIN align_imgt I ON C.chain_id = I.chain_id
+    WHERE C.model_no = 0
         AND I.evalue <= 1e-10
         AND I.bit_score >= 100
         AND I.isotype = 'IG'

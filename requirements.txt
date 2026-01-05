@@ -7,3 +7,5 @@ redis
 sh
 urllib3
 mysql-connector-python
+matplotlib-venn
+venny4py
