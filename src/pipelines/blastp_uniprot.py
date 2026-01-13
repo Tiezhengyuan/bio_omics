@@ -4,7 +4,7 @@ requirements:
     - table meta_faa, meta_pdb
     - blastp database
 example: 
-    - parallel -j8 python src/pipelines/blastp_uniprot.py ::: {0..116}
+    - parallel -j4 python src/pipelines/blastp_uniprot.py ::: {0..117}
     - python src/pipelines/blastp_uniprot.py 0
 functions:
     - blastp against uniprot_sprot

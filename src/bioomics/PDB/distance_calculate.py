@@ -7,14 +7,18 @@ import MDAnalysis as mda
 from MDAnalysis.analysis.distances import distance_array
 
 from ..constants.amino_acids import EXTRA_LONGER_NAMES
-from .analyze_complex import AnalyzeComplex
+from .distance_analyze import DistanceAnalyze
 
-class DistanceCalculate:
+class DistanceCalculate(DistanceAnalyze):
 
-    def __init__(self, pdb_file:str):
-        # the pdb_file should contain exact two chains
+    def __init__(self, pdb_file:str, args:dict):
+        '''
+        pdb_file: pdb should contain exact two chains
+        dist_cutoff: 10A
+        max_span: max 10 amino acids between two contacts
+        '''
         self.pdb_file = pdb_file
-        # default
+        super().__init__(args)
         self.dist1, self.dist2 = None, None
     
     def process(self, chain_combo:str):
@@ -25,8 +29,10 @@ class DistanceCalculate:
         dist1, dist2 = self.cal_dist(chain1_id, chain2_id)
         if dist1 is not None and dist2 is not None:
             if len(dist1) > 0 and len(dist2) > 0:
-                motif1 = DistanceCalculate.parse_seq(dist1)
-                motif2 = DistanceCalculate.parse_seq(dist2)
+                motif1 = self.parse_seq(dist1)
+                motif2 = self.parse_seq(dist2)
+                if self.verbose:
+                    print(f"input: {self.pdb_file}, contacts: {len(motif1)} vs {len(motif2)}")
                 return {
                     'chain1': chain1_id,
                     'dist1': dist1,
@@ -94,36 +100,3 @@ class DistanceCalculate:
             print(f"ERROR: calculate distance, pdb={self.pdb_file}, err={e}")
         return None, None
 
-    @staticmethod
-    def parse_seq(dist, max_span:int=None, cutoff:float=None):
-        '''
-        present contacts interface. In default:
-            - max span of AA is 10
-            - max distance between atoms is 5 A
-        '''
-        if not isinstance(dist, pd.DataFrame):
-            return None
-        max_span = 10 if max_span is None else int(max_span)
-        cutoff = 5 if cutoff is None else float(cutoff)        
-
-        # filter dist: values less than 5 in default
-        sig = dist[dist['value']<=cutoff]
-        # group significant point
-        group = AnalyzeComplex.group_significant_points(sig, max_span)
-
-        # convert to seq
-        motif = []
-        for g in group:
-            start, end = g[0][0], g[-1][0]
-            sub = dist.loc[start:end,:]
-            # seq should be continuous seq, but pair_aa may not be continuous
-            motif.append({
-                'seq': ''.join(sub['aa']),
-                'pair_aa': ''.join(sub['pair_aa']),
-                'sig_res': len(g),
-                'start': g[0][0],
-                'end': g[-1][0],
-                'cutoff': cutoff,
-                'max_span': max_span,
-            })
-        return motif

@@ -3,7 +3,7 @@ requirements:
     - PDB raw data
     - table pdb, meta_chain_pdb
 example: 
-    - parallel -j4 python src/pipelines/pdb_dssp.py ::: {0..116}
+    - parallel -j4 python src/pipelines/pdb_dssp.py ::: {0..117}
     - python src/pipelines/pdb_dssp.py 0
 functions:
     - Analyze secondary structure by chains

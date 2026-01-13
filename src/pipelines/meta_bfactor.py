@@ -3,7 +3,7 @@ requirements:
     - PDB raw data
     - table meta_pdb
 example: 
-    - parallel -j4 python src/pipelines/meta_bfactor.py ::: {0..116}
+    - parallel -j4 python src/pipelines/meta_bfactor.py ::: {0..117}
     - python src/pipelines/meta_bfactor.py 0
 functions:
     - calculate B-factor of PDB
@@ -92,4 +92,3 @@ if __name__ == "__main__":
     bc.insert_batch_records(args['table_name'])
 
     print(meta)
-

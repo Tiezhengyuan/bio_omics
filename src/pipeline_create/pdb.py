@@ -41,8 +41,7 @@ pdb -> meta_pdb
                 -> pdb_faa
                 -> meta_chain_faa
                 -> meta_chain_pdb
-                -> meta_combo2_pdb
-                -> meta_combo2_seq
+                -> meta_combo2
 '''
 
 SQL_TEXT = """
@@ -57,11 +56,11 @@ CREATE TABLE pdb(
 DROP TABLE IF EXISTS meta_pdb;
 CREATE TABLE meta_pdb(
     pdb_id          VARCHAR(10),
-    relative_path   VARCHAR(60) NOT NULL,
+    relative_path   VARCHAR(60),
     pdb_group       INT,
     UNIQUE (pdb_id),
     CONSTRAINT fk_meta_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS meta_mmcif;
@@ -71,7 +70,7 @@ CREATE TABLE meta_mmcif(
     pdb_group       INT,
     UNIQUE (pdb_id),
     CONSTRAINT fk_meta_mmcif FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 CREATE TABLE pdb_compound(
@@ -81,7 +80,7 @@ CREATE TABLE pdb_compound(
     compound_text   TEXT,
     CONSTRAINT pk_compound PRIMARY KEY (pdb_id, compound_no),
     CONSTRAINT fk_compound_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 CREATE TABLE pdb_method(
@@ -90,7 +89,7 @@ CREATE TABLE pdb_method(
     resolution          FLOAT,
     CONSTRAINT pk_method PRIMARY KEY (pdb_id),
     CONSTRAINT fk_method_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 CREATE TABLE pdb_keyword(
@@ -110,7 +109,7 @@ CREATE TABLE pdb_chainid(
     idx             INT,
     UNIQUE(chain_id),
     CONSTRAINT fk_chainid_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 //
@@ -123,7 +122,7 @@ CREATE TABLE pdb_chain_seq(
     chain_seq       TEXT,
     UNIQUE(chain_id),
     CONSTRAINT fk_chainseq_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS meta_chain_faa;
@@ -133,40 +132,55 @@ CREATE TABLE meta_chain_faa(
     relative_path   VARCHAR(60),
     UNIQUE (pdb_id, chain_id),
     CONSTRAINT fk_faa_chain FOREIGN KEY (chain_id)
-        REFERENCES pdb_chainid(chain_id)
+        REFERENCES pdb_chainid(chain_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS meta_chain_pdb;
 CREATE TABLE meta_chain_pdb(
     pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
-    relative_path   VARCHAR(60),
+    chain_pdb       VARCHAR(60),
     UNIQUE (pdb_id, chain_id),
     CONSTRAINT fk_pdb_chain FOREIGN KEY (chain_id)
-        REFERENCES pdb_chainid(chain_id)
+        REFERENCES pdb_chainid(chain_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS meta_combo2_pdb;
-CREATE TABLE meta_combo2_pdb(
+DROP TABLE IF EXISTS meta_combo2;
+CREATE TABLE meta_combo2 (
     pdb_id          VARCHAR(10),
-    model_no        INT,
     combo_id        VARCHAR(40),
     chain_combo     VARCHAR(10),
-    relative_path   VARCHAR(60),
-    CONSTRAINT fk_combo2_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+    chain_pdbs      VARCHAR(120),
+    combo_pdb       VARCHAR(60),
+    combo_csv       VARCHAR(60),
+    combo_fasta     VARCHAR(60),
+    CONSTRAINT fk_combo2 FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
-//
-DROP TABLE IF EXISTS meta_combo2_seq;
-CREATE TABLE meta_combo2_seq(
-    pdb_id          VARCHAR(10),
-    model_no        INT,
-    combo_id        VARCHAR(40),
-    chain_combo     VARCHAR(10),
-    relative_csv    VARCHAR(60),
-    CONSTRAINT fk_combo2_seq FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
-);
+
+# //
+# DROP TABLE IF EXISTS meta_combo2_pdb;
+# CREATE TABLE meta_combo2_pdb(
+#     pdb_id          VARCHAR(10),
+#     model_no        INT,
+#     combo_id        VARCHAR(40),
+#     chain_combo     VARCHAR(10),
+#     bounded_pdb     VARCHAR(60),
+#     chain_pdbs      VARCHAR(60),
+#     CONSTRAINT fk_combo2_pdb FOREIGN KEY (pdb_id)
+#         REFERENCES pdb(pdb_id) ON DELETE CASCADE
+# );
+# //
+# DROP TABLE IF EXISTS meta_combo2_seq;
+# CREATE TABLE meta_combo2_seq(
+#     pdb_id          VARCHAR(10),
+#     model_no        INT,
+#     combo_id        VARCHAR(40),
+#     chain_combo     VARCHAR(10),
+#     relative_csv    VARCHAR(60),
+#     CONSTRAINT fk_combo2_seq FOREIGN KEY (pdb_id)
+#         REFERENCES pdb(pdb_id) ON DELETE CASCADE
+# );
 //
 DROP TABLE IF EXISTS pdb_faa;
 CREATE TABLE pdb_faa(
@@ -175,7 +189,7 @@ CREATE TABLE pdb_faa(
     relative_faa    VARCHAR(60),
     UNIQUE (pdb_id, model_no),
     CONSTRAINT fk_pdb_faa FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 """
@@ -187,3 +201,5 @@ if __name__ == "__main__":
         res = bc.create_table(query)
         if res is None:
             print(f"ERROR. Check the above SQL: {query}\n\n")
+
+

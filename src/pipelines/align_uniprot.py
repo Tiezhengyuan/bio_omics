@@ -3,7 +3,7 @@ requirements:
     - blastp alignment *.blastp5 files
     - table meta_blastp5
 example: 
-    - parallel -j4 python src/pipelines/align_uniprot.py ::: {0..116}
+    - parallel -j4 python src/pipelines/align_uniprot.py ::: {0..117}
     - python src/pipelines/align_uniprot.py 0
 functions:
     - pust alignment results of blastp into align_uniprot

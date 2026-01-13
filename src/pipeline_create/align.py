@@ -56,8 +56,8 @@ CREATE TABLE meta_igblastp(
         REFERENCES pdb(pdb_id)
 );
 //
-DROP TABLE IF EXISTS align_imgt;
-CREATE TABLE align_imgt(
+DROP TABLE IF EXISTS align_vregion;
+CREATE TABLE align_vregion (
     pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
     allele_name     VARCHAR(20),
@@ -68,19 +68,20 @@ CREATE TABLE align_imgt(
     isotype         VARCHAR(10),
     evalue          DOUBLE,
     bit_score       INT,
+    region_names    VARCHAR(100),
     UNIQUE(chain_id),
     CONSTRAINT fk_imgt_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id)
 );
 //
-DROP TABLE IF EXISTS align_vregion;
-CREATE TABLE align_vregion (
+DROP TABLE IF EXISTS align_vfrag;
+CREATE TABLE align_vfrag (
     pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
     region_name     VARCHAR(20),
     identity        FLOAT,
-    start           INT,
-    end             INT,
+    seq_from        INT,
+    seq_to          INT,
     seq             TEXT,
     UNIQUE(chain_id, region_name),
     CONSTRAINT fk_vregion_pdb FOREIGN KEY (pdb_id)

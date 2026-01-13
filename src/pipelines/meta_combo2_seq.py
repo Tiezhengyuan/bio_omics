@@ -2,7 +2,7 @@
 requirements:
     - The table meta_pdb is ready.
 example:
-    - parallel -j4 python src/pipelines/meta_combo2_seq.py ::: {0..116}
+    - parallel -j4 python src/pipelines/meta_combo2_seq.py ::: {0..117}
     - python src/pipelines/meta_combo2_seq.py 0
 function:
     - split PDB of complex to paired chains PDB.

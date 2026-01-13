@@ -40,7 +40,9 @@ CREATE TABLE pdb_bfactor(
     model_no        INT,
     chain_no        VARCHAR(5),
     avg_bfactor     FLOAT,
-    bfactor         TEXT
+    bfactor         TEXT,
+    CONSTRAINT fk_chain_bfactor_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS pdb_chain_type;
@@ -57,7 +59,9 @@ CREATE TABLE pdb_chain_type(
     ion_res         INT,
     hetero_res      INT,
     other_res       INT,
-    UNIQUE (chain_id)
+    UNIQUE (chain_id),
+    CONSTRAINT fk_chain_type_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS pdb_dssp;
@@ -67,25 +71,25 @@ CREATE TABLE pdb_dssp(
     chain_no        VARCHAR(5),
     dssp_seq        TEXT,
     CONSTRAINT fk_secondary_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS meta_pdb_distance;
 CREATE TABLE meta_pdb_distance(
     pdb_id          VARCHAR(20),
+    combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
-    UNIQUE (pdb_id),
-    CONSTRAINT fk_distance_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+    CONSTRAINT fk_meta_distance_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS meta_pdb_sasa;
 CREATE TABLE meta_pdb_sasa(
     pdb_id          VARCHAR(20),
+    combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
-    UNIQUE (pdb_id),
     CONSTRAINT fk_sasa_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 """

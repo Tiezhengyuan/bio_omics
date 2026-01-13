@@ -3,7 +3,7 @@
 requirements:
     - table meta_pdb, pdb_chainid
 example:
-    - parallel -j4 python src/pipelines/pdb_chain_type.py ::: {0..116}
+    - parallel -j4 python src/pipelines/pdb_chain_type.py ::: {0..117}
     - python src/pipelines/pdb_chain_type.py 0
 function:
     - fix pdb files

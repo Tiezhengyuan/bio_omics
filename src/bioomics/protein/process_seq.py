@@ -108,3 +108,19 @@ class ProcessSeq:
             return 'succeed'
         except Exception as e:
             return 'fail'
+
+    @staticmethod
+    def to_colabfold_fasta(data:dict, outfile:str):
+        '''
+        Used as the input of colabfold for structure prediction
+        '''
+        try:
+            with open(outfile, 'w') as f:
+                for seq_id, seq_pool in data.items():
+                    header = f">{seq_id}\n"
+                    f.write(header)
+                    seq_str = ':\n'.join(seq_pool)
+                    f.write(seq_str)
+            return 'succeed'
+        except Exception as e:
+            return 'fail'

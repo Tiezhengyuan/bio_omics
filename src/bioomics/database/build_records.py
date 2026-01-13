@@ -99,7 +99,7 @@ class BuildRecords:
             return records
 
         if self.verbose:
-            print(f"Warning: no chains detected in {pdb_file}, error={e}")
+            print(f"Warning: no chains detected in {pdb_file}.")
         return [(pdb_id,) + (None,) * (len(cols)-1),]
 
     def pdb_chain_seq(self, args):
@@ -245,10 +245,9 @@ class BuildRecords:
             records.append(rec)
         return records
 
-    def align_imgt(self, args:dict):
+    def align_vregion(self, args:dict):
         pdb_id = args['pdb_id']
         records = []
-
         faa_file = args['faa_file']
         aln_file = args['aln_file']
         pi = ParseIgblast(aln_file, faa_file, self.verbose)
@@ -257,6 +256,7 @@ class BuildRecords:
             rec = (pdb_id, query_id,)
             if 'allele_name' in hit:
                 allele_name, specie = hit['allele_name'].split('|')
+                region_names = [i.replace('-IMGT', '') for i in hit.get('region_names', [])]
                 rec += (
                     allele_name,
                     specie,
@@ -266,31 +266,31 @@ class BuildRecords:
                     hit['isotype'].upper(), 
                     float(hit['e-value']),
                     float(hit['bits-score']),
+                    ','.join(region_names) if region_names else None,
                 )
             else:
                 # insert null if not hits detected
-                rec += (None,) * 8
+                rec += (None,) * 9
             records.append(rec)
         return records
 
-    def align_vregion(self, args:dict):
+    def align_vfrag(self, args:dict):
         pdb_id = args['pdb_id']
         faa_file = args['faa_file']
         aln_file = args['aln_file']
-    
         pi = ParseIgblast(aln_file, faa_file, self.verbose)
         records = []
         for region in pi.retrieve_regions():
             query_id = region['query_id']
             rec0 = (pdb_id, query_id,)
             if 'percent identity' in region:
-                rec = rec0 + (
-                    region['region'],
-                    region['percent identity'],
-                    region['from'],
-                    region['to'],
-                    region['seq'],
-                )
+                region_name, seq = region['region'], region['seq']
+                rec = rec0 + (region['percent identity'], seq,)
+                if  region_name == 'Total':
+                    rec += ('Total', 1, len(seq),)
+                else:
+                    rec += (region_name.replace('-IMGT', ''),
+                        region['from'], region['to'],)
                 if rec not in records:
                     records.append(rec)
             else:

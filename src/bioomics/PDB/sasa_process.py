@@ -24,6 +24,9 @@ class SasaProcess:
             # keys is bounded in dict, unbouned in dict, delta_total_sasa
             result = self.pair_freesasa(bounded_pdb_file, unbounded_pdb_files)
             if result is not None:
+                if self.verbose:
+                    delta = result['delta_total_sasa']
+                    print(f"dSASA = {delta}, bounded PDB: {bounded_pdb_file}")
                 # parse seq/motif
                 for unbounded in result['unbounded']:
                     unbounded['motif'] = SasaCalculate.parse_seq(

@@ -30,19 +30,35 @@ CREATE VIEW view_allergen AS
 
 
 SQL_TEXT = """
+DROP VIEW IF EXISTS view_ig;
+CREATE VIEW view_ig AS
+    SELECT I.allele_name, I.specie, I.gene_name, I.gene_family,
+        I.chain_type, C.pdb_id, C.chain_id, C.model_no,
+        C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
+        C.release_date, C.structure_method, C.resolution, C.avg_bfactor,
+        C.relative_faa, C.chain_pdb, C.pdb_group
+    FROM view_pdb_chain C
+    LEFT JOIN align_vregion I ON C.chain_id = I.chain_id
+    WHERE C.model_no = 0
+        AND I.evalue <= 1e-5
+        AND I.bit_score >= 50
+        AND I.isotype = 'IG'
+;
+//
 DROP VIEW IF EXISTS view_antibody;
 CREATE VIEW view_antibody AS
     SELECT I.allele_name, I.specie, I.gene_name, I.gene_family,
         I.chain_type, C.pdb_id, C.chain_id, C.model_no,
         C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
         C.release_date, C.structure_method, C.resolution, C.avg_bfactor,
-        C.relative_faa, C.relative_pdb, C.pdb_group
+        C.relative_faa, C.chain_pdb, C.pdb_group
     FROM view_pdb_chain C
-    LEFT JOIN align_imgt I ON C.chain_id = I.chain_id
+    LEFT JOIN align_vregion I ON C.chain_id = I.chain_id
     WHERE C.model_no = 0
         AND I.evalue <= 1e-10
         AND I.bit_score >= 100
         AND I.isotype = 'IG'
+        AND I.region_names = 'FR1,CDR1,FR2,CDR2,FR3,CDR3'
 ;
 //
 DROP VIEW IF EXISTS view_ab_dssp;
@@ -51,7 +67,7 @@ CREATE VIEW view_ab_dssp AS
         SELECT I.allele_name, I.specie, I.gene_name, I.gene_family,
             I.chain_type, C.pdb_id, C.chain_id, C.model_no, C.chain_no,
             S.chain_seq, S.pro_len
-        FROM align_imgt I, pdb_chainid C, pdb_chain_seq S
+        FROM align_vregion I, pdb_chainid C, pdb_chain_seq S
         WHERE I.chain_id = C.chain_id
             AND I.chain_id = S.chain_id
             AND I.evalue <= 1e-10
@@ -76,7 +92,7 @@ CREATE VIEW view_tcr AS
         I.chain_type, C.pdb_id, C.chain_id, C.model_no,
         C.chain_no, C.pro_id, C.chain_seq, C.structure_method,
         C.resolution, C.relative_faa, C.relative_pdb, C.pdb_group
-    FROM view_pdb_chain C, align_imgt I
+    FROM view_pdb_chain C, align_vregion I
     WHERE C.chain_id = I.chain_id
         AND I.evalue <= 1e-10
         AND I.bit_score >= 50

@@ -55,41 +55,26 @@ def clean_table_files(table_name, col_name, file_format, meta):
 
 if __name__ == "__main__":
     meta = defaultdict(int)
-    idx = int(sys.argv[1])
-    pool = [
-        # 0
-        ('meta_pdb', 'pdb_file', 'pdb'),
-        # 1
-        ('meta_chain_faa', 'faa_file', 'fasta'),
-        # 2
-        ('meta_chain_pdb', 'pdb_file', 'pdb'),
-        # 3
-        ('meta_combo_pdb', 'pdb_file', 'pdb'),
-        # 4
-        ('meta_faa', 'faa_file', 'fasta'),
-        # 5
-        ('meta_pdb_distance', 'pickle_file', 'pickle'),
-        # 6
-        ('meta_pdb_sasa', 'pickle_file', 'pickle'),
-        # 7
-        ('uniprot_meta_alphafold', 'pdb_path', 'pdb'),
-        # 8
-        ('uniprot_alphafold_plddt', 'pickle_file', 'pickle'),
-        # 9
-        ('meta_blastp5', 'aln_file', 'xml'),
-        # 10
-        ('meta_pdb_igblastp', 'aln_file', 'text'),
-        # 11
-        ('meta_bfactor', 'pickle_file', 'pickle'),
-        # 12
-        ('meta_dabsab', 'summary_file', 'text'),
-        # 13
-        ('ab_absd_faa', 'faa_file', 'fasta'),
-        # 14
-        ('ab_absd_aln', 'aln_file', 'text'),
-    ]
-    if 0 <= idx < len(pool):
-        table_name, col_name, file_format = pool[idx]
+    table_name = sys.argv[1]
+    pool = {
+        'meta_pdb': ('pdb_file', 'pdb'),
+        'meta_chain_faa': ('faa_file', 'fasta'),
+        'meta_chain_pdb': ('pdb_file', 'pdb'),
+        'meta_combo_pdb': ('pdb_file', 'pdb'),
+        'meta_faa': ('faa_file', 'fasta'),
+        'meta_pdb_distance': ('pickle_file', 'pickle'),
+        'meta_pdb_sasa': ('pickle_file', 'pickle'),
+        'uniprot_meta_alphafold': ('pdb_path', 'pdb'),
+        'uniprot_alphafold_plddt': ('pickle_file', 'pickle'),
+        'meta_blastp5': ('aln_file', 'xml'),
+        'meta_pdb_igblastp': ('aln_file', 'text'),
+        'meta_bfactor': ('pickle_file', 'pickle'),
+        'meta_dabsab': ('summary_file', 'text'),
+        'ab_absd_faa': ('faa_file', 'fasta'),
+        'ab_absd_aln': ('aln_file', 'text'),
+    }
+    if table_name in pool:
+        col_name, file_format = pool[table_name]
         clean_table_files(table_name, col_name, file_format, meta)
         print('\nSummary:')
         print(f"table:{table_name}, column:{col_name}\n")

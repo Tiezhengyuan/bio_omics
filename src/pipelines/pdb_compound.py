@@ -3,8 +3,8 @@ requirements:
     - PDB files should be synchronized to the local.
     - The table pdb is ready.
 example:
-    - parallel -j4 python src/pipelines/put_compound.py ::: {0..116}
-    - python src/pipelines/put_compound.py 0
+    - parallel -j4 python src/pipelines/pdb_compound.py ::: {0..117}
+    - python src/pipelines/pdb_compound.py 0
 function:
     - synchronize PDB/UniProt/alignments with data in database COMPLEX.
 '''

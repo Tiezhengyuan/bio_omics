@@ -1,6 +1,6 @@
 '''
 example: 
-    - parallel -j4 python src/pipelines/meta_chain_faa.py ::: {0..116}
+    - parallel -j4 python src/pipelines/meta_chain_faa.py ::: {0..117}
     - python src/pipelines/meta_chain_faa.py 0
 functions:
     - retrieve pdb to fasta by chains
@@ -41,11 +41,12 @@ def export_chain_faa(rows, args, meta):
             endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id)
             outdir = os.path.join(args['data_dir'], endpoint)
             Dir(outdir).init_dir()
-            for chain_id, _pdb_id, model_no, chain_no, chain in chains:
+            for item in chains:
+                chain_id = item['chain_id']
                 file_name = f"{chain_id}.faa"
                 outfile = os.path.join(outdir, file_name)
                 if args['overwrite'] or (not os.path.isfile(outfile)):
-                    chain_seq = p._chain_seq(chain)
+                    chain_seq = p._chain_seq(item['chain'])
                     if chain_seq:
                         pf = ProcessFasta(outfile, args['verbose'])
                         status = pf.one_seq(chain_seq, chain_id)

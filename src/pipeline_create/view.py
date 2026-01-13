@@ -37,6 +37,7 @@ CREATE VIEW view_pdb AS
     FROM pdb P, meta_pdb B, pdb_method M
     WHERE P.pdb_id = B.pdb_id
         AND P.pdb_id = M.pdb_id
+        AND B.relative_path IS NOT NULL
         AND M.resolution IS NOT NULL
 ;
 //
@@ -54,8 +55,7 @@ CREATE VIEW view_pdb_chain AS
         D.structure_method, D.resolution, B.avg_bfactor,
         D.release_date, D.pdb_group,
         S.chain_seq, S.pro_len,
-        F.relative_path AS relative_faa,
-        P.relative_path AS relative_pdb
+        F.relative_path AS relative_faa, P.chain_pdb
     FROM pdb_chainid C
     LEFT JOIN pdb_chain_seq     S ON C.chain_id = S.chain_id
     LEFT JOIN meta_chain_faa    F ON C.chain_id = F.chain_id

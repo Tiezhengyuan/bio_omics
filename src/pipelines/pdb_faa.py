@@ -3,7 +3,7 @@ requirements:
     - PDB data
     - table meta_pdb
 example: 
-    - parallel -j8 python src/pipelines/pdb_faa.py ::: {0..116}
+    - parallel -j4 python src/pipelines/pdb_faa.py ::: {0..117}
     - python src/pipelines/pdb_faa.py 0
 functions:
     - retrieve pdb to fasta

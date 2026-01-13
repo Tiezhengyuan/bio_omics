@@ -1,6 +1,6 @@
 '''
 example: 
-    - parallel -j4 python src/pipelines/meta_chain_pdb.py ::: {0..116}
+    - parallel -j4 python src/pipelines/meta_chain_pdb.py ::: {0..117}
     - python src/pipelines/meta_chain_pdb.py 0
 functions:
     - retrieve pdb to pdb by chain
@@ -36,17 +36,19 @@ def pull_chain_pdb(rows, args, meta):
             p = Pdb(pdb_file, None, args['verbose'])
             p.load_structure()
 
+            model_chains = p.parse_model_chains()
             model_no = 0
-            chains = p.parse_model_chains(model_no)
-            if chains:
+            if model_no in model_chains:
                 endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id)
                 outdir = os.path.join(args['data_dir'], endpoint)
                 Dir(outdir).init_dir()
 
-                for chain_id, chain_no, chain in chains:
+                for item in model_chains[model_no]:
+                    chain_id = item['chain_id']
                     file_name = f'{chain_id}.pdb'
                     outfile = os.path.join(outdir, file_name)
                     if args['overwrite'] or not os.path.isfile(outfile):
+                        chain_no = item['chain_no']
                         p.to_chain_pdb(model_no, [chain_no,], outfile)
                         meta['chains'] += 1
                     else:
@@ -61,8 +63,10 @@ def pull_chain_pdb(rows, args, meta):
                 meta['null'] += 1
                 yield pdb_id, '-', None
         except Exception as e:
+            print(f"error={e}")
             meta['fail_parsing'] += 1
             yield pdb_id, None, None
+
 
 if __name__ == "__main__":
     args = {

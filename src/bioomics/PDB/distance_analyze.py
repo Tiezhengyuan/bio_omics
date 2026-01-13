@@ -1,87 +1,98 @@
 '''
 '''
 import os
+import pandas as pd
 
-
-# from .analyze_complex import AnalyzeComplex
-from .distance_calculate import DistanceCalculate
 from ..common import ProcessPickle
+from .analyze_complex import AnalyzeComplex
 
 class DistanceAnalyze:
-    def __init__(self, data, max_span:int=None, cutoff:float=None, verbose:bool=None):
-        self.data = data
-        self.max_span = int(max_span) if max_span else 30
-        self.verbose = verbose if verbose else False
-        self.cutoff = float(cutoff) if cutoff else 5
-
-    def iter_dist(self):
+    def __init__(self, args):
         '''
-        return distance df
-        _data is dict, keys are chain1, dist1, motif1
-            chain2, dist2, motif2, and chain_combo
+        present contacts interface. In default:
+            - max span of AA >=1, default 10
+            - max distance between atoms is 5 A
         '''
-        for _data in self.data:
-            dist1 = _data['dist1']
-            dist2 = _data['dist2']
-            yield dist1, dist2
+        self.pfile = args.get('pickle_file', None)
+        self.data = ProcessPickle(self.pfile).load_pickle({})
+        self.max_span = int(args.get('max_span', 10))
+        self.dist_cutoff = float(args.get('dist_cutoff', 5))
+        self.verbose = args.get('verbose', False)
 
-
-    def print_min_dist(self, ix:int):
-        '''
-        '''
-        dist_data = self.data[ix]['dist']
-        # print(dist_data['type'])
-
-        g1, g2 = dist_data['dist1'], dist_data['dist2']
-        print('---'*10)
-        sig1 = g1[g1['value']<=self.cutoff]
-        print(sig1)
-        print('---'*10)
-        sig2 = g2[g2['value']<=self.cutoff]
-        print(sig2)
-
-    def retrieve_motif(self, outdir:str=None):
+    def retrieve_motif(self, min_seq_len:int=1):
         '''
         the motif is binding region
         '''
-        pairs = []
-        for _data in self.data:
-            motif1 = DistanceCalculate.parse_seq(_data['dist1'], \
-                self.max_span, self.cutoff)
-            motif2 = DistanceCalculate.parse_seq(_data['dist2'], \
-                self.max_span, self.cutoff)
-            if motif1 and motif2:
-                pairs.append((_data['chain1'], motif1, _data['chain2'], motif2))
-        # export
-        if os.path.isdir(outdir):
-            cond = f"dist-{self.cutoff}_span-{self.max_span}"
-            outfile = os.path.join(self.outdir, f'seq_dist_{cond}.p')
-            if self.verbose:
-                print(f"Sequence-Distance data: {outfile}.")
-            ProcessPickle(outfile).save_pickle(pairs)
-            return pairs, outfile
-        return pairs, None
+        motifs = []
+        try:
+            motif1 = self.parse_seq(self.data.get('dist1'))
+            for m in motif1:
+                if len(m['seq']) >= min_seq_len:
+                    m['chain_no'] = self.data['chain1']
+                    m['pair_chain_no'] = self.data['chain2']
+                    m['pdb_id'] = self.data['pdb_id']
+                    m['combo_id'] = self.data['combo_id']
+                    motifs.append(m)
+            motif2 = self.parse_seq(self.data.get('dist2'))
+            for m in motif2:
+                if len(m['seq']) >= min_seq_len:
+                    m['chain_no'] = self.data['chain2']
+                    m['pair_chain_no'] = self.data['chain1']
+                    m['pdb_id'] = self.data['pdb_id']
+                    m['combo_id'] = self.data['combo_id']
+                    motifs.append(m)
+        except Exception as e:
+            print(self.pfile, e)
+        return motifs
 
+    def parse_seq(self, dist):
+        if not isinstance(dist, pd.DataFrame):
+            return None
+        # filter dist: values less than 5 in default
+        sig = dist[dist['value']<=self.dist_cutoff]
+        # group significant point
+        group = AnalyzeComplex.group_significant_points(sig, self.max_span)
+
+        # convert to seq
+        motif = []
+        for g in group:
+            start, end = g[0][0], g[-1][0]
+            sub = dist.loc[start:end,:]
+            # seq should be continuous seq, but pair_aa may not be continuous
+            motif.append({
+                'seq': ''.join(sub['aa']),
+                'pair_aa': ''.join(sub['pair_aa']),
+                'sig_res': len(g),
+                'start': g[0][0],
+                'end': g[-1][0],
+                'dist_cutoff': self.dist_cutoff,
+                'max_span': self.max_span,
+            })
+        return motif
 
     def get_chain_data(self, type_name:str, chain_len:int=None):
-        res = {}
-        for _data in self.data:
             df1, df2 = None, None
-            chain_id = (_data['chains'][0][0], _data['chains'][1][0])
-            if _data['type'] == type_name:
-                df1 = _data['dist']['dist1']
-                df2 = _data['dist']['dist2']
+            chain_id = (self.data['chains'][0][0], self.data['chains'][1][0])
+            if self.data['type'] == type_name:
+                df1 = self.data['dist']['dist1']
+                df2 = self.data['dist']['dist2']
             if (df1 is not None) and (df2 is not None):
                 if chain_len is None or (chain_len and chain_len == len(df1)):
-                    res[chain_id] = (df1, df2)
-        return res
+                    return chain_id, df1, df2
     
     def get_receptor_data(self, chain_len:int=None):
-        # 
-        res = {}
-        for _data in self.data:
-            chain_id = (_data['chains'][0][0], _data['chains'][1][0])
-            df = _data['dist']['dist2']
-            if chain_len is None or (chain_len and chain_len == len(df)):
-                res[chain_id] = df
-        return res
+        chain_id = (self.data['chains'][0][0], self.data['chains'][1][0])
+        df = self.data['dist']['dist2']
+        if chain_len is None or (chain_len and chain_len == len(df)):
+            return chain_id, df
+
+    def print_min_dist(self):
+        g1, g2 = self.data['dist1'], self.data['dist2']
+        print('---'*10)
+        sig1 = g1[g1['value']<=self.dist_cutoff]
+        print(sig1)
+        print('---'*10)
+        sig2 = g2[g2['value']<=self.dist_cutoff]
+        print(sig2)
+
+

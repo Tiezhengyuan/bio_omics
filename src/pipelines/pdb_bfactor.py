@@ -3,7 +3,7 @@ requirements:
     - bfactor.pkl
     - table meta_bfactor
 example: 
-    - parallel -j4 python src/pipelines/pdb_bfactor.py ::: {0..116}
+    - parallel -j4 python src/pipelines/pdb_bfactor.py ::: {0..117}
     - python src/pipelines/pdb_bfactor.py 0
 functions:
     - put average bfactor to table pdb_bfactor

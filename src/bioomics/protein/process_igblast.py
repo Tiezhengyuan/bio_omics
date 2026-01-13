@@ -43,9 +43,14 @@ class ProcessIgblast:
                 print(f"Stderr: {e.stderr}")
         return None
 
-
     def igblastp(self, fa_file:str, db_path:str, outfile:str, outfmt:int=None):
-        # outfmt could be 3, 4, 7
+        '''
+        -outfmt <String> alignment view options:
+            3 = Flat query-anchored, show identities,
+            4 = Flat query-anchored, no identities,
+            7 = Tabular with comment lines
+            19 = Rearrangement summary report (AIRR format)
+        '''
         outfmt = 5 if outfmt is None else outfmt
         cmd = [
             os.path.join(self.bin_dir, 'igblastp'),

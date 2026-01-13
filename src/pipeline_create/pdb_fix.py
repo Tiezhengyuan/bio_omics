@@ -26,7 +26,7 @@ CREATE TABLE fixed_pdb (
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (pdb_id),
     CONSTRAINT fk_fixed_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS fixed_chainid;
@@ -37,7 +37,7 @@ CREATE TABLE fixed_chainid (
     chain_no        VARCHAR(5),
     fixed_chain_no  VARCHAR(5),
     CONSTRAINT fk_chainid_fixed FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS fixed_chain;
@@ -49,7 +49,7 @@ CREATE TABLE fixed_chain (
     relative_pdb    VARCHAR(60),
     UNIQUE (pdb_id, chain_id),
     CONSTRAINT fk_fixed_chain FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS fixed_combo2;
@@ -61,7 +61,7 @@ CREATE TABLE fixed_combo2 (
     relative_pdb    VARCHAR(60),
     UNIQUE (pdb_id, combo_id),
     CONSTRAINT fk_fixed_combo2 FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS fixed_combo3;
@@ -73,7 +73,7 @@ CREATE TABLE fixed_combo3 (
     relative_pdb    VARCHAR(60),
     UNIQUE (pdb_id, combo_id),
     CONSTRAINT fk_fixed_combo3 FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 //

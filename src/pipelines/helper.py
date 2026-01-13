@@ -19,5 +19,5 @@ meta = defaultdict(int)
 load_dotenv()
 
 from bioomics.common import Dir
-from bioomics.database import BuildComplex, QueryComplex
+from bioomics.database import BuildComplex, QueryComplex, UpdateComplex
 from bioomics.PDB import Pdb

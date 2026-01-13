@@ -4,7 +4,7 @@ requirments:
         cd /home/yuan/data/ncbi-igblast-1.22.0
     - igblastp database is ready
 example: 
-    - parallel -j4 python /home/yuan/bio/bio_omics/src/pipelines/igblastp_vregion.py ::: {0..116}
+    - parallel -j4 python /home/yuan/bio/bio_omics/src/pipelines/igblastp_vregion.py ::: {0..117}
     - python /home/yuan/bio/bio_omics/src/pipelines/igblastp_vregion.py 0
 functions:
     - igblastp against IMGT v-region

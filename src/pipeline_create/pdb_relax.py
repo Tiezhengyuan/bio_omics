@@ -42,7 +42,7 @@ CREATE TABLE relaxed_pdb_amber99sb (
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (pdb_id),
     CONSTRAINT fk_relaxed_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS relaxed_pdb_amber14;
@@ -55,7 +55,7 @@ CREATE TABLE relaxed_pdb_amber14 (
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (pdb_id),
     CONSTRAINT fk_relaxed_pdb_amber14 FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS relaxed_amber14_chain;
@@ -67,7 +67,7 @@ CREATE TABLE relaxed_amber14_chain (
     relative_pdb        VARCHAR(50),
     UNIQUE (pdb_id, chain_id),
     CONSTRAINT fk_relaxed_amber14_chain FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS relaxed_amber14_combo2;
@@ -79,7 +79,7 @@ CREATE TABLE relaxed_amber14_combo2 (
     endpoint_prefix     VARCHAR(80),
     UNIQUE (combo_id),
     CONSTRAINT fk_relaxed_amber14_combo2 FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS relaxed_amber14_combo3;
@@ -91,7 +91,7 @@ CREATE TABLE relaxed_amber14_combo3 (
     endpoint_prefix     VARCHAR(80),
     UNIQUE (combo_id),
     CONSTRAINT fk_relaxed_amber14_combo3 FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
 DROP TABLE IF EXISTS chain_relaxed_amber14;
@@ -115,7 +115,10 @@ CREATE TABLE meta_chain_relaxed (
     original_energy     VARCHAR(60),
     relaxed_energy      VARCHAR(60),
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (chain_id)
+    UNIQUE (chain_id),
+    CONSTRAINT fk_chain_relaxed_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+
 );
 //
 DROP TABLE IF EXISTS meta_combo2_relaxed;
@@ -128,7 +131,10 @@ CREATE TABLE meta_combo2_relaxed (
     original_energy     VARCHAR(60),
     relaxed_energy      VARCHAR(60),
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (combo_id)
+    UNIQUE (combo_id),
+    CONSTRAINT fk_combo2_relaxed_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+
 );
 
 """

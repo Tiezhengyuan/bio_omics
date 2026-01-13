@@ -5,7 +5,8 @@ from .db import Db
 
 class UpdateDb(Db):
 
-    def __init__(self, verbose:bool=False):
+    def __init__(self, table_name, verbose:bool=False):
+        self.table_name = table_name
         super().__init__(verbose)
 
     def execute_update(self, query, record):
@@ -25,10 +26,17 @@ class UpdateDb(Db):
                 connection.close()
         return None
 
-    def delete_rows(self, table_name, col_name, value):
+    def delete_rows(self, col_name, value):
         query = f"""
-            DELETE FROM {table_name}
+            DELETE FROM {self.table_name}
             WHERE {col_name} = %s
         """
         adr = (value,)
         return self.execute_update(query, adr)
+
+    def delete_null_rows(self, col_name):
+        query = f"""
+            DELETE FROM {self.table_name}
+            WHERE {col_name} IS NULL
+        """
+        return self.execute_update(query, None)

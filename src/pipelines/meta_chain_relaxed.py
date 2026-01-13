@@ -3,7 +3,7 @@
 requirements:
     - table meta_chain_pdb
 example:
-    - parallel -j4 python src/pipelines/meta_chain_relaxed.py ::: {0..116}
+    - parallel -j4 python src/pipelines/meta_chain_relaxed.py ::: {0..117}
     - python src/pipelines/meta_chain_relaxed.py 0
 function:
     - fix pdb files
@@ -17,14 +17,15 @@ def retrieve_pdb(args, meta):
     pdb_group = args['pdb_group']
     table_name = args['table_name']
     query = f"""
-        SELECT C.pdb_id, C.chain_id, C.relative_path
-        FROM meta_chain_pdb C
+        SELECT C.pdb_id, C.chain_id, C.chain_pdb
+        FROM meta_chain_pdb     C
         LEFT JOIN pdb_chainid   I ON C.chain_id = I.chain_id
         LEFT JOIN pdb_chain_seq S ON C.chain_id = S.chain_id
         LEFT JOIN meta_pdb P ON C.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
             AND I.model_no = 0
             AND S.chain_seq IS NOT NULL
+            AND P.relative_path IS NOT NULL
             AND C.chain_id NOT IN (
                 SELECT chain_id FROM {table_name}
             )
@@ -55,7 +56,7 @@ def fix_and_relax(row, args, meta):
     # fix pdb
     fixed_pdb = os.path.join(outdir, 'fixed.pdb')
     if args['overwrite'] or not os.path.isfile(fixed_pdb):
-        input_pdb = os.path.join(args['data_dir'], row['relative_path'])
+        input_pdb = os.path.join(args['data_dir'], row['chain_pdb'])
         curr_args = {
             'verbose': args['verbose'],
             'outdir': outdir,

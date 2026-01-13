@@ -14,16 +14,20 @@ TABLE_COLUMNS = {
         'ion_res', 'hetero_res', 'other_res'],
     'pdb_faa': ['pdb_id', 'model_no', 'relative_faa'],
     'meta_chain_faa': ['pdb_id', 'chain_id', 'relative_path'],
-    'meta_chain_pdb': ['pdb_id', 'chain_id', 'relative_path'],
+    'meta_chain_pdb': ['pdb_id', 'chain_id', 'chain_pdb'],
+    'meta_combo2': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
+        'combo_pdb', 'combo_csv', 'combo_fasta'],
+
+
     'meta_combo2_pdb': ['pdb_id', 'model_no', 'combo_id',
-        'chain_combo', 'relative_path'],
+        'chain_combo', 'bounded_pdb', 'chain_pdbs'],
     'meta_combo2_seq': ['pdb_id', 'model_no', 'combo_id',
         'chain_combo', 'relative_csv'],
 
     #analyze
     'meta_bfactor': ['pdb_id', 'relative_pkl'],
-    'meta_pdb_distance': ['pdb_id', 'relative_pkl'],
-    'meta_pdb_sasa': ['pdb_id', 'relative_pkl'],
+    'meta_pdb_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
+    'pdb_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
 
     # fix
     'fixed_pdb': ['pdb_id', 'relative_path', 'time0'],
@@ -50,6 +54,7 @@ TABLE_COLUMNS = {
         'chain_combo', 'endpoint_prefix'],
     'chain_relaxed_amber14': ['chain_id', 'original_energy',
         'relaxed_energy', 'time0', 'endpoint'],
+
     'meta_chain_relaxed': ['pdb_id', 'chain_id', 'time0', 'fixed_pdb', 
         'relaxed_pdb', 'original_energy', 'relaxed_energy',],
     'meta_combo2_relaxed': ['pdb_id', 'combo_id', 'time0', 'fixed_pdb', 
@@ -319,21 +324,22 @@ class BuildComplex(BuildDb):
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
-    def insert_align_imgt(self) -> tuple:
-        table_name = 'align_imgt'
+    def insert_align_vregion(self) -> tuple:
+        table_name = 'align_vregion'
         insert_query = f"""INSERT INTO {table_name}
             (pdb_id, chain_id, allele_name, specie, gene_name, gene_family,
-                chain_type, isotype, evalue, bit_score)
-            VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s, %s)
+                chain_type, isotype, evalue, bit_score, region_names)
+            VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
-    def insert_align_vregion(self) -> tuple:
-        table_name = 'align_vregion'
+    def insert_align_vfrag(self) -> tuple:
+        # FRs and CDRs in V-regions
+        table_name = 'align_vfrag'
         insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, chain_id, region_name, identity, 
-                start, end, seq)
+            (pdb_id, chain_id, identity, seq,
+                region_name, seq_from, seq_to)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)

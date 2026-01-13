@@ -138,14 +138,18 @@ class ParseIgblast:
         '''
         hits = []
         for record, block in self.iter_pairwise():
-            sig = {
-                'query_id': self.query_id(block),
-                'query_seq': self.query_seq(record),
-            }
+            query_id = self.query_id(block)
+            query_seq = self.query_seq(record)
             sig_hits = self.sig_alignment(block)
+            sig = {
+                'query_id': query_id,
+                'query_seq': query_seq,
+            }
             # only import the top one hit for each record
             if sig_hits:
                 sig.update(sig_hits[0])
+                alignment = self.alignment_summary(block, query_seq)
+                sig['region_names'] = [i for i in alignment if '-IMGT' in i]
             hits.append(sig)
         return hits
 
@@ -155,7 +159,7 @@ class ParseIgblast:
         prepare records for db insertion
         '''
         hit_regions = []
-        names = ['from', 'to', 'length', 'matches', 'mismatches', 'gaps', 'percent identity']
+        # names = ['from', 'to', 'length', 'matches', 'mismatches', 'gaps', 'percent identity']
         for record, block in self.iter_pairwise():
             query_id = self.query_id(block)
             query_seq = self.query_seq(record)

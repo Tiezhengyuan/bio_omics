@@ -19,8 +19,8 @@ def retrieve_pdb(args, meta):
     query = f"""
         WITH tmp AS(
             SELECT DISTINCT I.pdb_id, S.first_chain_id, F.relative_path
-                FROM pdb_chain_seq S
-                LEFT JOIN pdb_chainid I ON S.first_chain_id = I.chain_id
+                FROM pdb_chain_seq       S
+                LEFT JOIN pdb_chainid    I ON S.first_chain_id = I.chain_id
                 LEFT JOIN meta_chain_faa F ON S.first_chain_id = F.chain_id
                 WHERE F.relative_path IS NOT NULL
                     AND S.first_chain_id IS NOT NULL
@@ -35,7 +35,8 @@ def retrieve_pdb(args, meta):
         SELECT T.pdb_id, T.first_chain_id AS chain_id, T.relative_path
         FROM tmp T
         LEFT JOIN meta_pdb P ON T.pdb_id=P.pdb_id
-        where P.pdb_group = {pdb_group}
+        WHERE P.pdb_group = {pdb_group}
+            AND P.relative_path IS NOT NULL
     ;"""
     rows = QueryComplex(args['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
