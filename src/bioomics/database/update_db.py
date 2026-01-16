@@ -26,13 +26,13 @@ class UpdateDb(Db):
                 connection.close()
         return None
 
-    def delete_rows(self, col_name, value):
+    def delete_rows(self, col_name, values):
+        placeholders = ', '.join(['%s',] * len(values))
         query = f"""
             DELETE FROM {self.table_name}
-            WHERE {col_name} = %s
+            WHERE {col_name} IN ({placeholders})
         """
-        adr = (value,)
-        return self.execute_update(query, adr)
+        return self.execute_update(query, values)
 
     def delete_null_rows(self, col_name):
         query = f"""

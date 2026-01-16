@@ -44,9 +44,8 @@ CREATE VIEW view_pdb AS
 DROP VIEW IF EXISTS view_protein;
 CREATE VIEW view_protein AS
     SELECT S.source_name, S.source_id, P.pro_id, P.pro_seq
-    FROM protein_source S
-    LEFT JOIN protein_seq P
-    ON S.pro_id = P.pro_id
+    FROM protein_source   S
+    LEFT JOIN protein_seq P ON S.pro_id = P.pro_id
 ;
 //
 DROP VIEW IF EXISTS view_pdb_chain;
@@ -74,12 +73,10 @@ CREATE VIEW view_pdb_uniprot AS
         C.chain_no, C.chain_seq,
         A.identity, U.pro_seq,
         C.structure_method, C.resolution,
-        C.relative_faa, C.relative_pdb
-    FROM align_uniprot A
-    LEFT JOIN uniprot U
-        ON A.uniprot_acc = U.uniprot_acc
-    LEFT JOIN view_pdb_chain C
-        ON A.chain_id = C.chain_id
+        C.relative_faa, C.chain_pdb
+    FROM align_uniprot       A
+    LEFT JOIN uniprot        U ON A.uniprot_acc = U.uniprot_acc
+    LEFT JOIN view_pdb_chain C ON A.chain_id = C.chain_id
     WHERE A.bit_score >= 50
         AND A.evalue <= 1e-10
         AND A.identity >= .3
@@ -96,10 +93,10 @@ CREATE VIEW view_htrm AS
     ON C.uniprot_acc = U.uniprot_acc
     WHERE U.organism LIKE '%Homo sapiens%'
         AND C.uniprot_acc IN (
-        SELECT distinct uniprot_acc
-        FROM uniprot_keyword
-        WHERE keyword LIKE 'Transmembrane'
-    )
+            SELECT distinct uniprot_acc
+            FROM uniprot_keyword
+            WHERE keyword LIKE 'Transmembrane'
+        )
 ;
 //
 /* drug protein */
@@ -107,12 +104,10 @@ DROP VIEW IF EXISTS view_drug;
 CREATE VIEW view_drug AS
     SELECT C.chain_id, C.pdb_id,  C.uniprot_acc,
         C.chain_no, C.name, D.db_acc AS drug_acc,
-        C.chain_seq, C.pro_seq, C.relative_faa, C.relative_pdb
-    FROM view_pdb_uniprot C
-    LEFT JOIN uniprot U
-    ON C.uniprot_acc = U.uniprot_acc
-    LEFT JOIN uniprot_dbxrefs D
-    ON C.uniprot_acc = D.uniprot_acc
+        C.chain_seq, C.pro_seq, C.relative_faa, C.chain_pdb
+    FROM view_pdb_uniprot     C
+    LEFT JOIN uniprot U ON    C.uniprot_acc = U.uniprot_acc
+    LEFT JOIN uniprot_dbxrefs D ON C.uniprot_acc = D.uniprot_acc
     WHERE U.organism LIKE '%Homo sapiens%'
         AND D.db_name = 'DrugBank'
 ;

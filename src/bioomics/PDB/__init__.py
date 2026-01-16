@@ -13,6 +13,7 @@ from .analyze_dssp import *
 
 from .distance_calculate import *
 from .distance_analyze import *
+from .distance_process import *
 
 from .sasa_calculate import *
 from .sasa_process import *

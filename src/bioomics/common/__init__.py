@@ -7,3 +7,4 @@ from .process_json import *
 from .bio_dict import BioDict
 from .bio_handler import BioHandler
 from .concurrency import *
+from .write_tmp import *

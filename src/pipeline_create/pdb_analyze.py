@@ -20,8 +20,10 @@ from bioomics import BuildComplex
 meta_pdb -> meta_bfactor -> pdb_bfactor
          -> pdb_chainid -> pdb_chain_type
                         -> pdb_chain_pdb -> pdb_dssp
-         -> meta_combo2_pdb -> meta_pdb_distance
-                            -> meta_pdb_sasa
+         -> meta_combo2 -> combo2_distance
+                        -> combo2_sasa
+        -> pdb_distance
+
 '''
 
 SQL_TEXT = """
@@ -41,7 +43,7 @@ CREATE TABLE pdb_bfactor(
     chain_no        VARCHAR(5),
     avg_bfactor     FLOAT,
     bfactor         TEXT,
-    CONSTRAINT fk_chain_bfactor_pdb FOREIGN KEY (pdb_id)
+    CONSTRAINT fk_pdb_bfactor_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
@@ -70,25 +72,52 @@ CREATE TABLE pdb_dssp(
     model_no        INT,
     chain_no        VARCHAR(5),
     dssp_seq        TEXT,
-    CONSTRAINT fk_secondary_pdb FOREIGN KEY (pdb_id)
+    CONSTRAINT fk_pdb_dssp_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS meta_pdb_distance;
-CREATE TABLE meta_pdb_distance(
+DROP TABLE IF EXISTS combo2_distance;
+CREATE TABLE combo2_distance(
     pdb_id          VARCHAR(20),
     combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
-    CONSTRAINT fk_meta_distance_pdb FOREIGN KEY (pdb_id)
+    CONSTRAINT fk_combo2_distance_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS meta_pdb_sasa;
-CREATE TABLE meta_pdb_sasa(
+DROP TABLE IF EXISTS pdb_distance;
+CREATE TABLE pdb_distance(
     pdb_id          VARCHAR(20),
     combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
-    CONSTRAINT fk_sasa_pdb FOREIGN KEY (pdb_id)
+    CONSTRAINT fk_pdb_distance_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS dist_amber14;
+CREATE TABLE dist_amber14(
+    pdb_id          VARCHAR(20),
+    combo_id        VARCHAR(40),
+    relative_pkl    VARCHAR(60),
+    CONSTRAINT fk_dist_amber14_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS combo2_sasa;
+CREATE TABLE combo2_sasa(
+    pdb_id          VARCHAR(20),
+    combo_id        VARCHAR(40),
+    relative_pkl    VARCHAR(60),
+    CONSTRAINT fk_combo2_sasa_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS pdb_sasa;
+CREATE TABLE pdb_sasa(
+    pdb_id          VARCHAR(20),
+    combo_id        VARCHAR(40),
+    relative_pkl    VARCHAR(60),
+    CONSTRAINT fk_pdb_sasa_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 

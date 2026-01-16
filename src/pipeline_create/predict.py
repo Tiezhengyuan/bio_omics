@@ -9,12 +9,19 @@ functions:
 '''
 from create_helper import *
 
+'''
+meta_pdb -> view_pdb_chain -> chain_alphafold
+         -> meta_combo2 -> combo2_alphafold
+
+'''
+
+
 SQL_TEXT = """
 DROP TABLE IF EXISTS chain_alphafold;
 CREATE TABLE chain_alphafold (
     chain_id            VARCHAR(20),
     endpoint            VARCHAR(60),
-    predicted_at        DATEIME,
+    predicted_at        DATETIME,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (chain_id)
 );
@@ -23,7 +30,7 @@ DROP TABLE IF EXISTS combo2_alphafold;
 CREATE TABLE combo2_alphafold (
     combo_id            VARCHAR(20),
     endpoint            VARCHAR(60),
-    predicted_at        DATEIME,
+    predicted_at        DATETIME,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (combo_id)
 );

@@ -13,6 +13,6 @@ parallel -j8 python ${PIPELINE_DIR}/pdb_chain_type.py ::: {0..117}
 parallel -j8 python ${PIPELINE_DIR}/pdb_dssp.py ::: {0..117}
 
 # atom distance
-parallel -j8 python ${PIPELINE_DIR}/meta_pdb_distance.py ::: {0..117}
+parallel -j8 python ${PIPELINE_DIR}/combo2_distance.py ::: {0..117}
 # require meta_combo_pdb
 parallel -j8 python ${PIPELINE_DIR}/pdb_sasa.py ::: {0..117}

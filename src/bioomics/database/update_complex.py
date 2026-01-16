@@ -93,7 +93,6 @@ class UpdateComplex(UpdateDb):
                 m += 1
         print(f"{self.table_name}.{col_name}: succeed={n}, unchanged={m}")
 
-
     def update_chain_seq(self, data:list):
         update_query = f"""
             UPDATE {self.table_name}

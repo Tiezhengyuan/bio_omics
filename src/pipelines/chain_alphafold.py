@@ -3,16 +3,17 @@
 requirements:
     - pdb fixed: table fixed_chain
 example:
-    - parallel -j4 python src/pipelines/chain_alphafold.py ::: {0..116}
+    - parallel -j4 python src/pipelines/chain_alphafold.py ::: {0..117}
     - python src/pipelines/chain_alphafold.py 0
 function:
-    - relax structure based on fixed pdb files
+    - prefix monomer
     - insert data into table chain_alphafold
 '''
 
 from helper import *
 from bioomics import Predictor
 
+@header
 def retrieve_pdb(args, meta):
     pdb_group = args['pdb_group']
     table_name = args['table_name']
@@ -40,21 +41,20 @@ def retrieve_pdb(args, meta):
     ;"""
     rows = QueryComplex(args['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
-    meta['pdb_group'] = int(pdb_group)
     meta['rows'] += len(rows)
     return rows
 
 if __name__ == "__main__":
     args = {
+        'pdb_group': sys.argv[1],
         'verbose': True,
         'data_dir': os.getenv('data_dir'),
         'predict_dir': os.getenv('predict_dir'),
         'table_name': 'chain_alphafold',
+        'num_recycle': '3',
         'relax': True,
         'max_iterations': '5000',
-        'num_recycle': '3',
     }
-    args['pdb_group'] = sys.argv[1]
     rows = retrieve_pdb(args, meta)
 
     for row in rows:
@@ -88,4 +88,4 @@ if __name__ == "__main__":
         bc = BuildComplex([tuple(rec),], args['verbose'])
         bc.insert_batch_records(args['table_name'])
 
-    print(meta)
+    footer(meta)

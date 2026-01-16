@@ -3,7 +3,7 @@
 requirements:
     - table meta_chain_pdb
 example:
-    - parallel -j4 python src/pipelines/meta_chain_relaxed.py ::: {0..117}
+    - parallel -j8 python src/pipelines/meta_chain_relaxed.py ::: {0..117}
     - python src/pipelines/meta_chain_relaxed.py 0
 function:
     - fix pdb files
@@ -13,6 +13,7 @@ function:
 from helper import *
 from bioomics import OpenmmPdbfixer, OpenmmSimulation, ProcessJson
 
+@header
 def retrieve_pdb(args, meta):
     pdb_group = args['pdb_group']
     table_name = args['table_name']
@@ -21,7 +22,7 @@ def retrieve_pdb(args, meta):
         FROM meta_chain_pdb     C
         LEFT JOIN pdb_chainid   I ON C.chain_id = I.chain_id
         LEFT JOIN pdb_chain_seq S ON C.chain_id = S.chain_id
-        LEFT JOIN meta_pdb P ON C.pdb_id = P.pdb_id
+        LEFT JOIN meta_pdb      P ON C.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
             AND I.model_no = 0
             AND S.chain_seq IS NOT NULL
@@ -33,10 +34,8 @@ def retrieve_pdb(args, meta):
                 SELECT pdb_id from view_antibody
             )
     ;"""
-    qc = QueryComplex(args['verbose'])
-    rows = qc.list_data(query)
+    rows = QueryComplex(args['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
-    meta['pdb_group'] = int(pdb_group)
     meta['rows'] += len(rows)
     return rows
 
@@ -116,6 +115,7 @@ def fix_and_relax(row, args, meta):
 
 if __name__ == "__main__":
     args = {
+        'pdb_group': sys.argv[1],
         'verbose': True,
         'overwrite': False,
         'data_dir': os.getenv('data_dir'),
@@ -124,12 +124,13 @@ if __name__ == "__main__":
         'max_iterations': 5000,
         'steps': 100_000,
     }
-    args['pdb_group'] = sys.argv[1]
-
     rows = retrieve_pdb(args, meta)
     for row in rows:
         rec = fix_and_relax(row, args, meta)
         bc = BuildComplex([rec,], args['verbose'])
         bc.insert_batch_records(args['table_name'])
 
-    print(meta)
+    print("Try to validate files...")
+    validate_data('fixed_pdb', args, meta)
+    validate_data('relaxed_pdb', args, meta)
+    footer(meta)

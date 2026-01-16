@@ -4,23 +4,24 @@
 PIPELINE_DIR=$1
 
 # fix pdb
-parallel -j4 python ${PIPELINE_DIR}/fixed_pdb.py ::: {0..116}
+parallel -j8 python ${PIPELINE_DIR}/fixed_pdb.py ::: {0..117}
 # split fixed_pdb
-parallel -j4 python ${PIPELINE_DIR}/fixed_chainid.py ::: {0..116}
-parallel -j4 python ${PIPELINE_DIR}/fixed_chain.py ::: {0..116}
-parallel -j4 python ${PIPELINE_DIR}/fixed_combo2.py ::: {0..116}
-parallel -j4 python ${PIPELINE_DIR}/fixed_combo3.py ::: {0..116}
+parallel -j8 python ${PIPELINE_DIR}/fixed_chainid.py ::: {0..117}
+parallel -j8 python ${PIPELINE_DIR}/fixed_chain.py ::: {0..117}
+parallel -j8 python ${PIPELINE_DIR}/fixed_combo2.py ::: {0..117}
+parallel -j8 python ${PIPELINE_DIR}/fixed_combo3.py ::: {0..117}
 
 # from chain 
-parallel -j4 python ${PIPELINE_DIR}/pdb_chain_fixed.py ::: {0..116}
+parallel -j8 python ${PIPELINE_DIR}/pdb_chain_fixed.py ::: {0..117}
 
 # relax pdb then split PDB
-parallel -j4 python ${PIPELINE_DIR}/relaxed_pdb_amber99sb.py ::: {0..116}
-parallel -j4 python ${PIPELINE_DIR}/relaxed_pdb_amber14.py ::: {0..116}
-parallel -j4 python ${PIPELINE_DIR}/relaxed_amber14_chain.py ::: {0..116}
+parallel -j8 python ${PIPELINE_DIR}/relaxed_pdb_amber99sb.py ::: {0..117}
+parallel -j8 python ${PIPELINE_DIR}/relaxed_pdb_amber14.py ::: {0..117}
+parallel -j8 python ${PIPELINE_DIR}/relaxed_amber14_chain.py ::: {0..117}
 
 # relax chain
-parallel -j4 python ${PIPELINE_DIR}/chain_relaxed_amber14.py ::: {0..116}
+parallel -j8 python ${PIPELINE_DIR}/chain_relaxed_amber14.py ::: {0..117}
 
 # fix + relax
-parallel -j4 python ${PIPELINE_DIR}/meta_chain_relaxed.py ::: {0..116}
+parallel -j8 python ${PIPELINE_DIR}/meta_chain_relaxed.py ::: {0..117}
+parallel -j8 python ${PIPELINE_DIR}/combo2_relaxed.py ::: {0..117}

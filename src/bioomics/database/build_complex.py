@@ -26,7 +26,10 @@ TABLE_COLUMNS = {
 
     #analyze
     'meta_bfactor': ['pdb_id', 'relative_pkl'],
-    'meta_pdb_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
+    'combo2_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
+    'pdb_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
+    'dist_amber14': ['pdb_id', 'combo_id', 'relative_pkl'],
+    'combo2_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
     'pdb_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
 
     # fix
@@ -57,7 +60,7 @@ TABLE_COLUMNS = {
 
     'meta_chain_relaxed': ['pdb_id', 'chain_id', 'time0', 'fixed_pdb', 
         'relaxed_pdb', 'original_energy', 'relaxed_energy',],
-    'meta_combo2_relaxed': ['pdb_id', 'combo_id', 'time0', 'fixed_pdb', 
+    'combo2_relaxed': ['pdb_id', 'combo_id', 'time0', 'fixed_pdb', 
         'relaxed_pdb', 'original_energy', 'relaxed_energy',],
 
     #align
@@ -66,6 +69,7 @@ TABLE_COLUMNS = {
 
     #predict
     'chain_alphafold': ['chain_id', 'endpoint', 'predicted_at'],
+    'combo2_alphafold': ['combo_id', 'endpoint', 'predicted_at'],
 
     # uniprot
     'uniprot_meta_alphafold': ['uniprot_acc', 'pdb_path'],
@@ -107,6 +111,8 @@ class BuildComplex(BuildDb):
         self.recorder = BuildRecords(verbose)
     
     def insert_batch_records(self, table_name:str):
+        if self.verbose:
+            print(f"Begin to insert data into table {table_name}...")
         cols = TABLE_COLUMNS[table_name]
         fmt = ['%s',] * len(cols)
         cols_str = ', '.join(cols)

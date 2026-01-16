@@ -17,15 +17,25 @@ CREATE VIEW view_allergen AS
     SELECT C.chain_id, C.pdb_id,  C.uniprot_acc,
         C.chain_no, C.name, D.db_acc AS allergen_acc,
         C.chain_seq, C.pro_seq, C.relative_faa , C.relative_pdb
-    FROM view_pdb_uniprot C
-    LEFT JOIN uniprot U
-    ON C.uniprot_acc = U.uniprot_acc
-    LEFT JOIN uniprot_dbxrefs D
-    ON C.uniprot_acc = D.uniprot_acc
+    FROM view_pdb_uniprot     C
+    LEFT JOIN uniprot         U ON C.uniprot_acc = U.uniprot_acc
+    LEFT JOIN uniprot_dbxrefs D ON C.uniprot_acc = D.uniprot_acc
     WHERE D.db_name = 'allergome'
         AND U.organism LIKE '%Homo sapiens%'
-        
 ;
+//
+DROP VIEW IF EXISTS view_tcr;
+CREATE VIEW view_tcr AS
+    SELECT I.allele_name, I.gene_name, I.gene_family,
+        I.chain_type, C.pdb_id, C.chain_id, C.model_no,
+        C.chain_no, C.pro_id, C.chain_seq, C.structure_method,
+        C.resolution, C.relative_faa, C.relative_pdb, C.pdb_group
+    FROM view_pdb_chain C, align_vregion I
+    WHERE C.chain_id = I.chain_id
+        AND I.evalue <= 1e-10
+        AND I.bit_score >= 50
+        AND I.isotype = 'TR'
+;       
 '''
 
 
@@ -37,7 +47,7 @@ CREATE VIEW view_ig AS
         C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
         C.release_date, C.structure_method, C.resolution, C.avg_bfactor,
         C.relative_faa, C.chain_pdb, C.pdb_group
-    FROM view_pdb_chain C
+    FROM view_pdb_chain     C
     LEFT JOIN align_vregion I ON C.chain_id = I.chain_id
     WHERE C.model_no = 0
         AND I.evalue <= 1e-5
@@ -52,7 +62,7 @@ CREATE VIEW view_antibody AS
         C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
         C.release_date, C.structure_method, C.resolution, C.avg_bfactor,
         C.relative_faa, C.chain_pdb, C.pdb_group
-    FROM view_pdb_chain C
+    FROM view_pdb_chain     C
     LEFT JOIN align_vregion I ON C.chain_id = I.chain_id
     WHERE C.model_no = 0
         AND I.evalue <= 1e-10
@@ -86,25 +96,11 @@ CREATE VIEW view_ab_dssp AS
         AND D.dssp_seq is not null
 ;
 //
-DROP VIEW IF EXISTS view_tcr;
-CREATE VIEW view_tcr AS
-    SELECT I.allele_name, I.gene_name, I.gene_family,
-        I.chain_type, C.pdb_id, C.chain_id, C.model_no,
-        C.chain_no, C.pro_id, C.chain_seq, C.structure_method,
-        C.resolution, C.relative_faa, C.relative_pdb, C.pdb_group
-    FROM view_pdb_chain C, align_vregion I
-    WHERE C.chain_id = I.chain_id
-        AND I.evalue <= 1e-10
-        AND I.bit_score >= 50
-        AND I.isotype = 'TR'
-;
-//
 DROP VIEW IF EXISTS view_antibody_complex;
 CREATE VIEW view_antibody_complex AS
     SELECT * FROM view_pdb_uniprot
     WHERE pdb_id IN (
-        SELECT DISTINCT pdb_id
-        FROM view_antibody
+        SELECT DISTINCT pdb_id FROM view_antibody
     )
     ORDER BY pdb_id
 ;
@@ -127,13 +123,10 @@ CREATE VIEW view_inn_pdb AS
     SELECT B.inn_chain_id, B.pdb_chain_id, P.pdb_id,
         I.inn_number, A.common_name, A.inn_name,
         A.receptor_type, A.receptor_description, I.chain_seq
-    FROM imgt_inn_blastp B
-    LEFT JOIN pdb_chainid P
-        ON B.pdb_chain_id = P.chain_id
-    LEFT JOIN imgt_inn_chain I
-        ON B.inn_chain_id = I.chain_id
-    LEFT JOIN imgt_inn A
-        ON I.inn_number = A.inn_number
+    FROM imgt_inn_blastp     B
+    LEFT JOIN pdb_chainid    P ON B.pdb_chain_id = P.chain_id
+    LEFT JOIN imgt_inn_chain I ON B.inn_chain_id = I.chain_id
+    LEFT JOIN imgt_inn       A ON I.inn_number = A.inn_number
     WHERE B.identity = 1
 ;
 

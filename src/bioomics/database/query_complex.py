@@ -12,127 +12,10 @@ class QueryComplex(QueryDb):
 
     def get_latest_date(self, table_name):
         query = f"""
-            SELECT MAX(release_date) AS date FROM {table_name};
-        """
+            SELECT MAX(release_date) AS date FROM {table_name}
+        ;"""
         res = self.list_data(query, False)
         return res[0]['date']
-
-    def delete_pdb_ids(self, table_name:str):
-        query = f"""
-            DELETE FROM {table_name}
-            WHERE chain_type = "x";
-        """
-        pdb_ids = self.list_data(query)
-        return tuple(pdb_ids['pdb_id'])
-
-    def count_complex(self):
-        query = f"""
-            SELECT complex_type, COUNT(DISTINCT pdb_id) AS pdb_ids
-            FROM complex
-            GROUP BY complex_type
-            ORDER BY complex_type;
-        """
-        res = self.list_data(query)
-        return pd.DataFrame(res)
-
-    def get_heavy_seq(self):
-        query = f"""
-            SELECT DISTINCT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq
-            FROM view_antibody_imgt
-            WHERE chain_type = 'H';
-        """
-        rows = self.list_data(query)
-        return rows
-
-    def get_light_seq(self):
-        query = f"""
-            SELECT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq
-            FROM view_antibody_imgt
-            WHERE chain_type IN ('L', 'K');
-        """
-        rows = self.list_data(query)
-        return rows
-
-    def germline_seq(self, chain_type:str):
-        query = f"""
-            SELECT G.allele_name AS id, S.seq AS seq
-            FROM imgt_gene G, imgt_geneseq S
-            WHERE G.germline_id = S.germline_id
-                AND G.specie = 'Homo_sapiens'
-                AND G.isotype = 'IG'
-                AND G.chain_type IN {chain_type}
-                AND G.region_name = 'V-REGION'
-                AND S.seq_type = 'AA-WithoutGaps-F+ORF+inframeP';
-        """
-        rows = self.list_data(query)
-        return rows
-    
-    def antibody_seq(self, chain_type:str=None):
-        query = f"""
-            SELECT chain_id AS id, pdb_id, chain_seq As seq
-            FROM view_antibody
-            WHERE chain_seq IS NOT NULL
-                AND chain_type IN {chain_type};
-        """
-        rows = self.list_data(query)
-        return rows
-    
-    def get_seq(self):
-        query = """
-            select A.pdb_id, A.compound_no, A.chain_id, A.chain_type, B.pro_seq
-            from abag A, chain B
-            where A.pdb_id = B.pdb_id
-                AND A.compound_no = B.compound_no
-                AND A.chain_id = B.chain_id
-                AND B.pro_seq is NOT NULL
-                AND A.chain_type IN ('light','heavy','single');
-        """
-        rows = self.list_data(query)
-        print('sequencines of abag:', len(rows))
-        res = {}
-        for rec in rows:
-            key = '|'.join([rec['pdb_id'], rec['chain_id'], rec['chain_type'],
-                str(len(rec['pro_seq'])),])
-            res[key] = str(rec['pro_seq'])
-        return res
-    
-    def dup_uniprot_align(self):
-        query = """
-            WITH dup AS (
-                SELECT pdb_id, model_id, chain_id, uniprot_acc
-                FROM uniprot_align
-                GROUP BY pdb_id, model_id, chain_id, uniprot_acc
-                HAVING COUNT(*) >1)
-            SELECT A.pdb_id, A.chain_id, A.uniprot_acc
-            FROM uniprot_align A
-            INNER JOIN dup B
-            ON A.pdb_id=B.pdb_id AND A.model_id = B.model_id
-             AND A.chain_id = B.chain_id
-             AND A.uniprot_acc = B.uniprot_acc;
-        """
-        rows = self.list_data(query)
-        print('duplicates of uniprot_align:', len(rows))
-        return rows
-
-    def antibody(self):
-        query = """
-            SELECT * FROM view_pdb_uniprot
-            WHERE keyword = 'Immunoglobulin' OR keyword LIKE '%antibody%';
-        """
-        rows = self.list_data(query)
-        return rows
-
-    def antibody_complex(self):
-        query = """
-            SELECT * FROM view_pdb_uniprot
-            WHERE pdb_id IN(
-                SELECT DISTINCT pdb_id
-                FROM view_pdb_uniprot
-                WHERE keyword = 'Immunoglobulin' OR keyword LIKE '%antibody%'
-            );
-        """
-        rows = self.list_data(query)
-        return rows
 
     def parse_modelling(self):
         query = """
@@ -145,8 +28,8 @@ class QueryComplex(QueryDb):
                     SELECT distinct chain_id
                     FROM uniprot_rmsd
                     WHERE ca_rmsd is NOT NULL
-                );
-        """
+                )
+        ;"""
         rows = self.list_data(query)
         return rows
     
@@ -158,8 +41,7 @@ class QueryComplex(QueryDb):
         chain_ids = []
         # select chain_id belonging to pbd_ids set
         query = """
-            SELECT DISTINCT pdb_id, chain_id
-            FROM chain
+            SELECT DISTINCT pdb_id, chain_id FROM chain
             WHERE chain_id IS NOT NULL;
         """
         rows = self.list_data(query)
@@ -178,8 +60,7 @@ class QueryComplex(QueryDb):
             SELECT pdb_id, local_path AS pdb_file
             FROM pdb
             WHERE pdb_id NOT IN (
-                SELECT DISTINCT pdb_id
-                FROM {table_name}
+                SELECT DISTINCT pdb_id FROM {table_name}
             );
         """
         rows = self.list_data(query)
@@ -195,10 +76,9 @@ class QueryComplex(QueryDb):
         for pro_len, sub in g:
             input_seq = [i['seq'] for i in sub]
             query = f"""
-                SELECT pro_seq AS seq
-                FROM protein_seq
+                SELECT pro_seq AS seq FROM protein_seq
                 WHERE pro_len = {pro_len}
-            """
+            ;"""
             rows = self.list_data(query, True)
             if rows:
                 db_seq = [i['seq'] for i in rows]
@@ -207,13 +87,144 @@ class QueryComplex(QueryDb):
 
     def parse_pro_id(self, source_name):
         query = f"""
-            SELECT pro_id, source_id
-            FROM protein_source
-            WHERE source_name = '{source_name}';
-        """
+            SELECT pro_id, source_id FROM protein_source
+            WHERE source_name = '{source_name}'
+        ;"""
         rows = self.list_data(query)
         ids = defaultdict(list)
         for row in rows:
             pro_id = int(row['pro_id'])
             ids[pro_id].append(row['source_id'])
         return ids
+
+    def delete_pdb_ids(self, table_name:str):
+        query = f"""
+            DELETE FROM {table_name} WHERE chain_type = "x"
+        ;"""
+        pdb_ids = self.list_data(query)
+        return tuple(pdb_ids['pdb_id'])
+
+    def count_complex(self):
+        query = f"""
+            SELECT complex_type, COUNT(DISTINCT pdb_id) AS pdb_ids
+            FROM complex
+            GROUP BY complex_type
+            ORDER BY complex_type
+        ;"""
+        res = self.list_data(query)
+        return pd.DataFrame(res)
+      
+    def get_seq(self):
+        query = """
+            select A.pdb_id, A.compound_no, A.chain_id, A.chain_type, B.pro_seq
+            from abag A, chain B
+            where A.pdb_id = B.pdb_id
+                AND A.compound_no = B.compound_no
+                AND A.chain_id = B.chain_id
+                AND B.pro_seq is NOT NULL
+                AND A.chain_type IN ('light','heavy','single')
+        ;"""
+        rows = self.list_data(query)
+        print('sequencines of abag:', len(rows))
+        res = {}
+        for rec in rows:
+            key = '|'.join([rec['pdb_id'], rec['chain_id'], rec['chain_type'],
+                str(len(rec['pro_seq'])),])
+            res[key] = str(rec['pro_seq'])
+        return res
+    
+    def dup_uniprot_align(self):
+        query = """
+            WITH dup AS (
+                SELECT pdb_id, model_id, chain_id, uniprot_acc
+                FROM uniprot_align
+                GROUP BY pdb_id, model_id, chain_id, uniprot_acc
+                HAVING COUNT(*) >1)
+            SELECT A.pdb_id, A.chain_id, A.uniprot_acc
+            FROM uniprot_align A
+            INNER JOIN dup     B ON A.pdb_id=B.pdb_id 
+                AND A.model_id = B.model_id
+                AND A.chain_id = B.chain_id
+                AND A.uniprot_acc = B.uniprot_acc
+        ;"""
+        rows = self.list_data(query)
+        print('duplicates of uniprot_align:', len(rows))
+        return rows
+
+###############################
+    def ab_chain_no(self) -> dict:
+        query = """
+            SELECT pdb_id, chain_no FROM view_antibody
+            WHERE model_no = 0
+        ;"""
+        res = {}
+        for row in self.list_data(query):
+            pdb_id, chain_no = row['pdb_id'], row['chain_no']
+            if pdb_id not in res:
+                res[pdb_id] = []
+            if chain_no not in res[pdb_id]:
+                res[pdb_id].append(chain_no)
+        return res
+
+    def ab_heavy_seq(self):
+        query = f"""
+            SELECT DISTINCT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq
+            FROM view_antibody_imgt
+            WHERE chain_type = 'H'
+        ;"""
+        rows = self.list_data(query)
+        return rows
+
+    def ab_light_seq(self):
+        query = f"""
+            SELECT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq
+            FROM view_antibody_imgt
+            WHERE chain_type IN ('L', 'K')
+        ;"""
+        rows = self.list_data(query)
+        return rows
+
+    def ab_seq(self, chain_type:str=None):
+        query = f"""
+            SELECT chain_id AS id, pdb_id, chain_seq As seq
+            FROM view_antibody
+            WHERE chain_seq IS NOT NULL
+                AND chain_type IN {chain_type};
+        """
+        rows = self.list_data(query)
+        return rows
+    
+    def ab_uniprot(self):
+        query = """
+            SELECT * FROM view_pdb_uniprot
+            WHERE keyword = 'Immunoglobulin'
+                OR keyword LIKE '%antibody%'
+        ;"""
+        rows = self.list_data(query)
+        return rows
+
+    def ab_complex(self):
+        query = """
+            SELECT * FROM view_pdb_uniprot
+            WHERE pdb_id IN(
+                SELECT DISTINCT pdb_id FROM view_pdb_uniprot
+                WHERE keyword = 'Immunoglobulin'
+                    OR keyword LIKE '%antibody%'
+            )
+        ;"""
+        rows = self.list_data(query)
+        return rows
+
+    def germline_seq(self, chain_type:str):
+        query = f"""
+            SELECT G.allele_name AS id, S.seq AS seq
+            FROM imgt_gene G, imgt_geneseq S
+            WHERE G.germline_id = S.germline_id
+                AND G.specie = 'Homo_sapiens'
+                AND G.isotype = 'IG'
+                AND G.chain_type IN {chain_type}
+                AND G.region_name = 'V-REGION'
+                AND S.seq_type = 'AA-WithoutGaps-F+ORF+inframeP'
+        ;"""
+        rows = self.list_data(query)
+        return rows

@@ -1,6 +1,6 @@
 '''
 example: 
-    - parallel -j4 python src/pipelines/meta_chain_pdb.py ::: {0..117}
+    - parallel -j8 python src/pipelines/meta_chain_pdb.py ::: {0..117}
     - python src/pipelines/meta_chain_pdb.py 0
 functions:
     - retrieve pdb to pdb by chain
@@ -67,7 +67,6 @@ def pull_chain_pdb(rows, args, meta):
             meta['fail_parsing'] += 1
             yield pdb_id, None, None
 
-
 if __name__ == "__main__":
     args = {
         'verbose': True,
@@ -83,5 +82,8 @@ if __name__ == "__main__":
     # insert
     bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
     bc.insert_batch_records(args['table_name'])
+
+    print("Try to validate files...")
+    validate_data(pdb_group, 'chain_pdb', args, meta)
 
     print(meta)
