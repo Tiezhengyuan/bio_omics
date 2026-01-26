@@ -5,21 +5,25 @@ from collections import defaultdict
 from datetime import datetime
 from dotenv import load_dotenv
 import functools
-from itertools import combinations
+import itertools
 import os
+import re
 from pathlib import Path
 import sys
 import numpy as np
 import pandas as pd
 
-src_dir = os.path.dirname(os.path.dirname(__file__))
+src_dir = os.path.dirname(__file__)
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-meta = defaultdict(int)
-load_dotenv()
+env_file = os.path.join(src_dir, '.env')
+load_dotenv(env_file)
 
-from bioomics.common import Dir, WriteTmp
+meta = defaultdict(int)
+
+
+from bioomics.common import Dir, WriteTmp, ProcessPickle
 from bioomics.database import BuildComplex, QueryComplex, UpdateComplex
 from bioomics.PDB import Pdb
 

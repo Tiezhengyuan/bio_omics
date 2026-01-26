@@ -151,6 +151,40 @@ class QueryComplex(QueryDb):
         print('duplicates of uniprot_align:', len(rows))
         return rows
 
+    def identical_seq_chain(self) -> dict:
+        '''
+        parse chain_id if their sequences are identical
+        '''
+        query = "select chain_id, first_chain_id from pdb_chain_seq;"
+        df = self.list_data(query, True)
+
+        res = {}
+        for _, sub in df.groupby('first_chain_id'):
+            ids = sub['chain_id'].tolist()
+            for _id in ids:
+                res[_id] = ids
+        return res
+    
+    def parse_chain_prediction(self):
+        query = """
+            SELECT chain_id, predictor, relative_pdb
+            FROM chain_plddt
+            WHERE relative_pdb REGEXP '_relaxed_'
+        """
+        pred = self.list_data(query, True)
+        g = pred.groupby('chain_id')
+        pred = dict(tuple(g))
+
+        res = {}
+        equal_chains = self.identical_seq_chain()
+        for chain_id, ids in equal_chains.items():
+            sub = []
+            for equal_id in ids:
+                if equal_id in pred:
+                    sub += pred[equal_id].to_dict(orient='records')
+            if sub:
+                res[chain_id] = pd.DataFrame(sub)
+        return res
 ###############################
     def ab_chain_no(self) -> dict:
         query = """

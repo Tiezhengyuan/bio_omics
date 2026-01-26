@@ -7,23 +7,25 @@ import os
 from .distance_analyze import DistanceAnalyze
 
 class DistanceProcess:
-    def __init__(self, data_dir:str, span:int, cutoff:float):
-        self.data_dir = data_dir
-        self.span = span
-        self.cutoff = cutoff
+    def __init__(self, args:dict):
+        self.data_dir = args['data_dir']
+        self.span = args.get('max_span', 10)
+        self.cutoff = args.get('dist_cutoff', 5)
+        self.min_seq_len = args.get('min_seq_len', 6)
+        self.verbose = args.get('verbose', False)
 
-    def retrieve_interface_seq(self, dist_meta, min_seq_len:int=6):
+    def retrieve_interface_seq(self, dist_meta):
         res = []
-        for row in dist_meta:
+        print('Number of distance', len(dist_meta))
+        for i, row in enumerate(dist_meta):
+            pfile = os.path.join(self.data_dir, row['relative_pkl'])
             args = {
-                'pickle_file': os.path.join(self.data_dir, row['relative_pkl']),
+                'pickle_file': pfile,
                 'max_span': self.span,
                 'dist_cutoff': self.cutoff,
             }
             da = DistanceAnalyze(args)
-            _motifs = da.retrieve_motif(min_seq_len=min_seq_len)
+            _motifs = da.retrieve_motif(self.min_seq_len)
             res.extend(_motifs)
         df = pd.DataFrame(res)
-        print('pdb', df['pdb_id'].nunique())
-        print('combo', df['combo_id'].nunique())
         return df

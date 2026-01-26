@@ -78,7 +78,7 @@ CREATE TABLE pdb_dssp(
 //
 DROP TABLE IF EXISTS combo2_distance;
 CREATE TABLE combo2_distance(
-    pdb_id          VARCHAR(20),
+    pdb_id          VARCHAR(10),
     combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
     CONSTRAINT fk_combo2_distance_pdb FOREIGN KEY (pdb_id)
@@ -87,7 +87,7 @@ CREATE TABLE combo2_distance(
 //
 DROP TABLE IF EXISTS pdb_distance;
 CREATE TABLE pdb_distance(
-    pdb_id          VARCHAR(20),
+    pdb_id          VARCHAR(10),
     combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
     CONSTRAINT fk_pdb_distance_pdb FOREIGN KEY (pdb_id)
@@ -96,7 +96,7 @@ CREATE TABLE pdb_distance(
 //
 DROP TABLE IF EXISTS dist_amber14;
 CREATE TABLE dist_amber14(
-    pdb_id          VARCHAR(20),
+    pdb_id          VARCHAR(10),
     combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
     CONSTRAINT fk_dist_amber14_pdb FOREIGN KEY (pdb_id)
@@ -105,7 +105,7 @@ CREATE TABLE dist_amber14(
 //
 DROP TABLE IF EXISTS combo2_sasa;
 CREATE TABLE combo2_sasa(
-    pdb_id          VARCHAR(20),
+    pdb_id          VARCHAR(10),
     combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
     CONSTRAINT fk_combo2_sasa_pdb FOREIGN KEY (pdb_id)
@@ -114,13 +114,22 @@ CREATE TABLE combo2_sasa(
 //
 DROP TABLE IF EXISTS pdb_sasa;
 CREATE TABLE pdb_sasa(
-    pdb_id          VARCHAR(20),
+    pdb_id          VARCHAR(10),
     combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
     CONSTRAINT fk_pdb_sasa_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
-
+//
+DROP TABLE IF EXISTS equal_seq_rmsd;
+CREATE TABLE equal_seq_rmsd(
+    chain_id        VARCHAR(10),
+    equal_chain_id  VARCHAR(10),
+    rmsd            FLOAT,
+    chain_pdb       VARCHAR(60),
+    equal_chain_pdb VARCHAR(60),
+    UNIQUE(chain_id, equal_chain_id)
+);
 """
 
 #####################################################################################

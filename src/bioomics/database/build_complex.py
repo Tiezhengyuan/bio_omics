@@ -31,6 +31,8 @@ TABLE_COLUMNS = {
     'dist_amber14': ['pdb_id', 'combo_id', 'relative_pkl'],
     'combo2_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
     'pdb_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
+    'equal_seq_rmsd': ['chain_id', 'equal_chain_id', 'rmsd',
+        'chain_pdb', 'equal_chain_pdb',],
 
     # fix
     'fixed_pdb': ['pdb_id', 'relative_path', 'time0'],
@@ -70,6 +72,13 @@ TABLE_COLUMNS = {
     #predict
     'chain_alphafold': ['chain_id', 'endpoint', 'predicted_at'],
     'combo2_alphafold': ['combo_id', 'endpoint', 'predicted_at'],
+    'chain_plddt': ['chain_id', 'relative_pdb', 'ranking', 
+        'predictor', 'avg_plddt', 'relative_pkl'],
+    'chain_rmsd': ['pdb_id','chain_id', 'rmsd', 'chain_status', 
+        'native_pdb', 'model_pdb'],
+    'chain_tmalign': ['pdb_id','chain_id', 'tm1', 'tm2', 'rmsd',
+        'chain_status', 'native_pdb', 'model_pdb'],
+
 
     # uniprot
     'uniprot_meta_alphafold': ['uniprot_acc', 'pdb_path'],

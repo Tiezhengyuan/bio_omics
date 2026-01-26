@@ -3,14 +3,14 @@
 requirements:
     - table meta_combo2
 example:
-    - parallel -j8 python src/pipelines/combo2_relaxed.py ::: {0..117}
-    - python src/pipelines/combo2_relaxed.py 0
+    - parallel -j8 python app.py combo2_relaxed ::: {0..117}
+    - python app.py combo2_relaxed 0
 function:
     - fix pdb files
     - relax pdb
     - insert data into table combo2_relaxed
 '''
-from helper import *
+from src.helper import *
 from bioomics import OpenmmPdbfixer, OpenmmSimulation, ProcessJson
 
 @header

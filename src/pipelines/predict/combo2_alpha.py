@@ -3,14 +3,14 @@
 requirements:
     - meta_combo2
 example:
-    - parallel -j8 python src/pipelines/combo2_alphafold.py ::: {0..117}
-    - python src/pipelines/combo2_alphafold.py 0
+    - parallel -j8 python app.py combo2_alpha ::: {0..117}
+    - python app.py combo2_alpha 0
 function:
     - predict dimer complex
-    - insert data into table combo2_alphafold
+    - insert data into table combo2_alpha
 '''
 
-from helper import *
+from src.helper import *
 from bioomics import Predictor
 
 @header
