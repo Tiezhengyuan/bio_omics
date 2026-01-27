@@ -10,7 +10,7 @@ functions:
     - put data to table equal_seq_rmsd
 '''
 from src.helper import *
-from bioomics import AnalyzeModel
+from bioomics import EvalPred
 
 def pull_chain_pdb(params, meta):
     query = f"""
@@ -59,6 +59,7 @@ def pull_equal_ids(pairs, params, meta):
                     yield (a, b)
 
 def calculate_rmsd(ids_pool, chain_pdb, args, meta):
+    ep = EvalPred()
     for (id1, id2) in ids_pool:
         relative1 = chain_pdb.get(id1)
         relative2 = chain_pdb.get(id2)
@@ -67,13 +68,10 @@ def calculate_rmsd(ids_pool, chain_pdb, args, meta):
             pdb1 = os.path.join(args['data_dir'], relative1)
             pdb2 = os.path.join(args['data_dir'], relative2)
             if os.path.isfile(pdb1) and os.path.isfile(pdb2):
-                try:
-                    rmsd = AnalyzeModel.rmsd(pdb1, pdb2)
-                    if rmsd:
-                        meta['succeed'] += 1
-                    else:
-                        meta['null'] += 1
-                except Exception as e:
+                rmsd = ep.rmsd(pdb1, pdb2)
+                if rmsd:
+                    meta['succeed'] += 1
+                else:
                     meta['fail'] += 1
         yield (id1, id2, rmsd, relative1, relative2)
 
