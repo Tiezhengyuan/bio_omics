@@ -19,3 +19,6 @@ parallel -j8 python ${APP_DIR}/app.py pdb_sasa ::: {0..117}
 
 # RMSD
 parallel -j8 python ${APP_DIR}/app.py equal_seq_rmsd ::: {0..117}
+
+#contacts
+parallel -j8 python ${APP_DIR}/app.py combo2_contacts ::: {0..117}

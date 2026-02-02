@@ -26,6 +26,7 @@ meta = defaultdict(int)
 from bioomics.common import Dir, WriteTmp, ProcessPickle
 from bioomics.database import BuildComplex, QueryComplex, UpdateComplex
 from bioomics.PDB import Pdb
+from bioomics.protein import ProcessFasta
 
 def header(func):
     @functools.wraps(func)

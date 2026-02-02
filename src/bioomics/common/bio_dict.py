@@ -72,7 +72,7 @@ class BioDict:
         qualifiers = dict([(re.sub(r'^/|=$', '', q.key), \
             re.sub(r'"', '', q.value)) for q in ft.qualifiers])
         # print(record.locus, ft, ft.location)
-        locations = re.findall('\d+', ft.location)
+        locations = re.findall(r'\d+', ft.location)
         start = int(locations[0]) if len(locations) > 0 else 0
         end = int(locations[1]) if len(locations) > 1 else 0
         return {

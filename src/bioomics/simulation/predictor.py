@@ -11,9 +11,10 @@ class Predictor:
             cmd.append('--save-all')
         if self.args.get('relax', True):
             cmd += ['--amber', '--use-gpu-relax',]
+            if 'max_iterations' in self.args:
+                cmd += ['--relax-max-iterations', self.args['max_iterations'],]
         cmd += [
             '--model-type', self.args.get('model_type', 'auto'),
-            '--relax-max-iterations', self.args.get('max_iterations', '2000'), 
             '--num-recycle', self.args.get('num_recycle'),
             self.args['faa_file'], self.args['output_dir'],
         ]

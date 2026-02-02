@@ -1,13 +1,13 @@
 import os
+import re
 import pandas as pd
 from pyrosetta import pyrosetta, io, rosetta
 import subprocess
 
 class EvalPred:
 
-    def __init__(self, bin_dir=None, data_dir=None):
+    def __init__(self, bin_dir=None):
         self.bin_dir = bin_dir
-        self.data_dir = data_dir
 
     def rmsd(self, native_pdb, model_pdb):
         try:
@@ -39,4 +39,52 @@ class EvalPred:
             print(e)
             pass
         return {}
+    
+    def prodigy(self, pdb_file, outfile=None):
+        try:
+            cmd = ['prodigy', pdb_file,]
+            result = subprocess.run(cmd, capture_output=True,
+                text=True, check=True)
+            if outfile:
+                with open(outfile, 'w') as f:
+                    f.write(result.stdout)
+            # parse result
+            res = self.parse_prodigy(result.stdout)
+            return res
+        except Exception as e:
+            print('error=', e)
+        return None
+
+    def parse_prodigy(self, text):
+        # not contacts
+        if 'No contacts found' in text:
+            return {'contacts': False, }
         
+        res = {'contacts': True, }
+        for line in text.split('\n'):
+            if 'No.' in line or 'Percentage' in line or 'Predicted' in line:
+                k, v = line.split(':')
+                val = float(v.strip())
+                if 'intermolecular' in line:
+                    res['intermolecular_contacts'] = val
+                elif 'charged-charged' in line:
+                    res['charged-charged_contacts'] = val
+                elif 'charged-polar' in line:
+                    res['charged-polar_contacts'] = val
+                elif 'charged-apolar' in line:
+                    res['charged-apolar_contacts'] = val
+                elif 'polar-polar' in line:
+                    res['polar-polar_contacts'] = val
+                elif 'apolar-polar' in line:
+                    res['apolar-polar_contacts'] = val
+                elif 'apolar-apolar' in line:
+                    res['apolar-apolar_contacts'] = val
+                elif 'apolar NIS' in line:
+                    res['apolar_NIS_residues'] = val
+                elif 'charged NIS' in line:
+                    res['charged_NIS_residues'] = val
+                elif 'binding affinity' in line:
+                    res['binding_affinity'] = val
+                elif 'dissociation constant' in line:
+                    res['dissociation_constant'] = val
+        return res

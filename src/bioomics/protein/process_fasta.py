@@ -58,8 +58,12 @@ class ProcessFasta:
                 return records
         except Exception as e:
             if self.verbose:
-                print(f"Failure: Can't write to {self.fa_file}, error={e}")
+                print(f"Failure: Can't read FASTA {self.fa_file}, error={e}")
         return None
+
+    def get_first_seq(self):
+        for rec in self.load_fasta():
+            return str(rec.seq)
 
     def wrong_fasta(self) -> bool:
         '''

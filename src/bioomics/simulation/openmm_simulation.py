@@ -58,7 +58,7 @@ class OpenmmSimulation:
         self.pdb = None
         self.simulation = None 
 
-    @timeout(10)
+    @timeout(20)
     def relax_pdb(self):
         '''
         note: max duration < 10 min in larges-scale screening
@@ -93,7 +93,7 @@ class OpenmmSimulation:
 
         # save self.info
         if self.verbose:
-            print(self.info)
+            print('### Relax info:', self.info)
         if os.path.isdir(self.outdir):
             json_file = os.path.join(self.outdir, 'relaxed_info.json')
             ProcessJson.save_json(self.info, json_file)

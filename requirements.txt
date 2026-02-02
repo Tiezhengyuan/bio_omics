@@ -2,6 +2,7 @@ Bio
 biosequtils
 ddt
 lxml
+nupy==1.26.4
 pandas
 redis
 sh

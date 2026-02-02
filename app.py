@@ -13,6 +13,7 @@ pool = {
     #dynamics
     'equal_seq_rmsd': 'dynamics.equal_seq_rmsd', 
     'combo2_relaxed': 'dynamics.combo2_relaxed',
+    'combo2_contacts': 'dynamics.combo2_contacts',
 
     # collect data
     'distance': 'collect.collect_distance',
@@ -20,6 +21,7 @@ pool = {
     # predict
     'chain_alpha': 'predict.chain_alphafold',
     'chain_alpha_plddt': 'predict.chain_alpha_plddt',
+    'chain_afsum': 'predict.chain_afsum',
     'chain_rmsd': 'predict.chain_rmsd',
     'chain_tmalign': 'predict.chain_tmalign',
     'combo2_alpha': 'predict.combo2_alpha',

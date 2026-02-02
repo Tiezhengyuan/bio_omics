@@ -26,6 +26,20 @@ CREATE TABLE chain_alphafold (
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (chain_id)
 );
+DROP TABLE IF EXISTS chain_afsum;
+CREATE TABLE chain_afsum (
+    predict_id      INT AUTO_INCREMENT PRIMARY KEY,
+    chain_id        VARCHAR(20),
+    ranking         INT,
+    avg_plddt       FLOAT,
+    avg_ptm         FLOAT,
+    max_pae         FLOAT,
+    relative_json   VARCHAR(150),
+    relaxed_pdb     VARCHAR(150),
+    unrelaxed_pdb   VARCHAR(150),
+    UNIQUE (chain_id, relaxed_pdb)
+);
+//
 DROP TABLE IF EXISTS chain_plddt;
 CREATE TABLE chain_plddt (
     predict_id      INT AUTO_INCREMENT PRIMARY KEY,

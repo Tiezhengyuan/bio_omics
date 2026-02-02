@@ -39,10 +39,15 @@ def retrieve_pdb(args, meta):
     ab_chains = qc.ab_chain_no()
     for row in rows:
         pdb_id = row['pdb_id']
+        row['faa_file'] = os.path.join(args['data_dir'], row['combo_fasta'])
         if pdb_id in ab_chains:
             combo_ids = set(row['combo_id'].split('-'))
             if combo_ids.intersection(ab_chains[pdb_id]):
-                ab_rows.append(row)
+                # first predict short sequence for saving time
+                input_seq = ProcessFasta(row['faa_file']).get_first_seq()
+                print(pdb_id, len(input_seq), end='\t')
+                if 10 < len(input_seq) < 1000:
+                    ab_rows.append(row)
     meta['antibody_rows'] += len(ab_rows)
     print(f"Filter {len(ab_rows)} PDB files including antibody chain.")
     return ab_rows
@@ -57,7 +62,6 @@ if __name__ == "__main__":
         'table_name': 'combo2_alphafold',
         'num_recycle': '3',
         'relax': True,
-        'max_iterations': '5000',
     }
 
     rows = retrieve_pdb(args, meta)
@@ -70,7 +74,7 @@ if __name__ == "__main__":
 
         # predict
         _args = {
-            'faa_file': os.path.join(args['data_dir'], row['combo_fasta']),
+            'faa_file': row['faa_file'],
             'output_dir': outdir,
         }
         _args.update(args)

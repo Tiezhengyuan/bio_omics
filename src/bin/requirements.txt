@@ -13,3 +13,6 @@ redis
 mysql-connector-python
 ddt
 sh
+pytest
+jupyter
+notebook

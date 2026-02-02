@@ -112,6 +112,17 @@ CREATE TABLE combo2_sasa(
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
+DROP TABLE IF EXISTS combo2_contacts;
+CREATE TABLE combo2_contacts(
+    pdb_id                  VARCHAR(10),
+    combo_id                VARCHAR(40),
+    binding_affinity        FLOAT,
+    dissociation_constant   FLOAT,
+    relative_prodigy        VARCHAR(100),
+    CONSTRAINT fk_combo2_contacts_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
 DROP TABLE IF EXISTS pdb_sasa;
 CREATE TABLE pdb_sasa(
     pdb_id          VARCHAR(10),
