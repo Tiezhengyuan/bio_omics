@@ -81,6 +81,8 @@ CREATE TABLE combo2_distance(
     pdb_id          VARCHAR(10),
     combo_id        VARCHAR(40),
     relative_pkl    VARCHAR(60),
+    ranked_dist1    TEXT,
+    ranked_dist2    TEXT,
     CONSTRAINT fk_combo2_distance_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );

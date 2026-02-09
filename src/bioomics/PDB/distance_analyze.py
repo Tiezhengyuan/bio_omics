@@ -1,6 +1,7 @@
 '''
 '''
 import os
+import numpy as np
 import pandas as pd
 
 from ..common import ProcessPickle
@@ -18,6 +19,17 @@ class DistanceAnalyze:
         self.max_span = int(args.get('max_span', 10))
         self.dist_cutoff = float(args.get('dist_cutoff', 5))
         self.verbose = args.get('verbose', False)
+
+    def distance_threshold(self):
+        dist1 = np.round(self.data['dist1']['value'].sort_values())
+        dist2 = np.round(self.data['dist2']['value'].sort_values())
+        values = []
+        for i in [0, 4, 9]:
+            val1 = dist1[i] if i < len(dist1) else None
+            values.append(val1)
+            val2 = dist2[i] if i < len(dist2) else None
+            values.append(val2)
+        return values
 
     def retrieve_motif(self, min_seq_len:int=1):
         '''

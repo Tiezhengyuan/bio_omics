@@ -3,14 +3,14 @@ requirments:
     - PDB raw data
     - table meta_combo2, only calculate distance of two chains 
 example: 
-    - parallel -j8 python src/pipelines/combo2_distance.py ::: {0..117}
-    - python src/pipelines/combo2_distance.py 0
+    - parallel -j8 python app.py combo2_distance ::: {0..117}
+    - python app.py combo2_distance 0
 functions:
     - calculate distance and analyze PPI
     - put meta data to table combo2_distance
 '''
-from helper import *
-from bioomics import DistanceCalculate, ProcessPickle
+from src.helper import *
+from bioomics import DistanceCalculate, DistanceAnalyze
 
 def retrieve_query(params, meta):
     pdb_group = params['pdb_group']
@@ -55,7 +55,8 @@ def cal_dist(rows, params, meta):
         
         # build record
         relative_path = os.path.join(endpoint, file_name) if os.path.isfile(pfile) else None
-        yield pdb_id, row['combo_id'], relative_path
+        yield (pdb_id, row['combo_id'], relative_path)
+
 
 if __name__ == "__main__":
     params = {

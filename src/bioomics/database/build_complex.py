@@ -26,7 +26,7 @@ TABLE_COLUMNS = {
 
     #analyze
     'meta_bfactor': ['pdb_id', 'relative_pkl'],
-    'combo2_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
+    'combo2_distance': ['pdb_id', 'combo_id', 'relative_pkl',],
     'pdb_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
     'dist_amber14': ['pdb_id', 'combo_id', 'relative_pkl'],
     'combo2_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],

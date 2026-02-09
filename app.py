@@ -11,12 +11,14 @@ name = sys.argv[1] if len(sys.argv) > 1 else None
 pdb_group = sys.argv[2] if len(sys.argv) > 2 else None
 pool = {
     #dynamics
+    'combo2_distance': 'dynamics.combo2_distance', 
     'equal_seq_rmsd': 'dynamics.equal_seq_rmsd', 
     'combo2_relaxed': 'dynamics.combo2_relaxed',
     'combo2_contacts': 'dynamics.combo2_contacts',
 
     # collect data
-    'distance': 'collect.collect_distance',
+    'collect_distance': 'collect.collect_distance',
+    'collect_ab_distance': 'collect.collect_ab_distance',
 
     # predict
     'chain_alpha': 'predict.chain_alphafold',

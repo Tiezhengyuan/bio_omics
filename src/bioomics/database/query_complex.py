@@ -200,6 +200,52 @@ class QueryComplex(QueryDb):
                 res[pdb_id].append(chain_no)
         return res
 
+    def ab_combo2(self) -> dict:
+        chain_no_pool = self.ab_chain_no()
+        res = []
+        query = """
+            SELECT pdb_id, combo_id, chain_combo
+            FROM meta_combo2
+            WHERE combo_pdb is not null
+        ;"""
+        rows = self.list_data(query)
+        for row in rows:
+            pdb_id = row['pdb_id']
+            if pdb_id in chain_no_pool:
+                ab_chain_no = set(chain_no_pool[pdb_id])
+                combo_chain_no = set(row['chain_combo'].split('-'))
+                inter = combo_chain_no.intersection(ab_chain_no)
+                if inter:
+                    row['ab_chain_no'] = '-'.join(list(inter))
+                    res.append(row)
+        return pd.DataFrame(res)
+
+    def abag_combo2(self) -> dict:
+        chain_no_pool = self.ab_chain_no()
+        res = {}
+        query = """
+            SELECT pdb_id, combo_id, chain_combo
+            FROM meta_combo2
+            WHERE combo_pdb is not null
+        ;"""
+        rows = self.list_data(query)
+        for row in rows:
+            pdb_id = row['pdb_id']
+            if pdb_id in chain_no_pool:
+                combo_id = row['combo_id']
+                ab_chain_no = chain_no_pool[pdb_id]
+                chain1, chain2 = row['chain_combo'].split('-')
+                # one antibody and one antigen
+                if chain1 in ab_chain_no:
+                    if chain2 not in ab_chain_no:
+                        row['ab_chain_no'] = chain1
+                        res[combo_id] = row
+                else:
+                    if chain2 in ab_chain_no:
+                        row['ab_chain_no'] = chain2
+                        res[combo_id] = row
+        return res
+
     def ab_heavy_seq(self):
         query = f"""
             SELECT DISTINCT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq

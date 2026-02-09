@@ -4,6 +4,7 @@ dotenv
 pandas
 matplotlib
 seaborn
+sklearn-kit
 plotly
 requests
 urllib3

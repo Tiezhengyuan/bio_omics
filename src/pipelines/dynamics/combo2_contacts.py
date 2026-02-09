@@ -25,9 +25,6 @@ def retrieve_pdb(args, meta):
             AND C.combo_id NOT IN (
                 SELECT combo_id FROM {table_name}
             )
-            AND C.pdb_id IN (
-                SELECT pdb_id from view_antibody
-            )
     ;"""
     rows = QueryComplex(args['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
@@ -70,12 +67,13 @@ if __name__ == "__main__":
         'pdb_group': sys.argv[1],
         'verbose': True,
         'overwrite': False,
+        'chunk_size': 50,
         'data_dir': os.getenv('data_dir'),
         'table_name': 'combo2_contacts',
     }
     rows = retrieve_pdb(args, meta)
     record_iter = cal_contacts(rows, args, meta,)
-    bc = BuildComplex(record_iter, args['verbose'])
+    bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
     bc.insert_batch_records(args['table_name'])
 
     validate_data('relative_prodigy', args, meta)
