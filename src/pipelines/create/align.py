@@ -98,6 +98,24 @@ CREATE TABLE imgt_inn_blastp(
     bit_score       INT,
     identity        FLOAT
 );
+//
+DROP TABLE IF EXISTS ab_anarci;
+CREATE TABLE ab_anarci (
+    chain_id            VARCHAR(20),
+    domain_no           INT,
+    hmm_species         VARCHAR(50),
+    chain_type          VARCHAR(5),
+    evalue              FLOAT,
+    score               FLOAT,
+    seqstart_index      INT,
+    seqend_index        INT,
+    identity_species    VARCHAR(50),
+    v_gene              VARCHAR(50),
+    v_identity          FLOAT,
+    j_gene              VARCHAR(50),
+    j_identity          FLOAT,
+    aligned_seq         TEXT
+);
 """
 
 #####################################################################################

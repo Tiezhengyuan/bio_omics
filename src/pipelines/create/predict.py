@@ -83,6 +83,7 @@ DROP TABLE IF EXISTS combo2_alphafold;
 CREATE TABLE combo2_alphafold (
     combo_id            VARCHAR(20),
     endpoint            VARCHAR(60),
+    host                VARCHAR(10),
     predicted_at        DATETIME,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (combo_id)

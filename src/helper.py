@@ -22,7 +22,7 @@ load_dotenv(env_file)
 
 meta = defaultdict(int)
 
-
+import socket
 from bioomics.common import Dir, WriteTmp, ProcessPickle
 from bioomics.database import BuildComplex, QueryComplex, UpdateComplex
 from bioomics.PDB import Pdb
@@ -38,6 +38,7 @@ def header(func):
         print(f"pdb group = {pdb_group}")
         print(f"Try to retrieve data from {table}...")
         meta['pdb_group'] = pdb_group
+        meta['host'] = socket.gethostname()
         result = func(*args, **kwargs)
         return result
     return wrapper

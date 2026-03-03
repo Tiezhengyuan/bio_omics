@@ -10,9 +10,12 @@ import subprocess
 name = sys.argv[1] if len(sys.argv) > 1 else None
 pdb_group = sys.argv[2] if len(sys.argv) > 2 else None
 pool = {
+    #immune
+    'anarci': 'immune.anarci',
+
     #dynamics
     'combo2_distance': 'dynamics.combo2_distance', 
-    'equal_seq_rmsd': 'dynamics.equal_seq_rmsd', 
+    'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
     'combo2_relaxed': 'dynamics.combo2_relaxed',
     'combo2_contacts': 'dynamics.combo2_contacts',
 

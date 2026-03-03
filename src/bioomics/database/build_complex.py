@@ -70,10 +70,14 @@ TABLE_COLUMNS = {
     #align
     'meta_blastp5': ['pdb_id', 'model_no', 'relative_aln'],
     'meta_igblastp': ['pdb_id', 'model_no', 'relative_aln'],
+    'ab_anarci': ['chain_id', 'domain_no', 'hmm_species',
+        'chain_type', 'evalue', 'score', 'seqstart_index',
+        'seqend_index', 'identity_species', 'v_gene', 'v_identity',
+        'j_gene', 'j_identity', 'aligned_seq',],
 
     #predict
-    'chain_alphafold': ['chain_id', 'endpoint', 'predicted_at'],
-    'combo2_alphafold': ['combo_id', 'endpoint', 'predicted_at'],
+    'chain_alphafold': ['chain_id', 'endpoint', 'predicted_at',],
+    'combo2_alphafold': ['combo_id', 'endpoint', 'host', 'predicted_at',],
     'chain_plddt': ['chain_id', 'relative_pdb', 'ranking', 
         'predictor', 'avg_plddt', 'relative_pkl'],
     'chain_afsum': ['chain_id', 'ranking', 'avg_plddt', 'avg_ptm',

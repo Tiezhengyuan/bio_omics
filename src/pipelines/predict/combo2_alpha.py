@@ -40,7 +40,7 @@ def retrieve_pdb(args, meta):
     for row in rows:
         pdb_id = row['pdb_id']
         row['faa_file'] = os.path.join(args['data_dir'], row['combo_fasta'])
-        if pdb_id in ab_chains:
+        if pdb_id in ab_chains and os.path.isfile(row['faa_file']):
             combo_ids = set(row['combo_id'].split('-'))
             if combo_ids.intersection(ab_chains[pdb_id]):
                 # first predict short sequence for saving time
@@ -65,6 +65,7 @@ if __name__ == "__main__":
     }
 
     rows = retrieve_pdb(args, meta)
+    host = socket.gethostname()
     for row in rows:
         t0 = datetime.now()
         pdb_id, combo_id = row['pdb_id'], row['combo_id']
@@ -83,7 +84,7 @@ if __name__ == "__main__":
         Predictor(_args).colabfold()
 
         # build record
-        rec = [combo_id, None, t0]
+        rec = [combo_id, None, host, t0]
         done_file = os.path.join(outdir, f"{combo_id}.done.txt")
         if os.path.isfile(done_file):
             meta['succeed'] += 1

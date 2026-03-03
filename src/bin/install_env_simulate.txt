@@ -40,6 +40,7 @@ install simulation packages
 ```
 conda create -n simulate2 python=3.12 -y
 conda activate simulate2
+python -c "import sys;print(sys.path)"
 ```
 
 install openmm with cuda=11.8, and pdbfixer
@@ -72,6 +73,9 @@ install other packages
     ```
     ```
 
+install ANARCI for numbering
+cd /home/yuan/bio/ANARCI
+python setup.py install
 
 ###############################################3333
 install localcollabfold out of ENV

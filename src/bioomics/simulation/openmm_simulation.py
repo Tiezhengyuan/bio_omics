@@ -58,7 +58,7 @@ class OpenmmSimulation:
         self.pdb = None
         self.simulation = None 
 
-    @timeout(20)
+    @timeout(30)
     def relax_pdb(self):
         '''
         note: max duration < 10 min in larges-scale screening
