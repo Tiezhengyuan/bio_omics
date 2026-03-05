@@ -43,7 +43,6 @@ class ProcessBlast:
                 print(f"Stderr: {e.stderr}")
         return None
 
-
     def blastp(self, fa_file:str, db_path:str, outfile:str, outfmt:int=None):
         outfmt = 7 if outfmt is None else outfmt
         cmd = [

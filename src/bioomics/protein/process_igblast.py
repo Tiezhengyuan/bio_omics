@@ -54,16 +54,15 @@ class ProcessIgblast:
         outfmt = 5 if outfmt is None else outfmt
         cmd = [
             os.path.join(self.bin_dir, 'igblastp'),
-            '-germline_db_V', db_path,
             '-query', fa_file,
             '-outfmt', str(outfmt),
-            '-out', outfile, ''
+            '-out', outfile,
+            '-germline_db_V', db_path,
         ]
         try:
             if self.verbose:
-                print('igblastp: ', ' '.join(cmd))
-            result = subprocess.run(' '.join(cmd), shell=True, \
-                capture_output=True, text=True, check=True)
+                print('\n##igblastp: ', ' '.join(cmd))
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             if self.verbose:
                 print("Command output:", result.stdout.strip())
             return 'succeed'

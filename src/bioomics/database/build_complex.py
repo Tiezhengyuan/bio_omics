@@ -69,7 +69,16 @@ TABLE_COLUMNS = {
 
     #align
     'meta_blastp5': ['pdb_id', 'model_no', 'relative_aln'],
-    'meta_igblastp': ['pdb_id', 'model_no', 'relative_aln'],
+    'meta_vdj': ['pdb_id', 'model_no', 'v_aln', 'd_aln', 'j_aln'],
+    'align_dregion': ['pdb_id', 'chain_id', 'hit_id', 'organism',
+        'evalue', 'bit_score', 'identities', 'query_len', 'align_len',
+        'query_start', 'query_end', 'query_seq', 'match_seq',
+        'sbjct_seq', 'sbjct_start', 'sbjct_end',],
+    'align_jregion': ['pdb_id', 'chain_id', 'allele_name', 'specie',
+        'gene_name', 'gene_family', 'chain_type', 'isotype',
+        'evalue', 'bit_score', 'identities', 'query_len', 'align_len',
+        'query_start', 'query_end', 'query_seq', 'match_seq',
+        'sbjct_seq', 'sbjct_start', 'sbjct_end',],
     'ab_anarci': ['chain_id', 'domain_no', 'hmm_species',
         'chain_type', 'evalue', 'score', 'seqstart_index',
         'seqend_index', 'identity_species', 'v_gene', 'v_identity',
@@ -347,27 +356,15 @@ class BuildComplex(BuildDb):
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
 
-    def insert_align_vregion(self) -> tuple:
-        table_name = 'align_vregion'
-        insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, chain_id, allele_name, specie, gene_name, gene_family,
-                chain_type, isotype, evalue, bit_score, region_names)
-            VALUES (%s, %s, %s, %s, %s, %s,%s, %s, %s, %s, %s)
-        """
-        func = getattr(self.recorder, table_name)
-        self.insert(table_name, insert_query, func)
-
     def insert_align_vfrag(self) -> tuple:
         # FRs and CDRs in V-regions
         table_name = 'align_vfrag'
         insert_query = f"""INSERT INTO {table_name}
-            (pdb_id, chain_id, identity, seq,
-                region_name, seq_from, seq_to)
+            (pdb_id, chain_id, identity, seq, fragment, seq_from, seq_to)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
-
 
 #####################
     

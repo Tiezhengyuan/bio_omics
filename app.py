@@ -11,6 +11,10 @@ name = sys.argv[1] if len(sys.argv) > 1 else None
 pdb_group = sys.argv[2] if len(sys.argv) > 2 else None
 pool = {
     #immune
+    'meta_vdj': 'immune.meta_vdj',
+    'align_vfrag': 'immune.align_vfrag',
+    'align_dregion': 'immune.align_dregion',
+    'align_jregion': 'immune.align_jregion',
     'anarci': 'immune.anarci',
 
     #dynamics

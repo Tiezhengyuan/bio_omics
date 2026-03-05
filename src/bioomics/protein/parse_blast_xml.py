@@ -9,6 +9,16 @@ class ParseBlastXml:
         # infile is BLAST XML output, outfmt=5
         self.infile = infile
 
+    def record_iter(self):
+        try:
+            with open(self.infile, 'r') as f:
+                parser = NCBIXML.parse(f)
+                for record in parser:
+                    yield record
+        except Exception as e:
+            print(f'ParseBlastXml failed: file={self.infile}, error={e}')
+            return []
+
     def best_hits(self):
         results = []
         for record in self.record_iter():
@@ -28,33 +38,61 @@ class ParseBlastXml:
                 results.append(query)
         return results
 
-    def record_iter(self):
-        try:
-            with open(self.infile, 'r') as f:
-                parser = NCBIXML.parse(f)
-                for record in parser:
-                    yield record
-        except Exception as e:
-            print(f'ParseBlastXml failed: file={self.infile}, error={e}')
-            return []
+    def hits(self):
+        results = []
+        for record in self.record_iter():
+            query = {
+                'query': record.query,
+                'query_len': record.query_length,
+            }
+            alignments = self.alignments(record)
+            for aln in alignments:
+                aln.update(query)
+                results.append(aln)
+        return results
            
     def alignments(self, record):
         results = []
         for alignment in record.alignments:
             for hsp in alignment.hsps:
                 aln = {
-                    'hit_id': alignment.hit_id,
+                    'hit_id': alignment.hit_id.strip(),
                     'hit_desc': alignment.hit_def,
                     'alignment_len': alignment.length,
                     'evalue': hsp.expect,
                     'bit_score': hsp.bits,
+                    'identities': hsp.identities,
                     'identity': hsp.identities/hsp.align_length,
                     'align_len': hsp.align_length,
                     'query_seq': hsp.query,
+                    'query_start': hsp.query_start,
+                    'query_end': hsp.query_end,
                     'match_seq': hsp.match,
-                    'subject_seq': hsp.sbjct,
+                    'sbjct_seq': hsp.sbjct,
+                    'sbjct_start': hsp.sbjct_start,
+                    'sbjct_end': hsp.sbjct_end,
                 }
                 results.append(aln)
         return results
-            
+    
+    @staticmethod
+    def parse_imgt_allele(input:str=None) -> tuple:
+        '''
+        allele_name, specie, gene_name, gene_family, chain_type, isotype
+        '''
+        allele_name, specie, gene_name, gene_family, chain_type, isotype = \
+            None, None, None, None, None, None
+        if input:
+            items = input.split('|')
+            allele_name = items[0]
+            if len(items) > 1:
+                specie = items[1]
+            if allele_name:
+                if '*' in allele_name:
+                    gene_name = allele_name.split('*')[0]
+                    if '-' in gene_name:
+                        gene_family = gene_name.split('-')[0]
+                chain_type = allele_name[2]
+                isotype = allele_name[:2]
+        return allele_name, specie, gene_name, gene_family, chain_type, isotype
 

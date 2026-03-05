@@ -275,12 +275,11 @@ class BuildRecords:
         return records
 
     def align_vfrag(self, args:dict):
-        pdb_id = args['pdb_id']
-        faa_file = args['faa_file']
-        aln_file = args['aln_file']
-        pi = ParseIgblast(aln_file, faa_file, self.verbose)
         records = []
-        for region in pi.retrieve_regions():
+        pdb_id = args['pdb_id']
+
+        c = ParseIgblast(args['aln_file'], args['faa_file'], self.verbose)
+        for region in c.retrieve_regions():
             query_id = region['query_id']
             rec0 = (pdb_id, query_id,)
             if 'percent identity' in region:
@@ -299,7 +298,7 @@ class BuildRecords:
                 if rec not in records:
                     records.append(rec)
         return records
-
+  
     def imgt_genelist(self, record:dict):
         names = ['Species', 'IMGT/GENE-DB', 'IMGT gene functionality', \
             'IMGT and HGNC gene definition', 'Number of alleles', \
@@ -450,11 +449,10 @@ class BuildRecords:
         return records
 
     def absd_align_imgt(self, args:dict):
-        seq_id = args['seq_id']
-        faa_file = args['faa_file']
-        aln_file = args['aln_file']
-        pi = ParseIgblast(aln_file, faa_file, self.verbose)
         records = []
+        seq_id = args['seq_id']
+
+        pi = ParseIgblast(args['aln_file'], args['faa_file'], self.verbose)
         for hit in pi.retrieve_hits():
             if 'allele_name' in hit:
                 rec = (
@@ -469,6 +467,7 @@ class BuildRecords:
                 )
                 if rec not in records:
                     records.append(rec)
+
         if not records:
             # insert null if not hits detected
             rec0 = (seq_id,) + (None,) * 7
