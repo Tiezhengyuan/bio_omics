@@ -17,6 +17,24 @@ class QueryComplex(QueryDb):
         res = self.list_data(query, False)
         return res[0]['date']
 
+    def get_pdb_groups(self):
+        query = "SELECT pdb_group FROM meta_pdb;"
+        res = self.list_data(query)
+        return [rec['pdb_group'] for rec in res]
+    
+    def pop_pdb_group(self, table_name):
+        query = f"""
+            select pdb_group from meta_pdb
+            except
+            select pdb_group from meta_execute
+            where table_name = '{table_name}'
+            order by pdb_group
+        ;"""
+        res = self.list_data(query)
+        if len(res) > 0:
+            return res[0]['pdb_group']
+        return None
+    
     def parse_modelling(self):
         query = """
             SELECT A.chain_id, A.pdb_id, A.uniprot_acc, U.pdb_path

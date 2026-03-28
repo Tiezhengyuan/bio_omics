@@ -1,4 +1,6 @@
 import os
+from datetime import datetime
+
 from .update_db import UpdateDb
 
 class UpdateComplex(UpdateDb):
@@ -107,3 +109,14 @@ class UpdateComplex(UpdateDb):
             else:
                 m += 1
         print(f"{self.table_name}.first_chain_id: succeed={n}, unchanged={m}")
+    
+    def update_execute_time(self, args):
+        t1 = datetime.now()
+        query = f"""
+            update {self.table_name}
+            set end_at = '{t1}'
+            where table_name = '{args['table_name']}'
+                and pdb_group = {args['pdb_group']}
+                and host = '{args['host']}'
+        ;"""
+        self.execute_update(query, None)

@@ -9,7 +9,7 @@ Entrez.email = 'tiezhengyuan@hotmail.com'
 
 class ProcessEntrez:
     def __init__(self, data=None, verbose=False):
-        self.data = data
+        self.data = {} if data is None else data
         self.verbose = verbose
 
     def search_protein_ids(self, keyword):
@@ -27,21 +27,6 @@ class ProcessEntrez:
             print(f"Found {res['Count']} protein IDs.")
         return res['IdList']
 
-    def fetch_records(self, protein_ids):
-        self.data = {}
-        for i, _id in enumerate(protein_ids):
-            record = self.fetch_record(_id)
-            entrez_parser = ParseEntrez(record)
-            rec_dict = {
-                'id':record.id,
-                'desc':record.description,
-                'pro_seq': str(record.seq),
-                'organism': record.annotations['organism'],
-                'db_source': entrez_parser.get_db_source(),
-                'features': entrez_parser.get_features(),
-            }
-            self.data[record.id] = rec_dict
-        return self.data
 
     def fetch_record(self, query_id):
         """
@@ -60,6 +45,25 @@ class ProcessEntrez:
         record = SeqIO.read(handle, 'genbank')
         return record
 
+    def fetch_records(self, protein_ids):
+        '''
+        update self.data
+        '''
+        self.data = {}
+        for i, _id in enumerate(protein_ids):
+            record = self.fetch_record(_id)
+            entrez_parser = ParseEntrez(record)
+            rec_dict = {
+                'id':record.id,
+                'desc':record.description,
+                'pro_seq': str(record.seq),
+                'organism': record.annotations['organism'],
+                'db_source': entrez_parser.get_db_source(),
+                'features': entrez_parser.get_features(),
+            }
+            self.data[record.id] = rec_dict
+        return self.data
+    
     def get_seq(self):
         seq_id, id_seq = {}, {}
         for _id, rec in self.data.items():
@@ -97,9 +101,11 @@ class ProcessEntrez:
         update self.data['ft_df']
         '''
         record = self.get_info(pdb_id)
+        if not record:
+            return None
+        
         ft = pd.DataFrame(record['features'])
         print(record['id'], ft['region_name'].value_counts())
-
         # split by features
         record['ft_df'] = {
             'ft': ft,

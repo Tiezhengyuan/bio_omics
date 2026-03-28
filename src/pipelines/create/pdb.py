@@ -31,8 +31,8 @@ CREATE TABLE pdb_chain(
 '''
 
 '''
-pdb -> meta_pdb
-    -> meta_mmcif
+pdb -> meta_mmcif
+    -> meta_pdb
                 -> pdb_compound
                 -> pdb_method
                 -> pdb_keyword
@@ -42,6 +42,7 @@ pdb -> meta_pdb
                 -> meta_chain_faa
                 -> meta_chain_pdb
                 -> meta_combo2
+                -> meta_combo3
 '''
 
 SQL_TEXT = """
@@ -157,7 +158,19 @@ CREATE TABLE meta_combo2 (
     CONSTRAINT fk_combo2 FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
-
+//
+DROP TABLE IF EXISTS meta_combo3;
+CREATE TABLE meta_combo3 (
+    pdb_id          VARCHAR(10),
+    combo_id        VARCHAR(40),
+    chain_combo     VARCHAR(10),
+    chain_pdbs      VARCHAR(120),
+    combo_pdb       VARCHAR(60),
+    combo_csv       VARCHAR(60),
+    combo_fasta     VARCHAR(60),
+    CONSTRAINT fk_combo3 FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
 # //
 # DROP TABLE IF EXISTS meta_combo2_pdb;
 # CREATE TABLE meta_combo2_pdb(

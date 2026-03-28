@@ -75,11 +75,11 @@ if __name__ == "__main__":
         Predictor(_args).colabfold()
 
         # build record
-        rec = [chain_id, None, t0]
+        rec = [pdb_id, chain_id, None, t0]
         done_file = os.path.join(outdir, f"{chain_id}.done.txt")
         if os.path.isfile(done_file):
             meta['succeed'] += 1
-            rec[1] = endpoint
+            rec[2] = endpoint
         else:
             meta['fail'] += 1
         # insertion

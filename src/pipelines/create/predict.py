@@ -13,6 +13,7 @@ from create_helper import *
 meta_pdb -> view_pdb_chain -> chain_alphafold -> chain_alphafold_plddt
                                               -> chain_model_measure
          -> meta_combo2 -> combo2_alphafold
+         -> meta_combo3 -> combo3_alphafold
 
 '''
 
@@ -20,11 +21,14 @@ meta_pdb -> view_pdb_chain -> chain_alphafold -> chain_alphafold_plddt
 SQL_TEXT = """
 DROP TABLE IF EXISTS chain_alphafold;
 CREATE TABLE chain_alphafold (
+    pdb_id              VARCHAR(10),
     chain_id            VARCHAR(20),
     endpoint            VARCHAR(60),
     predicted_at        DATETIME,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (chain_id)
+    UNIQUE (chain_id),
+    CONSTRAINT fk_chain_alpha_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 DROP TABLE IF EXISTS chain_afsum;
 CREATE TABLE chain_afsum (
@@ -81,12 +85,15 @@ CREATE TABLE chain_tmalign(
 //
 DROP TABLE IF EXISTS combo2_alphafold;
 CREATE TABLE combo2_alphafold (
+    pdb_id              VARCHAR(10),
     combo_id            VARCHAR(20),
     endpoint            VARCHAR(60),
     host                VARCHAR(10),
     predicted_at        DATETIME,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (combo_id)
+    UNIQUE (combo_id),
+    CONSTRAINT fk_combo2_alpha_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 """

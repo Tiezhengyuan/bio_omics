@@ -9,9 +9,12 @@ import itertools
 import os
 import re
 from pathlib import Path
+import shutil
 import sys
 import numpy as np
 import pandas as pd
+import subprocess
+import socket
 
 src_dir = os.path.dirname(__file__)
 if src_dir not in sys.path:
@@ -27,6 +30,40 @@ from bioomics.common import Dir, WriteTmp, ProcessPickle
 from bioomics.database import BuildComplex, QueryComplex, UpdateComplex
 from bioomics.PDB import Pdb
 from bioomics.protein import ProcessFasta
+
+
+def local_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip_addr = s.getsockname()[0]
+    s.close()
+    return ip_addr
+
+def add_meta(args) -> dict:
+    # host name
+    args['host'] = socket.gethostname()
+    # IP address of this host
+    args['ip_addr'] = local_ip()
+    if args.get('test'):
+        args['pdb_group'] = 0
+        return args
+
+    print('Try to assign pdb_group...')
+    pdb_group = QueryComplex().pop_pdb_group(args['table_name'])
+    args['pdb_group'] = pdb_group
+
+    if args['verbose']:
+        print(args)
+    if args['pdb_group'] is None:
+        print(f"\nExit! Try process {args['table_name']}, but not pdb_group is assigned.")
+        sys.exit(0)
+    
+    # add new record
+    rec = (args['table_name'], args['pdb_group'], args['host'], args['ip_addr'], args['script'])
+    BuildComplex([rec,], args['verbose']).insert_batch_records('meta_execute')
+    if args['verbose']:
+        print('Update meta_exeucte:', rec)
+    return args
 
 def header(func):
     @functools.wraps(func)
@@ -75,6 +112,27 @@ def validate_data(col_name, params, meta):
             meta['delete_rows'] += len(values)
             print(i, end=' ')
         print(f'{n}\n')
+
+
+
+def copy_data(outdir):
+    host, user = os.getenv('HOST'), os.getenv('USER')
+    if host == local_ip():
+        print(f"Skip synchronization, host={host}")
+    else:
+        cmd = ['rsync', '-avz', '--progress',
+            '--mkpath', '--remove-source-files',
+            f"{outdir}/*",
+            f"{user}@{host}:{outdir}/",
+        ]
+        try:
+            cmd = ' '.join(cmd)
+            print(cmd)
+            res = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+            print('Synchronize results: ', res.stdout, res.stderr)
+        except Exception as e:
+            print(f"ERROR: Synchronization between {outdir}, err={e}")
+
 
 def footer(meta):
     print('Statistics of this run', meta)

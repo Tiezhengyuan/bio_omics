@@ -7,6 +7,7 @@ from .build_records import BuildRecords
 
 # build SQL query string
 TABLE_COLUMNS = {
+    'meta_execute': ['table_name', 'pdb_group', 'host', 'ip_addr', 'script'],
     'meta_pdb': ['pdb_id', 'relative_path', 'pdb_group'],
     'meta_mmcif': ['pdb_id', 'relative_path', 'pdb_group'],
     'pdb_chain_type': ['pdb_id', 'chain_id', 'chain_type', 'total_res', 
@@ -17,7 +18,8 @@ TABLE_COLUMNS = {
     'meta_chain_pdb': ['pdb_id', 'chain_id', 'chain_pdb'],
     'meta_combo2': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
         'combo_pdb', 'combo_csv', 'combo_fasta'],
-
+    'meta_combo3': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
+        'combo_pdb', 'combo_csv', 'combo_fasta'],
 
     'meta_combo2_pdb': ['pdb_id', 'model_no', 'combo_id',
         'chain_combo', 'bounded_pdb', 'chain_pdbs'],
@@ -85,8 +87,8 @@ TABLE_COLUMNS = {
         'j_gene', 'j_identity', 'aligned_seq',],
 
     #predict
-    'chain_alphafold': ['chain_id', 'endpoint', 'predicted_at',],
-    'combo2_alphafold': ['combo_id', 'endpoint', 'host', 'predicted_at',],
+    'chain_alphafold': ['pdb_id', 'chain_id', 'endpoint', 'predicted_at',],
+    'combo2_alphafold': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
     'chain_plddt': ['chain_id', 'relative_pdb', 'ranking', 
         'predictor', 'avg_plddt', 'relative_pkl'],
     'chain_afsum': ['chain_id', 'ranking', 'avg_plddt', 'avg_ptm',

@@ -10,6 +10,10 @@ import subprocess
 name = sys.argv[1] if len(sys.argv) > 1 else None
 pdb_group = sys.argv[2] if len(sys.argv) > 2 else None
 pool = {
+    #pdb
+    'combo2': 'pdb.meta_combo2',
+    'combo3': 'pdb.meta_combo3',
+
     #immune
     'meta_vdj': 'immune.meta_vdj',
     'align_vfrag': 'immune.align_vfrag',
@@ -34,6 +38,10 @@ pool = {
     'chain_rmsd': 'predict.chain_rmsd',
     'chain_tmalign': 'predict.chain_tmalign',
     'combo2_alpha': 'predict.combo2_alpha',
+
+    #other
+    'clean_predict': 'clean.clean_predict',
+    'test': 'test',
 }
 
 cmd = ['python', '-m',]

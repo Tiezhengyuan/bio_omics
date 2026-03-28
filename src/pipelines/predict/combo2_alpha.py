@@ -10,6 +10,7 @@ function:
     - insert data into table combo2_alpha
 '''
 
+
 from src.helper import *
 from bioomics import Predictor
 
@@ -45,8 +46,8 @@ def retrieve_pdb(args, meta):
             if combo_ids.intersection(ab_chains[pdb_id]):
                 # first predict short sequence for saving time
                 input_seq = ProcessFasta(row['faa_file']).get_first_seq()
-                print(pdb_id, len(input_seq), end='\t')
-                if 10 < len(input_seq) < 1000:
+                if len(input_seq) < 1000:
+                    print(row['combo_id'], len(input_seq), end='\t')
                     ab_rows.append(row)
     meta['antibody_rows'] += len(ab_rows)
     print(f"Filter {len(ab_rows)} PDB files including antibody chain.")
@@ -55,7 +56,8 @@ def retrieve_pdb(args, meta):
 
 if __name__ == "__main__":
     args = {
-        'pdb_group': sys.argv[1],
+        'script': sys.argv[0],
+        'pdb_group': sys.argv[1] if len(sys.argv) > 1 else None,
         'verbose': True,
         'data_dir': os.getenv('data_dir'),
         'predict_dir': os.getenv('predict_dir'),
@@ -84,17 +86,26 @@ if __name__ == "__main__":
         Predictor(_args).colabfold()
 
         # build record
-        rec = [combo_id, None, host, t0]
+        rec = [pdb_id, combo_id, None, host, t0]
         done_file = os.path.join(outdir, f"{combo_id}.done.txt")
         if os.path.isfile(done_file):
             meta['succeed'] += 1
-            rec[1] = endpoint
+            rec[2] = endpoint
         else:
             meta['fail'] += 1
+        
         # insertion
         if args['verbose']:
             print('### Try to insert ', rec)
         bc = BuildComplex([tuple(rec),], args['verbose'])
         bc.insert_batch_records(args['table_name'])
+
+        if rec[2]:
+            # delete *_env for saving space
+            _env_dir = os.path.join(outdir, f"{combo_id}_env")
+            if os.path.isdir(_env_dir):
+                shutil.rmtree(_env_dir)
+            #copy results to local server if that is remote
+            copy_data(outdir)
 
     footer(meta)
