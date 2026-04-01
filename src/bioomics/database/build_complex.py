@@ -7,7 +7,11 @@ from .build_records import BuildRecords
 
 # build SQL query string
 TABLE_COLUMNS = {
+    # meta
+    'meta': ['pdb_group', 'host', 'ip_addr', 'script'],
     'meta_execute': ['table_name', 'pdb_group', 'host', 'ip_addr', 'script'],
+
+    # 
     'meta_pdb': ['pdb_id', 'relative_path', 'pdb_group'],
     'meta_mmcif': ['pdb_id', 'relative_path', 'pdb_group'],
     'pdb_chain_type': ['pdb_id', 'chain_id', 'chain_type', 'total_res', 
@@ -25,6 +29,8 @@ TABLE_COLUMNS = {
         'chain_combo', 'bounded_pdb', 'chain_pdbs'],
     'meta_combo2_seq': ['pdb_id', 'model_no', 'combo_id',
         'chain_combo', 'relative_csv'],
+    'pdb_complex': ['pdb_id', 'combo_id', 'chain_combo', 
+        'chain_label', 'chains_num', 'category'],
 
     #analyze
     'meta_bfactor': ['pdb_id', 'relative_pkl'],
@@ -68,6 +74,8 @@ TABLE_COLUMNS = {
         'relaxed_pdb', 'original_energy', 'relaxed_energy',],
     'combo2_relaxed': ['pdb_id', 'combo_id', 'time0', 'fixed_pdb', 
         'relaxed_pdb', 'original_energy', 'relaxed_energy',],
+    'combo3_relaxed': ['pdb_id', 'combo_id', 'time0', 'fixed_pdb', 
+        'relaxed_pdb', 'original_energy', 'relaxed_energy',],
 
     #align
     'meta_blastp5': ['pdb_id', 'model_no', 'relative_aln'],
@@ -89,6 +97,7 @@ TABLE_COLUMNS = {
     #predict
     'chain_alphafold': ['pdb_id', 'chain_id', 'endpoint', 'predicted_at',],
     'combo2_alphafold': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
+    'combo3_alphafold': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
     'chain_plddt': ['chain_id', 'relative_pdb', 'ranking', 
         'predictor', 'avg_plddt', 'relative_pkl'],
     'chain_afsum': ['chain_id', 'ranking', 'avg_plddt', 'avg_ptm',

@@ -95,7 +95,18 @@ CREATE TABLE combo2_alphafold (
     CONSTRAINT fk_combo2_alpha_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
-
+DROP TABLE IF EXISTS combo3_alphafold;
+CREATE TABLE combo3_alphafold (
+    pdb_id              VARCHAR(10),
+    combo_id            VARCHAR(20),
+    endpoint            VARCHAR(60),
+    host                VARCHAR(10),
+    predicted_at        DATETIME,
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (combo_id),
+    CONSTRAINT fk_combo3_alpha_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
 """
 #####################################################################################
 

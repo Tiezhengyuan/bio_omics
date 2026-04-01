@@ -204,7 +204,18 @@ CREATE TABLE pdb_faa(
     CONSTRAINT fk_pdb_faa FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
-
+//
+DROP TABLE IF EXISTS pdb_complex;
+CREATE TABLE pdb_complex(
+    pdb_id          VARCHAR(10),
+    combo_id        VARCHAR(40),
+    chain_combo     VARCHAR(20),
+    chain_label     VARCHAR(100),
+    chains_num      INT,
+    category        VARCHAR(20),
+    CONSTRAINT fk_pdb_complex_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
 """
 #####################################################################################
 

@@ -39,31 +39,38 @@ def local_ip():
     s.close()
     return ip_addr
 
-def add_meta(args) -> dict:
+def add_params(params:dict={}):
+    '''
+    update args and meta
+    '''
+    params['script'] = sys.argv[0]
+    params['pdb_group'] = None
+    
     # host name
-    args['host'] = socket.gethostname()
+    params['host'] = socket.gethostname()
     # IP address of this host
-    args['ip_addr'] = local_ip()
-    if args.get('test'):
-        args['pdb_group'] = 0
-        return args
+    params['ip_addr'] = local_ip()
+    if params.get('test'):
+        params['pdb_group'] = 0
+        return params
 
     print('Try to assign pdb_group...')
-    pdb_group = QueryComplex().pop_pdb_group(args['table_name'])
-    args['pdb_group'] = pdb_group
+    pdb_group = QueryComplex().pop_pdb_group(params['table_name'])
+    params['pdb_group'] = pdb_group
 
-    if args['verbose']:
-        print(args)
-    if args['pdb_group'] is None:
-        print(f"\nExit! Try process {args['table_name']}, but not pdb_group is assigned.")
+    if params['verbose']:
+        print(params)
+    if params['pdb_group'] is None:
+        print(f"\nExit! Try process {params['table_name']}, but not pdb_group is assigned.")
         sys.exit(0)
     
     # add new record
-    rec = (args['table_name'], args['pdb_group'], args['host'], args['ip_addr'], args['script'])
-    BuildComplex([rec,], args['verbose']).insert_batch_records('meta_execute')
-    if args['verbose']:
+    rec = (params['table_name'], params['pdb_group'], params['host'], params['ip_addr'], params['script'])
+    BuildComplex([rec,], params['verbose']).insert_batch_records('meta_execute')
+    params['meta_execute'] = True
+    if params['verbose']:
         print('Update meta_exeucte:', rec)
-    return args
+    return params
 
 def header(func):
     @functools.wraps(func)
@@ -113,8 +120,6 @@ def validate_data(col_name, params, meta):
             print(i, end=' ')
         print(f'{n}\n')
 
-
-
 def copy_data(outdir):
     host, user = os.getenv('HOST'), os.getenv('USER')
     if host == local_ip():
@@ -133,7 +138,10 @@ def copy_data(outdir):
         except Exception as e:
             print(f"ERROR: Synchronization between {outdir}, err={e}")
 
-
-def footer(meta):
+def footer(params, meta):
+    # update table meta_execute with end time
+    if params.get('meta_execute'):
+        UpdateComplex('meta_execute', params['verbose']).execute_end_time(params)
+    # print statistics of this run
     print('Statistics of this run', meta)
     print("Done!\n\n")

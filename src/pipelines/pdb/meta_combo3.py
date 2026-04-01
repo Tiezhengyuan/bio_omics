@@ -3,8 +3,8 @@ requirements:
     - The table meta_pdb is ready.
     - meta_chain_pdb is ready
 example:
-    - parallel -j8 python app.py combo3 ::: {0..117}
-    - python app.py combo3 0
+    - parallel -j8 python app.py combo3 ::: {0..99}
+    - python app.py combo3
 function:
     - split PDB of complex to paired chains PDB.
     - export complex csv and fasta for structure predication
@@ -125,7 +125,6 @@ def build_data(input_iter, params, meta):
 ##################################
 if __name__ == "__main__":
     params = {
-        'pdb_group': sys.argv[1],
         'verbose': True,
         'overwrite': False,
         'pdb_dir': os.getenv('pdb_dir'),
@@ -133,6 +132,8 @@ if __name__ == "__main__":
         'table_name': 'meta_combo3',
         'combo': 3,
     }
+    add_params(params)
+
     input_iter = retrieve_data(params, meta)
     record_iter = build_data(input_iter, params, meta)
     bc = BuildComplex(record_iter, params['verbose'])
@@ -140,4 +141,4 @@ if __name__ == "__main__":
 
     for col_name in ('combo_pdb', 'combo_csv', 'combo_fasta'):
         validate_data(col_name, params, meta)
-    footer(meta)
+    footer(params, meta)

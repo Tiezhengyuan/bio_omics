@@ -26,6 +26,10 @@ class UpdateDb(Db):
                 connection.close()
         return None
 
+    def empty_tables(self):
+        query = f"DELETE FROM {self.table_name};"
+        return self.execute_update(query, None)
+
     def delete_rows(self, col_name, values):
         placeholders = ', '.join(['%s',] * len(values))
         query = f"""

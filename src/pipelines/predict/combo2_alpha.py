@@ -3,8 +3,8 @@
 requirements:
     - meta_combo2
 example:
-    - parallel -j8 python app.py combo2_alpha ::: {0..117}
-    - python app.py combo2_alpha 0
+    - parallel --delay 5 -j 8 python app.py combo2_alpha ::: {0..99}
+    - python app.py combo2_alpha
 function:
     - predict dimer complex
     - insert data into table combo2_alpha
@@ -15,49 +15,42 @@ from src.helper import *
 from bioomics import Predictor
 
 @header
-def retrieve_pdb(args, meta):
-    pdb_group = args['pdb_group']
-    table_name = args['table_name']
+def retrieve_pdb(params, meta):
+    pdb_group = params['pdb_group']
+    table_name = params['table_name']
     query = f"""
-        SELECT C.pdb_id, C.combo_id, C.combo_fasta
-        FROM meta_combo2   C
-        LEFT JOIN meta_pdb P ON C.pdb_id=P.pdb_id
-        WHERE P.pdb_group = {pdb_group}
-            AND C.pdb_id IN (
-                SELECT pdb_id from view_antibody
-            )
-            AND C.combo_id NOT IN (
+        SELECT b.pdb_id, b.combo_id, c.combo_fasta
+        FROM pdb_complex       b 
+        LEFT JOIN meta_combo2  c ON b.combo_id = c.combo_id 
+        LEFT JOIN meta_pdb     p ON b.pdb_id = p.pdb_id
+        WHERE b.category = 'AbAg'
+            AND p.pdb_group = {pdb_group}
+            AND b.combo_id NOT IN (
                 SELECT combo_id FROM {table_name}
             )
     ;"""
-    qc = QueryComplex(args['verbose'])
+    qc = QueryComplex(params['verbose'])
     rows = qc.list_data(query)
     print(f"{len(rows)} PDB files ready...")
     meta['rows'] += len(rows)
 
     # antibody chain should be included in combo
     ab_rows = []
-    ab_chains = qc.ab_chain_no()
     for row in rows:
-        pdb_id = row['pdb_id']
-        row['faa_file'] = os.path.join(args['data_dir'], row['combo_fasta'])
-        if pdb_id in ab_chains and os.path.isfile(row['faa_file']):
-            combo_ids = set(row['combo_id'].split('-'))
-            if combo_ids.intersection(ab_chains[pdb_id]):
-                # first predict short sequence for saving time
-                input_seq = ProcessFasta(row['faa_file']).get_first_seq()
-                if len(input_seq) < 1000:
-                    print(row['combo_id'], len(input_seq), end='\t')
-                    ab_rows.append(row)
-    meta['antibody_rows'] += len(ab_rows)
-    print(f"Filter {len(ab_rows)} PDB files including antibody chain.")
+        row['faa_file'] = os.path.join(params['data_dir'], row['combo_fasta'])
+        # predict short sequence for saving time
+        records = ProcessFasta(row['faa_file']).load_fasta()
+        total_aa = np.sum([len(rec.seq) for rec in records])
+        if total_aa < 1000:
+            print(row['combo_id'], total_aa, end='\t')
+            ab_rows.append(row)
+    meta['predict_rows'] += len(ab_rows)
+    print(f"Get {len(ab_rows)} PDB files for prediction.")
     return ab_rows
 
 
 if __name__ == "__main__":
-    args = {
-        'script': sys.argv[0],
-        'pdb_group': sys.argv[1] if len(sys.argv) > 1 else None,
+    params = {
         'verbose': True,
         'data_dir': os.getenv('data_dir'),
         'predict_dir': os.getenv('predict_dir'),
@@ -65,25 +58,26 @@ if __name__ == "__main__":
         'num_recycle': '3',
         'relax': True,
     }
+    add_params(params)
 
-    rows = retrieve_pdb(args, meta)
+    rows = retrieve_pdb(params, meta)
     host = socket.gethostname()
     for row in rows:
         t0 = datetime.now()
         pdb_id, combo_id = row['pdb_id'], row['combo_id']
-        endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id, combo_id)
-        outdir = os.path.join(args['predict_dir'], endpoint)
+        endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id, combo_id)
+        outdir = os.path.join(params['predict_dir'], endpoint)
         Dir(outdir).init_dir()
 
         # predict
-        _args = {
+        _params = {
             'faa_file': row['faa_file'],
             'output_dir': outdir,
         }
-        _args.update(args)
-        if args['verbose']:
-            print('Arguments for prediction: ', _args)
-        Predictor(_args).colabfold()
+        _params.update(params)
+        if params['verbose']:
+            print('Arguments for prediction: ', _params)
+        Predictor(_params).colabfold()
 
         # build record
         rec = [pdb_id, combo_id, None, host, t0]
@@ -95,10 +89,10 @@ if __name__ == "__main__":
             meta['fail'] += 1
         
         # insertion
-        if args['verbose']:
+        if params['verbose']:
             print('### Try to insert ', rec)
-        bc = BuildComplex([tuple(rec),], args['verbose'])
-        bc.insert_batch_records(args['table_name'])
+        bc = BuildComplex([tuple(rec),], params['verbose'])
+        bc.insert_batch_records(params['table_name'])
 
         if rec[2]:
             # delete *_env for saving space
@@ -108,4 +102,4 @@ if __name__ == "__main__":
             #copy results to local server if that is remote
             copy_data(outdir)
 
-    footer(meta)
+    footer(params, meta)

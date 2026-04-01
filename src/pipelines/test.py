@@ -11,11 +11,9 @@ function:
 
 import time
 from src.helper import *
-from bioomics import Predictor
-
 
 if __name__ == "__main__":
-    args = {
+    params = {
         'script': sys.argv[0],
         'pdb_group': None,
         'overwrite': False,
@@ -23,11 +21,11 @@ if __name__ == "__main__":
         'test': False,
         'data_dir': os.getenv('data_dir'),
         'predict_dir': os.getenv('predict_dir'),
-        'table_name': 'combo2_alphafold',
+        'table_name': 'meta',
     }
-    add_meta(args)
+    add_params(params)
 
 
     #update record
     time.sleep(30)
-    UpdateComplex('meta_execute', args['verbose']).update_execute_time(args)
+    footer(params, meta)

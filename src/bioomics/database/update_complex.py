@@ -110,7 +110,7 @@ class UpdateComplex(UpdateDb):
                 m += 1
         print(f"{self.table_name}.first_chain_id: succeed={n}, unchanged={m}")
     
-    def update_execute_time(self, args):
+    def execute_end_time(self, args):
         t1 = datetime.now()
         query = f"""
             update {self.table_name}

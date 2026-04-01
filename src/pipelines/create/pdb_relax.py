@@ -28,7 +28,7 @@ fixed_pdb -> fixed_chain -> chain_relaxed_amber14
 # method 3: chain/combo -> fixed + relaxed
 meta_chain_pdb -> meta_chain_relaxed
 meta_combo2 -> combo2_relaxed
-
+meta_combo3 -> combo3_relaxed
 '''
 
 SQL_TEXT = """
@@ -135,7 +135,21 @@ CREATE TABLE combo2_relaxed (
     CONSTRAINT fk_combo2_relaxed_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
-
+//
+DROP TABLE IF EXISTS combo3_relaxed;
+CREATE TABLE combo3_relaxed (
+    pdb_id              VARCHAR(10),
+    combo_id            VARCHAR(40),
+    time0               DATETIME,
+    fixed_pdb           VARCHAR(80),
+    relaxed_pdb         VARCHAR(80),
+    original_energy     VARCHAR(60),
+    relaxed_energy      VARCHAR(60),
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (combo_id),
+    CONSTRAINT fk_combo3_relaxed_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
 """
 #####################################################################################
 

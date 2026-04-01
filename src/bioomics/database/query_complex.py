@@ -206,16 +206,15 @@ class QueryComplex(QueryDb):
 ###############################
     def ab_chain_no(self) -> dict:
         query = """
-            SELECT pdb_id, chain_no FROM view_antibody
+            SELECT pdb_id, chain_no, chain_type FROM view_antibody
             WHERE model_no = 0
         ;"""
         res = {}
         for row in self.list_data(query):
-            pdb_id, chain_no = row['pdb_id'], row['chain_no']
+            pdb_id, chain_no, chain_type = row['pdb_id'], row['chain_no'], row['chain_type']
             if pdb_id not in res:
-                res[pdb_id] = []
-            if chain_no not in res[pdb_id]:
-                res[pdb_id].append(chain_no)
+                res[pdb_id] = {}
+            res[pdb_id][chain_no] = chain_type
         return res
 
     def ab_combo2(self) -> dict:
@@ -230,7 +229,7 @@ class QueryComplex(QueryDb):
         for row in rows:
             pdb_id = row['pdb_id']
             if pdb_id in chain_no_pool:
-                ab_chain_no = set(chain_no_pool[pdb_id])
+                ab_chain_no = set(list(chain_no_pool[pdb_id]))
                 combo_chain_no = set(row['chain_combo'].split('-'))
                 inter = combo_chain_no.intersection(ab_chain_no)
                 if inter:
@@ -251,19 +250,44 @@ class QueryComplex(QueryDb):
             pdb_id = row['pdb_id']
             if pdb_id in chain_no_pool:
                 combo_id = row['combo_id']
-                ab_chain_no = chain_no_pool[pdb_id]
+                ab_chain_no = list(chain_no_pool[pdb_id])
                 chain1, chain2 = row['chain_combo'].split('-')
                 # one antibody and one antigen
                 if chain1 in ab_chain_no:
                     if chain2 not in ab_chain_no:
                         row['ab_chain_no'] = chain1
+                        row['chain_label'] = 'antibody-target'
                         res[combo_id] = row
                 else:
                     if chain2 in ab_chain_no:
                         row['ab_chain_no'] = chain2
+                        row['chain_label'] = 'target-antibody'
                         res[combo_id] = row
         return res
 
+    def abag_combo3(self) -> dict:
+        chain_no_pool = self.ab_chain_no()
+        res = {}
+        query = """
+            SELECT pdb_id, combo_id, chain_combo
+            FROM meta_combo3
+            WHERE combo_pdb is not null
+        ;"""
+        rows = self.list_data(query)
+        for row in rows:
+            pdb_id = row['pdb_id']
+            if pdb_id in chain_no_pool:
+                combo_id = row['combo_id']
+                chainno_chaintype = chain_no_pool[pdb_id]
+                chain_no = row['chain_combo'].split('-')
+                chain_labels = [chainno_chaintype.get(c, 'antigen') for c in chain_no]
+                # trimer: Heavy + Kappa/Lambda + antigen
+                if 'H' in chain_labels and ('antigen' in chain_labels) \
+                    and ('K' in chain_labels or 'L' in chain_labels):
+                    row['chain_label'] = '-'.join(chain_labels)
+                    res[combo_id] = row
+        return res
+    
     def ab_heavy_seq(self):
         query = f"""
             SELECT DISTINCT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq

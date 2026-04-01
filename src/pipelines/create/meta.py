@@ -28,7 +28,17 @@ CREATE TABLE meta_execute(
     end_at          DATETIME,
     UNIQUE (table_name, pdb_group, host)
 );
-
+//
+DROP TABLE IF EXISTS meta;
+CREATE TABLE meta(
+    pdb_group       INT,
+    host            VARCHAR(10),
+    ip_addr         VARCHAR(30),
+    script          VARCHAR(100),
+    start_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    end_at          DATETIME,
+    UNIQUE (table_name, pdb_group, host)
+);
 """
 #####################################################################################
 

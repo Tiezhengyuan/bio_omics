@@ -13,6 +13,7 @@ pool = {
     #pdb
     'combo2': 'pdb.meta_combo2',
     'combo3': 'pdb.meta_combo3',
+    'pdb_complex': 'pdb.pdb_complex',
 
     #immune
     'meta_vdj': 'immune.meta_vdj',
@@ -26,6 +27,7 @@ pool = {
     'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
     'combo2_relaxed': 'dynamics.combo2_relaxed',
     'combo2_contacts': 'dynamics.combo2_contacts',
+    'combo3_relaxed': 'dynamics.combo3_relaxed',
 
     # collect data
     'collect_distance': 'collect.collect_distance',
@@ -38,6 +40,7 @@ pool = {
     'chain_rmsd': 'predict.chain_rmsd',
     'chain_tmalign': 'predict.chain_tmalign',
     'combo2_alpha': 'predict.combo2_alpha',
+    'combo3_alpha': 'predict.combo3_alpha',
 
     #other
     'clean_predict': 'clean.clean_predict',
