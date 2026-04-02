@@ -101,4 +101,4 @@ if __name__ == "__main__":
                 shutil.rmtree(_env_dir)
             #copy results to local server if that is remote
             copy_data(outdir)
-    footer(params, meta)
+    footer(meta, params)

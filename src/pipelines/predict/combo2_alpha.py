@@ -102,4 +102,4 @@ if __name__ == "__main__":
             #copy results to local server if that is remote
             copy_data(outdir)
 
-    footer(params, meta)
+    footer(meta, params)

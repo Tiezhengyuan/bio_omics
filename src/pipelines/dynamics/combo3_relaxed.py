@@ -3,7 +3,7 @@
 requirements:
     - table meta_combo3
 example:
-    - parallel --delay 5 -j8 python app.py combo3_relaxed ::: {0..99}
+    - parallel --delay 10 -j3 python app.py combo3_relaxed ::: {0..99}
     - python app.py combo3_relaxed
 function:
     - fix pdb files
@@ -20,13 +20,13 @@ def retrieve_pdb(params, meta):
     query = f"""
         SELECT c.pdb_id, c.combo_id, c.combo_pdb
         FROM meta_combo3   c
-        LEFT JOIN meta_pdb p ON c.pdb_id = c.pdb_id
+        LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND c.combo_id NOT IN (
                 SELECT combo_id FROM {table_name}
             )
-            AND c.pdb_id IN (
-                SELECT pdb_id from view_antibody
+            AND c.combo_id IN (
+                SELECT combo_id FROM pdb_complex
             )
     ;"""
     rows = QueryComplex(params['verbose']).list_data(query)
@@ -133,4 +133,4 @@ if __name__ == "__main__":
 
     validate_data('fixed_pdb', params, meta)
     validate_data('relaxed_pdb', params, meta)
-    footer(params, meta)
+    footer(meta, params)

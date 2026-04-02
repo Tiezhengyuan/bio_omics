@@ -1,6 +1,6 @@
 #!/usr/bin/bash
 
-# example: bash src/bin/backup.sh
+# example: bash src/bin/backup.sh <data>
 
 name=$1
 BK_DIR="/home/yuan/output/backup_mysql"

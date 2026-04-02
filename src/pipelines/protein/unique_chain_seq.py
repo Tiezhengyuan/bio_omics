@@ -2,23 +2,23 @@
 requirements:
     - The table pdb_chain_seq is ready.
 example:
-    - python src/pipelines/unique_chain_seq.py
+    - python app.py unique_chain_seq
 function:
     - assign unique id to chain protein sequences
 '''
 
-from helper import *
+from src.helper import *
 from bioomics import UpdateComplex
 
-def unique_seqs(args, meta):
-    table_name = args['table_name']
+def unique_seqs(params, meta):
+    table_name = params['table_name']
     query = f"""
         SELECT first_chain_id, chain_seq
         FROM {table_name}
         WHERE chain_seq IS NOT NULL
             AND first_chain_id IS NOT NULL
     ;"""
-    rows = QueryComplex(args['verbose']).list_data(query)
+    rows = QueryComplex(params['verbose']).list_data(query)
     meta['unique_chains'] = len(rows)
     res = defaultdict()
     for row in rows:
@@ -29,8 +29,8 @@ def unique_seqs(args, meta):
         res[prefix][seq] = chain_id
     return res
 
-def parse_seq(seq_dict, args, meta):
-    table_name = args['table_name']
+def parse_seq(seq_dict, params, meta):
+    table_name = params['table_name']
     query = f"""
         SELECT pdb_id, chain_id, chain_seq
         FROM {table_name}
@@ -38,7 +38,7 @@ def parse_seq(seq_dict, args, meta):
             AND chain_seq IS NOT NULL
         ORDER BY pdb_id, chain_id
     ;"""
-    rows = QueryComplex(args['verbose']).list_data(query)
+    rows = QueryComplex(params['verbose']).list_data(query)
     meta['rows'] = len(rows)
     for row in rows:
         seq = row['chain_seq']
@@ -51,22 +51,25 @@ def parse_seq(seq_dict, args, meta):
             if prefix not in seq_dict:
                 seq_dict[prefix] = defaultdict()
             seq_dict[prefix][seq] = row['chain_id']
-            yield row['chain_id'], row['pdb_id'], row['chain_id']
+            rec = row['chain_id'], row['pdb_id'], row['chain_id']
+            if params['verbose']:
+                print(rec)
+            yield rec
 
 ##################################
 if __name__ == "__main__":
-    args = {
+    params = {
         'verbose': True,
         'table_name': 'pdb_chain_seq',
     }
+
     # get unique sequences with first_chain_id
-    seq_dict = unique_seqs(args, meta)
+    seq_dict = unique_seqs(params, meta)
 
     # detect unique sequences and parse sequences with first_chain_id
-    data = parse_seq(seq_dict, args, meta)
+    data = parse_seq(seq_dict, params, meta)
 
-    print(f"Try to update table {args['table_name']}...")
-    bc = UpdateComplex(args['verbose'])
-    bc.update_chain_seq(data)
+    print(f"Try to update table {params['table_name']}...")
+    UpdateComplex(params['verbose']).update_chain_seq(data)
 
-    print(meta)
+    footer(meta)

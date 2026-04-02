@@ -3,6 +3,10 @@
 
 PIPELINE_DIR=$1
 
+#
+parallel -j8 python app.py meta_combo2 ::: {0..237}
+parallel -j8 python app.py meta_combo3 ::: {0..237}
+
 # fix pdb
 parallel -j8 python ${PIPELINE_DIR}/fixed_pdb.py ::: {0..117}
 # split fixed_pdb

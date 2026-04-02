@@ -2,15 +2,16 @@
 requirements:
     - The table pdb_chainid is ready.
 example:
-    - parallel -j4 python src/pipelines/pdb_chain_seq.py ::: {0..117}
-    - python src/pipelines/pdb_chain_seq.py 0
+    - parallel -j4 python app.py chain_seq ::: {0..237}
+    - python app.py chain_seq 0
 function:
     - assign unique id to chain protein sequences
 '''
 
-from helper import *
+from src.helper import *
 
-def retrieve_data(pdb_group, args, meta):
+def retrieve_data(args, meta):
+    pdb_group = args['pdb_group']
     table_name = args['table_name']
     query = f"""
         SELECT DISTINCT C.pdb_id, P.relative_path
@@ -34,17 +35,18 @@ def retrieve_data(pdb_group, args, meta):
 
 ##################################
 if __name__ == "__main__":
-    pdb_group = sys.argv[1]
     args = {
+        'pdb_group': sys.argv[1],
         'verbose': True,
         'chunk_size': 100,
         'pdb_dir': os.getenv("pdb_dir"),
         'table_name': 'pdb_chain_seq',
     }
-    rows = retrieve_data(pdb_group, args, meta)
+    rows = retrieve_data(args, meta)
 
-    print(f"{pdb_group}. Try to insert PDB data into table {args['table_name']}...")
+    print(f"Try to insert PDB data into table {args['table_name']}...")
     bc = BuildComplex(rows, args['verbose'], args['chunk_size'])
     bc.insert_pdb_chain_seq()
     print(f"Synchronization of PDB with {args['table_name']} is good.")
-    print(meta)
+    
+    footer(meta)

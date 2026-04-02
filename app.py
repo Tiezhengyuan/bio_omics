@@ -11,9 +11,18 @@ name = sys.argv[1] if len(sys.argv) > 1 else None
 pdb_group = sys.argv[2] if len(sys.argv) > 2 else None
 pool = {
     #pdb
-    'combo2': 'pdb.meta_combo2',
-    'combo3': 'pdb.meta_combo3',
-    'pdb_complex': 'pdb.pdb_complex',
+    'download_pdb': 'pdb.download_pdb',
+    'pdb': 'pdb.pdb',
+    'meta_pdb': 'pdb.meta_pdb',
+    'pdb_compound': 'pdb.pdb_compound',
+    'pdb_method': 'pdb.pdb_method',
+    'pdb_keyword': 'pdb.pdb_keyword',
+    'pdb_chainid': 'pdb.pdb_chainid',
+    'chain_seq': 'pdb.pdb_chain_seq',
+    'unique_chain_seq': 'protein.unique_chain_seq',
+    'pdb_faa': 'pdb.pdb_faa',
+    'meta_chain_faa': 'pdb.meta_chain_faa',
+    'meta_chain_pdb': 'pdb.meta_chain_pdb',
 
     #immune
     'meta_vdj': 'immune.meta_vdj',
@@ -21,8 +30,11 @@ pool = {
     'align_dregion': 'immune.align_dregion',
     'align_jregion': 'immune.align_jregion',
     'anarci': 'immune.anarci',
+    'pdb_complex': 'pdb.pdb_complex',
 
     #dynamics
+    'meta_combo2': 'pdb.meta_combo2',
+    'meta_combo3': 'pdb.meta_combo3',
     'combo2_distance': 'dynamics.combo2_distance', 
     'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
     'combo2_relaxed': 'dynamics.combo2_relaxed',

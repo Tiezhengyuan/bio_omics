@@ -3,16 +3,15 @@ requirements:
     - The table meta_pdb is ready.
     - meta_chain_pdb is ready
 example:
-    - parallel -j8 python src/pipelines/meta_combo2.py ::: {0..117}
-    - python src/pipelines/meta_combo2.py 0
+    - parallel -j8 python app.py meta_combo2 ::: {0..237}
+    - python app.py meta_combo2 0
 function:
     - split PDB of complex to paired chains PDB.
     - export complex csv and fasta for structure predication
 note:
     - only consider model.id == 0
 '''
-from helper import *
-from itertools import combinations
+from src.helper import *
 from bioomics import ProcessSeq
 
 
@@ -33,9 +32,6 @@ def retrieve_data(params, meta):
             AND I.model_no = 0
             AND C.pdb_id NOT IN (
                 SELECT pdb_id FROM {table_name}
-            )
-            AND C.pdb_id IN (
-                SELECT pdb_id from view_antibody
             )
     ;"""
     df = QueryComplex(params['verbose']).list_data(query, True)
@@ -74,7 +70,7 @@ def build_data(input_iter, params, meta):
         model_no = input['model_no']
         chain_rows = input['chain_rows']
         ids = list(chain_rows.index)
-        for _ids in combinations(ids, params['combo']):
+        for _ids in itertools.combinations(ids, params['combo']):
             _ids = list(_ids)
             chain_combo = '-'.join(_ids)
             combo_id = f"{pdb_id}_{model_no}_{chain_combo}"

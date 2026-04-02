@@ -2,13 +2,13 @@
 requirements:
     - enough free space ~500GB
 example:
-    - python src/pipelines/download_pdb.py
+    - python app.py download_pdb
 functions:
  - download the latest pdb files
  - wrap the commands for running pipelines in multi-rocessing
 '''
 
-from helper import *
+from src.helper import *
 from bioomics import ProcessJson, PullPdb
 
 if __name__ == "__main__":
@@ -31,5 +31,5 @@ if __name__ == "__main__":
     
     # build json
     pdb_iter = PullPdb(raw_dir).iter_raw_pdb_args(args)
-    file_list = ProcessJson.iter_to_json(pdb_iter, list_dir, chunk_size=2_000)
+    file_list = ProcessJson.iter_to_json(pdb_iter, list_dir, chunk_size=1_000)
     print(f"\n{file_list}\n")

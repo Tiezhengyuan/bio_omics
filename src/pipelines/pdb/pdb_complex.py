@@ -11,19 +11,20 @@ function:
 '''
 from src.helper import *
 
-
-def antibody_antigen(args, meta):
+def antibody_antigen(meta):
     res = QueryComplex(params['verbose']).abag_combo2()
     for v in res.values():
         rec = (v['pdb_id'], v['combo_id'], v['chain_combo'], 
             v['chain_label'], 2, 'AbAg')
+        meta['antibody-antigen'] += 1
         yield rec
 
-def heavy_light_antigen(args, meta):
+def heavy_light_antigen(meta):
     res = QueryComplex(params['verbose']).abag_combo3()
     for v in res.values():
         rec = (v['pdb_id'], v['combo_id'], v['chain_combo'], 
             v['chain_label'], 3, 'HLAg')
+        meta['heavy-light-antigen'] += 1
         yield rec
 
 
@@ -34,10 +35,12 @@ if __name__ == "__main__":
     }
     UpdateComplex(params['table_name'], params['verbose']).empty_tables()
 
-    # antibody complex
-    pool = [antibody_antigen, heavy_light_antigen]
+    pool = [
+        # antibody complex
+        antibody_antigen, heavy_light_antigen,
+    ]
     for func in pool:
-        record_iter = func(params, meta)
+        record_iter = func(meta)
         bc = BuildComplex(record_iter, params['verbose'])
         bc.insert_batch_records(params['table_name'])
 

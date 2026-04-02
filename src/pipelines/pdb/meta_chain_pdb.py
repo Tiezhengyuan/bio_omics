@@ -1,7 +1,7 @@
 '''
 example: 
-    - parallel -j8 python src/pipelines/meta_chain_pdb.py ::: {0..117}
-    - python src/pipelines/meta_chain_pdb.py 0
+    - parallel -j8 python app.py meta_chain_pdb ::: {0..237}
+    - python app.py meta_chain_pdb 0
 functions:
     - retrieve pdb to pdb by chain
     - data are required by B-factor, DSSP analysis
@@ -9,11 +9,13 @@ note:
     - only include model.id=0 currently
 '''
 
-from helper import *
+from src.helper import *
 from bioomics import Pdb
 
-def retrieve_pdb(pdb_group, args, meta):
-    table_name = args['table_name']
+@header
+def retrieve_pdb(params, meta):
+    pdb_group = params['pdb_group']
+    table_name = params['table_name']
     query = f"""
         SELECT pdb_id, relative_path
         FROM meta_pdb
@@ -22,32 +24,32 @@ def retrieve_pdb(pdb_group, args, meta):
                 SELECT pdb_id FROM {table_name}
             );
     """
-    rows = QueryComplex(args['verbose']).list_data(query)
+    rows = QueryComplex(params['verbose']).list_data(query)
     meta['pdb_group'] = int(pdb_group)
     meta['rows'] += len(rows)
     print(f"{len(rows)} PDB files ready for processing...")
     return rows
 
-def pull_chain_pdb(rows, args, meta):
+def pull_chain_pdb(rows, params, meta):
     for row in rows:
         pdb_id = row['pdb_id']
-        pdb_file = os.path.join(args['pdb_dir'], row['relative_path'])
+        pdb_file = os.path.join(params['pdb_dir'], row['relative_path'])
         try:
-            p = Pdb(pdb_file, None, args['verbose'])
+            p = Pdb(pdb_file, None, params['verbose'])
             p.load_structure()
 
             model_chains = p.parse_model_chains()
             model_no = 0
             if model_no in model_chains:
-                endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id)
-                outdir = os.path.join(args['data_dir'], endpoint)
+                endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
+                outdir = os.path.join(params['data_dir'], endpoint)
                 Dir(outdir).init_dir()
 
                 for item in model_chains[model_no]:
                     chain_id = item['chain_id']
                     file_name = f'{chain_id}.pdb'
                     outfile = os.path.join(outdir, file_name)
-                    if args['overwrite'] or not os.path.isfile(outfile):
+                    if params['overwrite'] or not os.path.isfile(outfile):
                         chain_no = item['chain_no']
                         p.to_chain_pdb(model_no, [chain_no,], outfile)
                         meta['chains'] += 1
@@ -68,7 +70,8 @@ def pull_chain_pdb(rows, args, meta):
             yield pdb_id, None, None
 
 if __name__ == "__main__":
-    args = {
+    params = {
+        'pdb_group': sys.argv[1],
         'verbose': True,
         'overwrite': False,
         'chunk_size': 100,
@@ -76,14 +79,14 @@ if __name__ == "__main__":
         'data_dir': os.getenv("data_dir"),
         'table_name': 'meta_chain_pdb',
     }
-    pdb_group = sys.argv[1]
-    rows = retrieve_pdb(pdb_group, args, meta)
-    record_iter = pull_chain_pdb(rows, args, meta)
+    
+    rows = retrieve_pdb(params, meta)
+    record_iter = pull_chain_pdb(rows, params, meta)
     # insert
-    bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
-    bc.insert_batch_records(args['table_name'])
+    bc = BuildComplex(record_iter, params['verbose'], params['chunk_size'])
+    bc.insert_batch_records(params['table_name'])
 
     print("Try to validate files...")
-    validate_data(pdb_group, 'chain_pdb', args, meta)
+    validate_data('chain_pdb', params, meta)
 
-    print(meta)
+    footer(meta)

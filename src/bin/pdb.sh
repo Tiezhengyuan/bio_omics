@@ -1,31 +1,28 @@
 #! /usr/bin/bash
 
-PIPELINE_DIR=/home/yuan/bio/bio_omics/src/pipelines
-
 # synchronize raw data from PDB
-python ${PIPELINE_DIR}/download_pdb.py
-# python ${PIPELINE_DIR}/download_mmcif.py
+python app.py download_pdb
+# python app.py download_mmcif
 
 # PDB to pdb
-python ${PIPELINE_DIR}/pdb.py 
-# python ${PIPELINE_DIR}/put_pdb2.py
+python app.py pdb
+# python ${PIPELINE_DIR}/put_pdb2
 
 # pdb_files of PDB
-python ${PIPELINE_DIR}/meta_pdb.py
-# python ${PIPELINE_DIR}/put_meta_mmcif.py
+python app.py meta_pdb
+# python app.py put_meta_mmcif
 
 # require meta_pdb
-parallel -j8 python ${PIPELINE_DIR}/pdb_compound.py ::: {0..117}
-parallel -j8 python ${PIPELINE_DIR}/pdb_method.py ::: {0..117}
-parallel -j8 python ${PIPELINE_DIR}/pdb_keyword.py ::: {0..117}
-# parallel -j8 python ${PIPELINE_DIR}/put_chain.py ::: {0..117}
-parallel -j8 python ${PIPELINE_DIR}/pdb_chainid.py ::: {0..117}
+parallel -j8 python app.py pdb_compound ::: {0..237}
+parallel -j8 python app.py pdb_method ::: {0..237}
+parallel -j8 python app.py pdb_keyword ::: {0..237}
+# parallel -j8 python app.py put_chain ::: {0..237}
+parallel -j8 python app.py pdb_chainid ::: {0..237}
 
 # require pdb_chain
-parallel -j8 python ${PIPELINE_DIR}/pdb_chain_seq.py ::: {0..117}
-parallel -j8 python ${PIPELINE_DIR}/unique_chain_seq.py
-parallel -j8 python ${PIPELINE_DIR}/pdb_faa.py ::: {0..117}
-parallel -j8 python ${PIPELINE_DIR}/meta_chain_faa.py ::: {0..117}
-parallel -j8 python ${PIPELINE_DIR}/meta_chain_pdb.py ::: {0..117}
+parallel -j8 python app.py pdb_chain_seq ::: {0..237}
+parallel -j8 python app.py unique_chain_seq
+parallel -j8 python app.py pdb_faa ::: {0..237}
+parallel -j8 python app.py meta_chain_faa ::: {0..237}
+parallel -j8 python app.py meta_chain_pdb ::: {0..237}
 
-parallel -j8 python ${PIPELINE_DIR}/meta_combo2.py ::: {0..117}

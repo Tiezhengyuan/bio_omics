@@ -138,7 +138,7 @@ def copy_data(outdir):
         except Exception as e:
             print(f"ERROR: Synchronization between {outdir}, err={e}")
 
-def footer(params, meta):
+def footer(meta, params:dict={}):
     # update table meta_execute with end time
     if params.get('meta_execute'):
         UpdateComplex('meta_execute', params['verbose']).execute_end_time(params)

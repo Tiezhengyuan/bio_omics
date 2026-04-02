@@ -3,19 +3,19 @@
 requirements:
     - PDB raw data should be downloaded to the local
 example:
-    - python src/pipelines/pdb.py
+    - python app.py pdb
 function:
-    - build table pdb and insert data into table pdb
+    - build table pdb and insert data
 '''
 
-from helper import *
+from src.helper import *
 from bioomics import PullPdb
 
-def scan_raw_data(db_pdb_ids, args, meta):
-    raw_pdb_dir = os.path.join(args['pdb_dir'], args['data_format'])
+def scan_raw_data(db_pdb_ids, params, meta):
+    raw_pdb_dir = os.path.join(params['pdb_dir'], params['data_format'])
     pdb_path_dict = PullPdb(raw_pdb_dir).get_raw_pdb()
 
-    ud = UpdateComplex(args['table_name'], args['verbose'])
+    ud = UpdateComplex(params['table_name'], params['verbose'])
     for pdb_id in db_pdb_ids:
         if pdb_id in pdb_path_dict:
             del pdb_path_dict[pdb_id]
@@ -30,21 +30,20 @@ def scan_raw_data(db_pdb_ids, args, meta):
 
 
 if __name__ == "__main__":
-    args = {
+    params = {
         'verbose': True,
         'pdb_dir': os.getenv('pdb_dir'),
         'data_format': 'pdb',
         'table_name': 'pdb',
     }
     # get pdb in db
-    qc = QueryComplex(args['verbose'])
-    db_pdb_ids = qc.unique_values(args['table_name'], 'pdb_id')
+    qc = QueryComplex(params['verbose'])
+    db_pdb_ids = qc.unique_values(params['table_name'], 'pdb_id')
     meta['db_pdb'] = len(db_pdb_ids)
 
     # scan raw data
-    pdb_path_dict = scan_raw_data(db_pdb_ids, args, meta)
+    pdb_path_dict = scan_raw_data(db_pdb_ids, params, meta)
     pdb_files = pdb_path_dict.values()
-    BuildComplex(pdb_files, args['verbose']).insert_pdb()
+    BuildComplex(pdb_files, params['verbose']).insert_pdb()
 
-    print(meta)
-    print("Done. Great\n\n")
+    footer(meta)
