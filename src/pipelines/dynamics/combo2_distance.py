@@ -3,7 +3,7 @@ requirments:
     - PDB raw data
     - table meta_combo2, only calculate distance of two chains 
 example: 
-    - parallel -j8 python app.py combo2_distance ::: {0..117}
+    - parallel -j8 python app.py combo2_distance ::: {0..237}
     - python app.py combo2_distance 0
 functions:
     - calculate distance and analyze PPI
@@ -23,21 +23,23 @@ def retrieve_query(params, meta):
             AND P.relative_path IS NOT NULL
             AND S.combo_id IS NOT NULL
             AND S.combo_pdb IS NOT NULL
-            AND S.combo_id NOT IN(
+            AND S.combo_id IN(
+                SELECT combo_id FROM pdb_complex
+                EXCEPT
                 SELECT combo_id FROM {table_name}
-            );
-    """
+            )
+    ;"""
     rows = QueryComplex(params['verbose']).list_data(query)
     meta['rows'] = len(rows)
     print(f"Group {pdb_group}: Collect combo2 chains from {len(rows)} PDB ...")
     return rows
 
-def cal_dist(rows, params, meta):
+def cal_dist(rows, params, meta) -> tuple:
     for row in rows:
         pdb_id = row['pdb_id']
         endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
         outdir = os.path.join(params['data_dir'], endpoint)
-        Dir(outdir).init_dir()
+        Path(outdir).mkdir(parents=True, exist_ok=True)
 
         file_name =  f"{row['combo_id']}.pkl"
         pfile = os.path.join(outdir, file_name)
@@ -54,22 +56,26 @@ def cal_dist(rows, params, meta):
             meta['skip_cal_dist'] += 1
         
         # build record
-        relative_path = os.path.join(endpoint, file_name) if os.path.isfile(pfile) else None
-        yield (pdb_id, row['combo_id'], relative_path)
+        rec0 = (pdb_id, row['combo_id'])
+        rec1 = (None,) * 4
+        if os.path.isfile(pfile):
+            relative_path = os.path.join(endpoint, file_name)
+            p = DistanceAnalyze({'pickle_file': pfile})
+            dist_value, res1, res2 = p.get_distance(False, 0)
+            rec1 = (relative_path, dist_value, res1, res2)
+        yield rec0 + rec1
 
 
 if __name__ == "__main__":
-    params = {
-        'pdb_group': sys.argv[1],
-        'verbose': True,
+    params.update({
         'overwrite': False,
         'chunk_size': 20,
-        'data_dir': os.getenv("data_dir"),
         'table_name': 'combo2_distance',
         'dist_cutoff': 10,
         'span': 10,
-    }
+    })
     pdb_iter = retrieve_query(params, meta)
+
     # calculate atom distance
     record_iter = cal_dist(pdb_iter, params, meta)
 

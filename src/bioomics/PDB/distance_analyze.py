@@ -20,6 +20,14 @@ class DistanceAnalyze:
         self.dist_cutoff = float(args.get('dist_cutoff', 5))
         self.verbose = args.get('verbose', False)
 
+    def get_distance(self, pair:bool=False, rank_idx:int=0):
+        col = 'dist2' if pair is True else 'dist1'
+        dist = self.data[col].sort_values('value').iloc[rank_idx]
+        dist_value = round(dist['value'], 2)
+        res1 = f"{dist['aa']}-{dist['res_no']}"
+        res2 = f"{dist['pair_aa']}-{dist['pair_res_no']}"
+        return dist_value, res1, res2
+
     def distance_threshold(self):
         dist1 = np.round(self.data['dist1']['value'].sort_values())
         dist2 = np.round(self.data['dist2']['value'].sort_values())

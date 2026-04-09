@@ -15,21 +15,6 @@ if src_dir not in sys.path:
 
 from bioomics import BuildComplex
 
-# deprecated
-'''
-//
-CREATE TABLE pdb_chain(
-    chain_id        VARCHAR(20),
-    pdb_id          VARCHAR(10),
-    model_no        INT,
-    chain_no        VARCHAR(5),
-    chain_seq       TEXT,
-    CONSTRAINT pk_chain_pdb PRIMARY KEY (chain_id),
-    CONSTRAINT fk_chain_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
-);
-'''
-
 '''
 pdb -> meta_mmcif
     -> meta_pdb
@@ -103,10 +88,10 @@ CREATE TABLE pdb_keyword(
 //
 DROP TABLE IF EXISTS pdb_chainid;
 CREATE TABLE pdb_chainid(
-    chain_id        VARCHAR(20),
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     pdb_id          VARCHAR(10),
     model_no        INT,
-    chain_no        VARCHAR(5),
+    chain_no        VARCHAR(5) COLLATE utf8mb4_bin NOT NULL,
     idx             INT,
     UNIQUE(chain_id),
     CONSTRAINT fk_chainid_pdb FOREIGN KEY (pdb_id)
@@ -117,7 +102,7 @@ CREATE TABLE pdb_chainid(
 DROP TABLE IF EXISTS pdb_chain_seq;
 CREATE TABLE pdb_chain_seq(
     pdb_id          VARCHAR(10),
-    chain_id        VARCHAR(20),
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     first_chain_id  VARCHAR(20),
     pro_len         INT,
     chain_seq       TEXT,
@@ -129,7 +114,7 @@ CREATE TABLE pdb_chain_seq(
 DROP TABLE IF EXISTS meta_chain_faa;
 CREATE TABLE meta_chain_faa(
     pdb_id          VARCHAR(10),
-    chain_id        VARCHAR(20),
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     relative_path   VARCHAR(60),
     UNIQUE (pdb_id, chain_id),
     CONSTRAINT fk_faa_chain FOREIGN KEY (chain_id)
@@ -139,61 +124,68 @@ CREATE TABLE meta_chain_faa(
 DROP TABLE IF EXISTS meta_chain_pdb;
 CREATE TABLE meta_chain_pdb(
     pdb_id          VARCHAR(10),
-    chain_id        VARCHAR(20),
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     chain_pdb       VARCHAR(60),
     UNIQUE (pdb_id, chain_id),
     CONSTRAINT fk_pdb_chain FOREIGN KEY (chain_id)
         REFERENCES pdb_chainid(chain_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS meta_combo2;
-CREATE TABLE meta_combo2 (
+DROP TABLE IF EXISTS combo2;
+CREATE TABLE combo2 (
     pdb_id          VARCHAR(10),
-    combo_id        VARCHAR(40),
+    combo_id        VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
     chain_combo     VARCHAR(10),
     chain_pdbs      VARCHAR(120),
     combo_pdb       VARCHAR(60),
     combo_csv       VARCHAR(60),
     combo_fasta     VARCHAR(60),
-    CONSTRAINT fk_combo2 FOREIGN KEY (pdb_id)
+    UNIQUE(combo_id),
+    CONSTRAINT fk_combo2_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS meta_combo3;
-CREATE TABLE meta_combo3 (
+DROP TABLE IF EXISTS combo3;
+CREATE TABLE combo3 (
     pdb_id          VARCHAR(10),
-    combo_id        VARCHAR(40),
+    combo_id        VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
     chain_combo     VARCHAR(10),
     chain_pdbs      VARCHAR(120),
     combo_pdb       VARCHAR(60),
     combo_csv       VARCHAR(60),
     combo_fasta     VARCHAR(60),
-    CONSTRAINT fk_combo3 FOREIGN KEY (pdb_id)
+    UNIQUE(combo_id),
+    CONSTRAINT fk_combo3_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
-# //
-# DROP TABLE IF EXISTS meta_combo2_pdb;
-# CREATE TABLE meta_combo2_pdb(
-#     pdb_id          VARCHAR(10),
-#     model_no        INT,
-#     combo_id        VARCHAR(40),
-#     chain_combo     VARCHAR(10),
-#     bounded_pdb     VARCHAR(60),
-#     chain_pdbs      VARCHAR(60),
-#     CONSTRAINT fk_combo2_pdb FOREIGN KEY (pdb_id)
-#         REFERENCES pdb(pdb_id) ON DELETE CASCADE
-# );
-# //
-# DROP TABLE IF EXISTS meta_combo2_seq;
-# CREATE TABLE meta_combo2_seq(
-#     pdb_id          VARCHAR(10),
-#     model_no        INT,
-#     combo_id        VARCHAR(40),
-#     chain_combo     VARCHAR(10),
-#     relative_csv    VARCHAR(60),
-#     CONSTRAINT fk_combo2_seq FOREIGN KEY (pdb_id)
-#         REFERENCES pdb(pdb_id) ON DELETE CASCADE
-# );
+//
+DROP TABLE IF EXISTS combo4;
+CREATE TABLE combo4 (
+    pdb_id          VARCHAR(10),
+    combo_id        VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
+    chain_combo     VARCHAR(10),
+    chain_pdbs      VARCHAR(200),
+    combo_pdb       VARCHAR(60),
+    combo_csv       VARCHAR(60),
+    combo_fasta     VARCHAR(60),
+    UNIQUE(combo_id),
+    CONSTRAINT fk_combo4_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS combo5;
+CREATE TABLE combo5 (
+    pdb_id          VARCHAR(10),
+    combo_id        VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
+    chain_combo     VARCHAR(10),
+    chain_pdbs      VARCHAR(300),
+    combo_pdb       VARCHAR(60),
+    combo_csv       VARCHAR(60),
+    combo_fasta     VARCHAR(60),
+    UNIQUE(combo_id),
+    CONSTRAINT fk_combo5_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
 //
 DROP TABLE IF EXISTS pdb_faa;
 CREATE TABLE pdb_faa(
@@ -208,11 +200,14 @@ CREATE TABLE pdb_faa(
 DROP TABLE IF EXISTS pdb_complex;
 CREATE TABLE pdb_complex(
     pdb_id          VARCHAR(10),
-    combo_id        VARCHAR(40),
+    model_no        INT,
+    combo_id        VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
     chain_combo     VARCHAR(20),
-    chain_label     VARCHAR(100),
-    chains_num      INT,
+    chain_label     VARCHAR(50),
+    combo           INT,
+    chain_ids       VARCHAR(100),
     category        VARCHAR(20),
+    UNIQUE(combo_id, category),
     CONSTRAINT fk_pdb_complex_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );

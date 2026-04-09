@@ -20,21 +20,26 @@ TABLE_COLUMNS = {
     'pdb_faa': ['pdb_id', 'model_no', 'relative_faa'],
     'meta_chain_faa': ['pdb_id', 'chain_id', 'relative_path'],
     'meta_chain_pdb': ['pdb_id', 'chain_id', 'chain_pdb'],
-    'meta_combo2': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
+    'combo2': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
         'combo_pdb', 'combo_csv', 'combo_fasta'],
-    'meta_combo3': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
+    'combo3': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
+        'combo_pdb', 'combo_csv', 'combo_fasta'],
+    'combo4': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
+        'combo_pdb', 'combo_csv', 'combo_fasta'],
+    'combo5': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
         'combo_pdb', 'combo_csv', 'combo_fasta'],
 
     'meta_combo2_pdb': ['pdb_id', 'model_no', 'combo_id',
         'chain_combo', 'bounded_pdb', 'chain_pdbs'],
     'meta_combo2_seq': ['pdb_id', 'model_no', 'combo_id',
         'chain_combo', 'relative_csv'],
-    'pdb_complex': ['pdb_id', 'combo_id', 'chain_combo', 
-        'chain_label', 'chains_num', 'category'],
+    'pdb_complex': ['pdb_id', 'model_no', 'combo_id', 'chain_combo', 
+        'chain_label', 'combo', 'chain_ids', 'category'],
 
     #analyze
     'meta_bfactor': ['pdb_id', 'relative_pkl'],
-    'combo2_distance': ['pdb_id', 'combo_id', 'relative_pkl',],
+    'combo2_distance': ['pdb_id', 'combo_id', 'relative_pkl',\
+        'min_dist', 'min_res1', 'min_res2'],
     'pdb_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
     'dist_amber14': ['pdb_id', 'combo_id', 'relative_pkl'],
     'combo2_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
@@ -76,6 +81,10 @@ TABLE_COLUMNS = {
         'relaxed_pdb', 'original_energy', 'relaxed_energy',],
     'combo3_relaxed': ['pdb_id', 'combo_id', 'time0', 'fixed_pdb', 
         'relaxed_pdb', 'original_energy', 'relaxed_energy',],
+    'combo4_relaxed': ['pdb_id', 'combo_id', 'time0', 'fixed_pdb', 
+        'relaxed_pdb', 'original_energy', 'relaxed_energy',],
+    'combo5_relaxed': ['pdb_id', 'combo_id', 'time0', 'fixed_pdb', 
+        'relaxed_pdb', 'original_energy', 'relaxed_energy',],
 
     #align
     'meta_blastp5': ['pdb_id', 'model_no', 'relative_aln'],
@@ -95,17 +104,17 @@ TABLE_COLUMNS = {
         'j_gene', 'j_identity', 'aligned_seq',],
 
     #predict
-    'chain_alphafold': ['pdb_id', 'chain_id', 'endpoint', 'predicted_at',],
-    'combo2_alphafold': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
-    'combo3_alphafold': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
-    'chain_plddt': ['chain_id', 'relative_pdb', 'ranking', 
-        'predictor', 'avg_plddt', 'relative_pkl'],
-    'chain_afsum': ['chain_id', 'ranking', 'avg_plddt', 'avg_ptm',
+    'chain_alphafold': ['pdb_id', 'chain_id', 'endpoint', 'host', 'predicted_at',],
+    'chain_plddt': ['chain_id', 'relative_pdb', 'ranking', 'predictor', 
+        'avg_plddt', 'relative_pkl'],
+    'chain_af_summary': ['chain_id', 'ranking', 'avg_plddt', 'avg_ptm',
         'max_pae', 'relative_json', 'relaxed_pdb', 'unrelaxed_pdb'],
     'chain_rmsd': ['pdb_id','chain_id', 'rmsd', 'chain_status', 
         'native_pdb', 'model_pdb'],
     'chain_tmalign': ['pdb_id','chain_id', 'tm1', 'tm2', 'rmsd',
         'chain_status', 'native_pdb', 'model_pdb'],
+    'combo2_alphafold': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
+    'combo3_alphafold': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
 
 
     # uniprot
@@ -373,6 +382,16 @@ class BuildComplex(BuildDb):
         insert_query = f"""INSERT INTO {table_name}
             (pdb_id, chain_id, identity, seq, fragment, seq_from, seq_to)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        func = getattr(self.recorder, table_name)
+        self.insert(table_name, insert_query, func)
+
+    def insert_align_vregion(self) -> tuple:
+        table_name = 'align_vregion'
+        insert_query = f"""INSERT INTO {table_name}
+            (pdb_id, chain_id, allele_name, specie, gene_name, gene_family,
+                chain_type, isotype, evalue, bit_score, region_names)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)

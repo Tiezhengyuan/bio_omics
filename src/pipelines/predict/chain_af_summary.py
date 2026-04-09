@@ -2,18 +2,18 @@
 requirements:
     - table chain_alphafold
 example: 
-    - parallel -j8 python app.py chain_afsum ::: {0..117}
-    - python app.py chain_afsum 0
+    - parallel -j8 python app.py chain_af_summary ::: {0..237}
+    - python app.py chain_af_summary 0
 functions:
-    - retrieve summary of alphafold prediction to table chain_afsum
+    - retrieve summary of alphafold prediction to table chain_af_summary
 '''
 
 from src.helper import *
 from bioomics import ProcessJson
 
-def parse_data(row, args):
+def parse_data(row, params):
     res = {}
-    indir = os.path.join(args['predict_dir'], row['endpoint'])
+    indir = os.path.join(params['predict_dir'], row['endpoint'])
     for file_name in os.listdir(indir):
         path = os.path.join(indir, file_name)
         if 'rank_' in file_name:
@@ -34,33 +34,32 @@ def parse_data(row, args):
     return res
 
 @header
-def retrieve_rows(args, meta):
-    pdb_group = args['pdb_group']
-    table_name = args['table_name']
+def retrieve_rows(params, meta):
+    pdb_group = params['pdb_group']
+    table_name = params['table_name']
     query = f"""
         SELECT a.relaxed_pdb
         FROM {table_name}     a
         LEFT JOIN pdb_chainid c ON a.chain_id = c.chain_id
         LEFT JOIN meta_pdb    p ON c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
-            AND a.relative_pdb IS NOT NULL
+            AND a.relaxed_pdb IS NOT NULL
     ;"""
-    curr_rows = QueryComplex().list_data(query)
+    curr_rows = QueryComplex(params['verbose']).list_data(query)
     pdb_files = [i['relaxed_pdb'] for i in curr_rows]
 
     query = f"""
-        SELECT c.pdb_id, a.chain_id, a.endpoint
-        FROM chain_alphafold a
-        LEFT JOIN pdb_chainid c ON a.chain_id = c.chain_id
-        LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
+        SELECT a.pdb_id, a.chain_id, a.endpoint
+        FROM chain_alphafold  a
+        LEFT JOIN meta_pdb    p ON a.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND a.endpoint IS NOT NULL
     ;"""
-    rows = QueryComplex().list_data(query)
+    rows = QueryComplex(params['verbose']).list_data(query)
     meta['chains'] = len(rows)
     print(f"Filter {len(rows)} PDB data...")
     for row in rows:
-        ranked = parse_data(row, args)
+        ranked = parse_data(row, params)
         for ranking, log in ranked.items():
             relaxed_pdb = log.get('relaxed_pdb')
             if relaxed_pdb and relaxed_pdb not in pdb_files:
@@ -75,16 +74,15 @@ def retrieve_rows(args, meta):
                     log.get('unrelaxed_pdb'),
                 )
         meta['records'] += len(ranked)
+
  
 if __name__ == "__main__":
-    args = {
-        'pdb_group': sys.argv[1],
-        'verbose': True,
-        'predict_dir': os.getenv('predict_dir'),
-        'table_name': 'chain_afsum',
-    }
-    rows = retrieve_rows(args, meta)
-    bc = BuildComplex(rows, args['verbose'])
-    bc.insert_batch_records(args['table_name'])
+    params.update({
+        'chunk_size': 5,
+        'table_name': 'chain_af_summary',
+    })
+    rows = retrieve_rows(params, meta)
+    bc = BuildComplex(rows, params['verbose'], params['chunk_size'])
+    bc.insert_batch_records(params['table_name'])
 
     footer(meta)

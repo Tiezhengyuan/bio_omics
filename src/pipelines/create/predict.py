@@ -24,14 +24,15 @@ CREATE TABLE chain_alphafold (
     pdb_id              VARCHAR(10),
     chain_id            VARCHAR(20),
     endpoint            VARCHAR(60),
+    host                VARCHAR(10),
     predicted_at        DATETIME,
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (chain_id),
     CONSTRAINT fk_chain_alpha_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
-DROP TABLE IF EXISTS chain_afsum;
-CREATE TABLE chain_afsum (
+DROP TABLE IF EXISTS chain_af_summary;
+CREATE TABLE chain_af_summary (
     predict_id      INT AUTO_INCREMENT PRIMARY KEY,
     chain_id        VARCHAR(20),
     ranking         INT,

@@ -3,22 +3,15 @@
 requirements:
     - view_pdb_chain
 example:
-    - python src/pipelines/protein_pdb.py
+    - python app.py protein_pdb
 function:
     - put pdb sequences into table pro_seq and pro_source
 '''
-from collections import defaultdict
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
+from src.helper import *
 
-from bioomics import BuildComplex, QueryComplex
-
-def pull_seq(min_len, max_len, args, meta):
-    table_name = args['table_name']
-    qc = QueryComplex(args['verbose'])
+def pull_seq(min_len, max_len, params, meta):
+    table_name = params['table_name']
+    qc = QueryComplex(params['verbose'])
     query = f'''
         SELECT chain_seq AS seq
         FROM {table_name}
@@ -43,8 +36,8 @@ def pull_seq(min_len, max_len, args, meta):
             rec = (row['id'], row['prefix'], pro_len, row['seq'],)
             yield rec
 
-def pull_id(min_len, max_len, args, meta):
-    table_name = args['table_name']
+def pull_id(min_len, max_len, params, meta):
+    table_name = params['table_name']
     query = f'''
         WITH tmp_chain AS (
             SELECT chain_id, chain_seq
@@ -64,32 +57,30 @@ def pull_id(min_len, max_len, args, meta):
         LEFT JOIN protein_seq S
         ON C.chain_seq = S.pro_seq;
     '''
-    rows = QueryComplex(args['verbose']).list_data(query)
+    rows = QueryComplex(params['verbose']).list_data(query)
     meta['num_id'] = len(rows)
     for row in rows:
         rec = (row['pro_id'], table_name, row['chain_id'])
         yield rec
         
 if __name__ == "__main__":
-    meta = defaultdict(int)
-    args = {
-        'verbose': True,
+    params.update({
         'chunk_size': 500,
         'table_name': 'pdb_chain_seq',
-    }
+    })
     for min_len in range(8, 5000, 50):
         max_len = min_len + 50
         meta['min_len'] = min_len
         meta['max_len'] = max_len
 
         # pull chain_seq and update pro_seq
-        seq_iter = pull_seq(min_len, max_len, args, meta)
-        bc = BuildComplex(seq_iter, args['verbose'], args['chunk_size'])
+        seq_iter = pull_seq(min_len, max_len, params, meta)
+        bc = BuildComplex(seq_iter, params['verbose'], params['chunk_size'])
         bc.insert_protein_seq()
 
         # pull chain_id and update pro_source
-        id_iter = pull_id(min_len, max_len, args, meta)
-        bc = BuildComplex(id_iter, args['verbose'], args['chunk_size'])
+        id_iter = pull_id(min_len, max_len, params, meta)
+        bc = BuildComplex(id_iter, params['verbose'], params['chunk_size'])
         bc.insert_protein_source()
     
-        print(meta)
+        footer(meta)

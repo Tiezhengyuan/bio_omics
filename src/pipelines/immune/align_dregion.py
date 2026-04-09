@@ -4,7 +4,7 @@ requirements:
     - table meta_faa
     - igblastp ready
 example:
-    - parallel -j4 python app.py align_dregion ::: {0..117}
+    - parallel -j4 python app.py align_dregion ::: {0..237}
     - python app.py align_dregion 0
 function:
     - build table pdb and insert D-region into table align_dregion
@@ -69,17 +69,14 @@ def run(row_iter, meta):
             yield rec
 
 if __name__ == "__main__":
-    params = {
-        'pdb_group': sys.argv[1],
-        'verbose': True,
-        'data_dir': os.getenv('data_dir'),
+    params.update({
         'table_name': 'align_dregion',
-    }
+    })
     print(f"Try to insert data into {params['table_name']}...")
     row_iter = retrieve(params, meta)
     record_iter = run(row_iter, meta)
     bc = BuildComplex(record_iter, params['verbose'])
     bc.insert_batch_records(params['table_name'])
 
-    print(meta)
+    footer(meta)
 

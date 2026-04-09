@@ -96,14 +96,14 @@ class UpdateComplex(UpdateDb):
         print(f"{self.table_name}.{col_name}: succeed={n}, unchanged={m}")
 
     def update_chain_seq(self, data:list):
-        update_query = f"""
+        query = f"""
             UPDATE {self.table_name}
             SET first_chain_id = %s
             WHERE pdb_id = %s AND chain_id = %s
         """
         n,m=0,0
         for rec in data:
-            r = self.execute_update(update_query, rec)
+            r = self.execute_update(query, rec)
             if r:
                 n+= 1
             else:

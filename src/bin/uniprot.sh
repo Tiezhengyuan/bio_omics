@@ -1,6 +1,5 @@
 #! /usr/bin/bash
-
-PIPELINE_DIR=/home/yuan/bio/bio_omics/src/pipelines
+APP=/home/yuan/bio/bio_omics/app.py
 
 # load uniprot_acc
 python ${PIPELINE_DIR}/uniprot.py
@@ -21,3 +20,10 @@ python ${PIPELINE_DIR}/uniprot_alphafold_plddt.py
 
 # RMSD between chain pdb and uniprot prediction by alphafold
 parallel -j4 python ${PIPELINE_DIR}/uniprot_alphafold_rmsd.py ::: {0..46}
+
+
+echo 'Data from Uniprot...'
+# python ${APP} protein_uniprot
+
+
+

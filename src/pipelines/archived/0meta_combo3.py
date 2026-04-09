@@ -34,7 +34,7 @@ def retrieve_data(params, meta):
                 SELECT pdb_id FROM {table_name}
             )
             AND C.pdb_id IN (
-                SELECT pdb_id FROM pdb_complex
+                SELECT pdb_id FROM view_antibody
             )
     ;"""
     df = QueryComplex(params['verbose']).list_data(query, True)
@@ -124,15 +124,11 @@ def build_data(input_iter, params, meta):
 
 ##################################
 if __name__ == "__main__":
-    params = {
-        'pdb_group': sys.argv[1],
-        'verbose': True,
+    params.update({
         'overwrite': False,
-        'pdb_dir': os.getenv('pdb_dir'),
-        'data_dir': os.getenv('data_dir'),
         'table_name': 'meta_combo3',
         'combo': 3,
-    }
+    }) 
 
     input_iter = retrieve_data(params, meta)
     record_iter = build_data(input_iter, params, meta)

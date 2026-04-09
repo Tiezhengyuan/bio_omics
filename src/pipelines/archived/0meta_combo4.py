@@ -3,8 +3,8 @@ requirements:
     - The table meta_pdb is ready.
     - meta_chain_pdb is ready
 example:
-    - parallel -j8 python app.py meta_combo2 ::: {0..237}
-    - python app.py meta_combo2 0
+    - parallel -j8 python app.py meta_combo4 ::: {0..237}
+    - python app.py meta_combo4 0
 function:
     - split PDB of complex to paired chains PDB.
     - export complex csv and fasta for structure predication
@@ -32,6 +32,9 @@ def retrieve_data(params, meta):
             AND I.model_no = 0
             AND C.pdb_id NOT IN (
                 SELECT pdb_id FROM {table_name}
+            )
+            AND C.pdb_id IN (
+                SELECT pdb_id FROM view_antibody
             )
     ;"""
     df = QueryComplex(params['verbose']).list_data(query, True)
@@ -115,22 +118,16 @@ def build_data(input_iter, params, meta):
                 os.path.isfile(fasta_file) else None
             rec = (pdb_id, combo_id, chain_combo, chain_pdbs, \
                 bounded_pdb, complex_csv, complex_fasta)
-            if params['verbose']:
-                print(params['pdb_group'], rec)
             yield rec
 
 ##################################
 if __name__ == "__main__":
-    params = {
-        'pdb_group': sys.argv[1],
-        'verbose': True,
+    params.update({
         'overwrite': False,
-        'chunk_size': 100,
-        'pdb_dir': os.getenv('pdb_dir'),
-        'data_dir': os.getenv('data_dir'),
-        'table_name': 'meta_combo2',
-        'combo': 2,
-    }
+        'table_name': 'meta_combo4',
+        'combo': 4,
+    }) 
+
     input_iter = retrieve_data(params, meta)
     record_iter = build_data(input_iter, params, meta)
     bc = BuildComplex(record_iter, params['verbose'])

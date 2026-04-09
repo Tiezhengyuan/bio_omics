@@ -6,22 +6,24 @@ import json
 class ProcessJson:
             
     @staticmethod
-    def load_json(infile):
+    def load_json(infile, default=None):
+        if default is None:
+            default = {}
         try:
             with open(infile, 'r') as f:
                 return json.load(f)
         except Exception as e:
-            pass
-        return {}
+            print(f"Failure: can't read {infile}, error={e}")
+        return default
 
     @staticmethod
-    def save_json(data, outfile):
+    def save_json(data, outfile) -> bool:
         try:
             with open(outfile, 'w') as f:
                 json.dump(data, f, indent=4, sort_keys=True)
             return True
         except Exception as e:
-            pass
+            print(f"Failure: can't write {outfile}, error={e}")
         return False
 
     @staticmethod

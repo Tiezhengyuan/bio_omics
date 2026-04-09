@@ -43,25 +43,25 @@ def parse_seq(seq_dict, params, meta):
     for row in rows:
         seq = row['chain_seq']
         prefix = seq[:3]
+        rec = None
         if prefix in seq_dict and seq in seq_dict[prefix]:
             meta['dup_seq'] += 1
-            yield seq_dict[prefix][seq], row['pdb_id'], row['chain_id']
+            rec = (seq_dict[prefix][seq], row['pdb_id'], row['chain_id'])
         else:
             meta['new_seq'] += 1
             if prefix not in seq_dict:
                 seq_dict[prefix] = defaultdict()
             seq_dict[prefix][seq] = row['chain_id']
             rec = row['chain_id'], row['pdb_id'], row['chain_id']
-            if params['verbose']:
-                print(rec)
-            yield rec
+        if params['verbose']:
+            print(rec)
+        yield rec
 
 ##################################
 if __name__ == "__main__":
-    params = {
-        'verbose': True,
+    params.update({
         'table_name': 'pdb_chain_seq',
-    }
+    })
 
     # get unique sequences with first_chain_id
     seq_dict = unique_seqs(params, meta)
@@ -70,6 +70,7 @@ if __name__ == "__main__":
     data = parse_seq(seq_dict, params, meta)
 
     print(f"Try to update table {params['table_name']}...")
-    UpdateComplex(params['verbose']).update_chain_seq(data)
+    c = UpdateComplex(params['table_name'], params['verbose'])
+    c.update_chain_seq(data)
 
     footer(meta)

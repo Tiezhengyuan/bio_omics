@@ -3,18 +3,19 @@
 requirements:
     - table meta_pdb, pdb_chainid
 example:
-    - parallel -j4 python src/pipelines/pdb_chain_type.py ::: {0..117}
-    - python src/pipelines/pdb_chain_type.py 0
+    - parallel -j4 python app.py pdb_chain_type ::: {0..237}
+    - python app.py pdb_chain_type 0
 function:
     - fix pdb files
     - insert data into table pdb_chain_type
 '''
 
-from helper import *
+from src.helper import *
 
-def retrieve_pdb(args, meta):
-    pdb_group = args['pdb_group']
-    table_name = args['table_name']
+@header
+def retrieve_pdb(params, meta):
+    pdb_group = params['pdb_group']
+    table_name = params['table_name']
     query = f"""
         SELECT pdb_id, relative_path
         FROM meta_pdb
@@ -23,21 +24,21 @@ def retrieve_pdb(args, meta):
                 SELECT pdb_id FROM {table_name}
             );
     """
-    rows = QueryComplex(args['verbose']).list_data(query)
+    rows = QueryComplex(params['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
     meta['pdb_group'] = int(pdb_group)
     meta['rows'] += len(rows)
     for row in rows:
-        pdb_file = os.path.join(args['pdb_dir'], row['relative_path'])
+        pdb_file = os.path.join(params['pdb_dir'], row['relative_path'])
         if os.path.isfile(pdb_file):
             row['pdb_file'] = pdb_file
             yield row
 
-def detect_chain_type(rows, args, meta):
+def detect_chain_type(rows, params, meta):
     for row in rows:
         pdb_id = row['pdb_id']
         meta['pdb_record'] += 1
-        p = Pdb(row['pdb_file'], None, args['verbose'])
+        p = Pdb(row['pdb_file'], None, params['verbose'])
         p.load_structure()
 
         chains = p.parse_chains()
@@ -56,18 +57,15 @@ def detect_chain_type(rows, args, meta):
 
 
 if __name__ == "__main__":
-    args = {
-        'verbose': True,
+    params.update({
         'chunk_size': 50,
-        'pdb_dir': os.getenv('pdb_dir'),
         'table_name': 'pdb_chain_type',
-    }
-    args['pdb_group'] = sys.argv[1]
-    rows = retrieve_pdb(args, meta)
+    })
+    rows = retrieve_pdb(params, meta)
 
     # retrieve chain types
-    record_iter = detect_chain_type(rows, args, meta)
-    bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
-    bc.insert_batch_records(args['table_name'])
+    record_iter = detect_chain_type(rows, params, meta)
+    bc = BuildComplex(record_iter, params['verbose'], params['chunk_size'])
+    bc.insert_batch_records(params['table_name'])
 
-    print(meta)
+    footer(meta)

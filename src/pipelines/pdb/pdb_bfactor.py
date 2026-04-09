@@ -3,16 +3,18 @@ requirements:
     - bfactor.pkl
     - table meta_bfactor
 example: 
-    - parallel -j4 python src/pipelines/pdb_bfactor.py ::: {0..117}
-    - python src/pipelines/pdb_bfactor.py 0
+    - parallel -j4 python app.py pdb_bfactor ::: {0..237}
+    - python app.py pdb_bfactor 0
 functions:
     - put average bfactor to table pdb_bfactor
 '''
 
-from helper import *
+from src.helper import *
 
-def retrieve_pdb(pdb_group, args, meta):
-    table_name = args['table_name']
+@header
+def retrieve_pdb(params, meta):
+    pdb_group = params['pdb_group']
+    table_name = params['table_name']
     query = f"""
         SELECT B.pdb_id, B.relative_pkl
         FROM meta_bfactor B, meta_pdb P
@@ -24,27 +26,24 @@ def retrieve_pdb(pdb_group, args, meta):
             );
     """
     # each record must have pdb_id and pdb_file
-    rows = QueryComplex(args['verbose']).list_data(query)
+    rows = QueryComplex(params['verbose']).list_data(query)
     print(f"{len(rows)} files ready...")
     meta['pdb_group'] = int(pdb_group)
     meta['rows'] += len(rows)
     for row in rows:
-        row['pickle_file'] = os.path.join(args['data_dir'], row['relative_pkl'])
+        row['pickle_file'] = os.path.join(params['data_dir'], row['relative_pkl'])
         if os.path.isfile(row['pickle_file']):
             yield row
 
 if __name__ == "__main__":
-    args = {
-        'verbose': True,
-        'data_dir': os.getenv('data_dir'),
+    params.update({
         'table_name': 'pdb_bfactor',
-    }
-    pdb_group = sys.argv[1]
-    args_iter = retrieve_pdb(pdb_group, args, meta)
+    })
+    params_iter = retrieve_pdb(params, meta)
 
     # put bfactor into table
-    print(f"Try put meta data to {args['table_name']}...")
-    bc = BuildComplex(args_iter, args['verbose'])
+    print(f"Try put meta data to {params['table_name']}...")
+    bc = BuildComplex(params_iter, params['verbose'])
     bc.insert_pdb_bfactor()
 
-    print(meta)
+    footer(meta)

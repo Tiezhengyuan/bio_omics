@@ -58,45 +58,9 @@ CREATE TABLE relaxed_pdb_amber14 (
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS relaxed_amber14_chain;
-CREATE TABLE relaxed_amber14_chain (
-    pdb_id              VARCHAR(10),
-    chain_id            VARCHAR(20),
-    model_no            INT,
-    chain_no            VARCHAR(5),
-    relative_pdb        VARCHAR(50),
-    UNIQUE (pdb_id, chain_id),
-    CONSTRAINT fk_relaxed_amber14_chain FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
-//
-DROP TABLE IF EXISTS relaxed_amber14_combo2;
-CREATE TABLE relaxed_amber14_combo2 (
-    pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(40),
-    model_no            INT,
-    chain_combo         VARCHAR(20),
-    endpoint_prefix     VARCHAR(80),
-    UNIQUE (combo_id),
-    CONSTRAINT fk_relaxed_amber14_combo2 FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
-//
-DROP TABLE IF EXISTS relaxed_amber14_combo3;
-CREATE TABLE relaxed_amber14_combo3 (
-    pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(40),
-    model_no            INT,
-    chain_combo         VARCHAR(20),
-    endpoint_prefix     VARCHAR(80),
-    UNIQUE (combo_id),
-    CONSTRAINT fk_relaxed_amber14_combo3 FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
-//
 DROP TABLE IF EXISTS chain_relaxed_amber14;
 CREATE TABLE chain_relaxed_amber14 (
-    chain_id            VARCHAR(20),
+    chain_id            VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     original_energy     VARCHAR(50),
     relaxed_energy      VARCHAR(50),
     endpoint            VARCHAR(80),
@@ -108,7 +72,7 @@ CREATE TABLE chain_relaxed_amber14 (
 DROP TABLE IF EXISTS meta_chain_relaxed;
 CREATE TABLE meta_chain_relaxed (
     pdb_id              VARCHAR(10),
-    chain_id            VARCHAR(20),
+    chain_id            VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     time0               DATETIME,
     fixed_pdb           VARCHAR(80),
     relaxed_pdb         VARCHAR(80),
@@ -124,7 +88,7 @@ CREATE TABLE meta_chain_relaxed (
 DROP TABLE IF EXISTS combo2_relaxed;
 CREATE TABLE combo2_relaxed (
     pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(40),
+    combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
     time0               DATETIME,
     fixed_pdb           VARCHAR(80),
     relaxed_pdb         VARCHAR(80),
@@ -139,7 +103,7 @@ CREATE TABLE combo2_relaxed (
 DROP TABLE IF EXISTS combo3_relaxed;
 CREATE TABLE combo3_relaxed (
     pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(40),
+    combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
     time0               DATETIME,
     fixed_pdb           VARCHAR(80),
     relaxed_pdb         VARCHAR(80),
@@ -148,6 +112,36 @@ CREATE TABLE combo3_relaxed (
     created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (combo_id),
     CONSTRAINT fk_combo3_relaxed_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS combo4_relaxed;
+CREATE TABLE combo4_relaxed (
+    pdb_id              VARCHAR(10),
+    combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
+    time0               DATETIME,
+    fixed_pdb           VARCHAR(80),
+    relaxed_pdb         VARCHAR(80),
+    original_energy     VARCHAR(60),
+    relaxed_energy      VARCHAR(60),
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (combo_id),
+    CONSTRAINT fk_combo4_relaxed_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS combo5_relaxed;
+CREATE TABLE combo5_relaxed (
+    pdb_id              VARCHAR(10),
+    combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
+    time0               DATETIME,
+    fixed_pdb           VARCHAR(80),
+    relaxed_pdb         VARCHAR(80),
+    original_energy     VARCHAR(60),
+    relaxed_energy      VARCHAR(60),
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (combo_id),
+    CONSTRAINT fk_combo5_relaxed_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 """
@@ -159,3 +153,43 @@ if __name__ == "__main__":
         res = bc.create_table(query)
         if res is None:
             print(f"ERROR. Check the above SQL: {query}\n\n")
+
+
+'''
+# //
+# DROP TABLE IF EXISTS relaxed_amber14_chain;
+# CREATE TABLE relaxed_amber14_chain (
+#     pdb_id              VARCHAR(10),
+#     chain_id            VARCHAR(20),
+#     model_no            INT,
+#     chain_no            VARCHAR(5),
+#     relative_pdb        VARCHAR(50),
+#     UNIQUE (pdb_id, chain_id),
+#     CONSTRAINT fk_relaxed_amber14_chain FOREIGN KEY (pdb_id)
+#         REFERENCES pdb(pdb_id) ON DELETE CASCADE
+# );
+# //
+# DROP TABLE IF EXISTS relaxed_amber14_combo2;
+# CREATE TABLE relaxed_amber14_combo2 (
+#     pdb_id              VARCHAR(10),
+#     combo_id            VARCHAR(40),
+#     model_no            INT,
+#     chain_combo         VARCHAR(20),
+#     endpoint_prefix     VARCHAR(80),
+#     UNIQUE (combo_id),
+#     CONSTRAINT fk_relaxed_amber14_combo2 FOREIGN KEY (pdb_id)
+#         REFERENCES pdb(pdb_id) ON DELETE CASCADE
+# );
+# //
+# DROP TABLE IF EXISTS relaxed_amber14_combo3;
+# CREATE TABLE relaxed_amber14_combo3 (
+#     pdb_id              VARCHAR(10),
+#     combo_id            VARCHAR(40),
+#     model_no            INT,
+#     chain_combo         VARCHAR(20),
+#     endpoint_prefix     VARCHAR(80),
+#     UNIQUE (combo_id),
+#     CONSTRAINT fk_relaxed_amber14_combo3 FOREIGN KEY (pdb_id)
+#         REFERENCES pdb(pdb_id) ON DELETE CASCADE
+# );
+'''

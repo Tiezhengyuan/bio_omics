@@ -10,17 +10,29 @@ function:
     - insert data into table pdb_complex
 '''
 from src.helper import *
+from bioomics import QueryAntibody
 
+# dimer
+def heav_light(meta):
+    res = QueryAntibody(params['verbose']).combo2_heavy_light()
+    for v in res.values():
+        rec = (v['pdb_id'], v['combo_id'], v['chain_combo'], 
+            v['chain_label'], 2, 'antibody')
+        meta['heavy-light'] += 1
+        yield rec
+
+#dimer
 def antibody_antigen(meta):
-    res = QueryComplex(params['verbose']).abag_combo2()
+    res = QueryAntibody(params['verbose']).combo2_abag()
     for v in res.values():
         rec = (v['pdb_id'], v['combo_id'], v['chain_combo'], 
             v['chain_label'], 2, 'AbAg')
         meta['antibody-antigen'] += 1
         yield rec
 
+#trimer
 def heavy_light_antigen(meta):
-    res = QueryComplex(params['verbose']).abag_combo3()
+    res = QueryAntibody(params['verbose']).combo3_heavy_light_antigen()
     for v in res.values():
         rec = (v['pdb_id'], v['combo_id'], v['chain_combo'], 
             v['chain_label'], 3, 'HLAg')
@@ -37,7 +49,7 @@ if __name__ == "__main__":
 
     pool = [
         # antibody complex
-        antibody_antigen, heavy_light_antigen,
+        heav_light, antibody_antigen, heavy_light_antigen,
     ]
     for func in pool:
         record_iter = func(meta)

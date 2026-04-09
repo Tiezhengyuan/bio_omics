@@ -4,8 +4,8 @@ requirements:
     - table meta_faa, meta_pdb
     - blastp database
 example: 
-    - parallel -j4 python src/pipelines/blastp_uniprot.py ::: {0..117}
-    - python src/pipelines/blastp_uniprot.py 0
+    - parallel -j4 python app.py blastp_uniprot ::: {0..237}
+    - python app.py blastp_uniprot 0
 functions:
     - blastp against uniprot_sprot
     - put aln_file into meta_blastp5
@@ -13,10 +13,12 @@ note:
     - only consider model.id=0
 '''
 
-from helper import *
+from src.helper import *
 from bioomics import ProcessBlast
 
-def retrieve(pdb_group, args, meta):
+@header
+def retrieve(args, meta):
+    pdb_group = args['pdb_group']
     table_name = args['table_name']
     query = f"""
         SELECT F.pdb_id, F.model_no, F.relative_faa
@@ -30,7 +32,6 @@ def retrieve(pdb_group, args, meta):
             );
     """
     rows = QueryComplex(args['verbose']).list_data(query)
-    meta['pdb_group'] = int(pdb_group)
     meta['rows'] = len(rows)
     return rows
 
@@ -67,6 +68,7 @@ def run(rows, args, meta):
 
 if __name__ == "__main__":
     args = {
+        'pdb_group': sys.argv[1],
         'verbose': True,
         'overwrite': True,
         'data_dir': os.getenv('data_dir'),
@@ -76,8 +78,7 @@ if __name__ == "__main__":
         'outfmt': 5,
     }
     # collect query
-    pdb_group = sys.argv[1]
-    rows = retrieve(pdb_group, args, meta)
+    rows = retrieve(args, meta)
 
     # blastp alignment
     record_iter = run(rows, args, meta)
@@ -86,4 +87,4 @@ if __name__ == "__main__":
     bc = BuildComplex(record_iter, args['verbose'], args['chunk_size'])
     bc.insert_batch_records(args['table_name'])
 
-    print(meta)
+    footer(meta)

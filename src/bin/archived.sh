@@ -1,11 +1,9 @@
 #! /usr/bin/bash
-# example: bash src/bin/pdb_relaxe.sh /home/yuan/bio/bio_omics/src/pipelines
 
-PIPELINE_DIR=$1
+echo "Try to integrate unique protein sequences..."
 
-#
-parallel -j8 python app.py meta_combo2 ::: {0..237}
-parallel -j8 python app.py meta_combo3 ::: {0..237}
+
+
 
 # fix pdb
 parallel -j8 python ${PIPELINE_DIR}/fixed_pdb.py ::: {0..117}
@@ -26,6 +24,15 @@ parallel -j8 python ${PIPELINE_DIR}/relaxed_amber14_chain.py ::: {0..117}
 # relax chain
 parallel -j8 python ${PIPELINE_DIR}/chain_relaxed_amber14.py ::: {0..117}
 
-# fix + relax
-parallel -j8 python ${PIPELINE_DIR}/meta_chain_relaxed.py ::: {0..117}
-parallel -j8 python ${PIPELINE_DIR}/combo2_relaxed.py ::: {0..117}
+
+
+
+
+# RMSD
+parallel -j8 python ${APP_DIR}/app.py equal_seq_rmsd ::: {0..117}
+
+#contacts
+parallel -j8 python ${APP_DIR}/app.py combo2_contacts ::: {0..117}
+
+# antibody numbering
+parallel -j8 python ${APP_DIR}/app.py anarci ::: {0..117}

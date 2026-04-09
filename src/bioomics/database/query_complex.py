@@ -204,138 +204,6 @@ class QueryComplex(QueryDb):
                 res[chain_id] = pd.DataFrame(sub)
         return res
 ###############################
-    def ab_chain_no(self) -> dict:
-        query = """
-            SELECT pdb_id, chain_no, chain_type FROM view_antibody
-            WHERE model_no = 0
-        ;"""
-        res = {}
-        for row in self.list_data(query):
-            pdb_id, chain_no, chain_type = row['pdb_id'], row['chain_no'], row['chain_type']
-            if pdb_id not in res:
-                res[pdb_id] = {}
-            res[pdb_id][chain_no] = chain_type
-        return res
-
-    def ab_combo2(self) -> dict:
-        chain_no_pool = self.ab_chain_no()
-        res = []
-        query = """
-            SELECT pdb_id, combo_id, chain_combo
-            FROM meta_combo2
-            WHERE combo_pdb is not null
-        ;"""
-        rows = self.list_data(query)
-        for row in rows:
-            pdb_id = row['pdb_id']
-            if pdb_id in chain_no_pool:
-                ab_chain_no = set(list(chain_no_pool[pdb_id]))
-                combo_chain_no = set(row['chain_combo'].split('-'))
-                inter = combo_chain_no.intersection(ab_chain_no)
-                if inter:
-                    row['ab_chain_no'] = '-'.join(list(inter))
-                    res.append(row)
-        return pd.DataFrame(res)
-
-    def abag_combo2(self) -> dict:
-        chain_no_pool = self.ab_chain_no()
-        res = {}
-        query = """
-            SELECT pdb_id, combo_id, chain_combo
-            FROM meta_combo2
-            WHERE combo_pdb is not null
-        ;"""
-        rows = self.list_data(query)
-        for row in rows:
-            pdb_id = row['pdb_id']
-            if pdb_id in chain_no_pool:
-                combo_id = row['combo_id']
-                ab_chain_no = list(chain_no_pool[pdb_id])
-                chain1, chain2 = row['chain_combo'].split('-')
-                # one antibody and one antigen
-                if chain1 in ab_chain_no:
-                    if chain2 not in ab_chain_no:
-                        row['ab_chain_no'] = chain1
-                        row['chain_label'] = 'antibody-target'
-                        res[combo_id] = row
-                else:
-                    if chain2 in ab_chain_no:
-                        row['ab_chain_no'] = chain2
-                        row['chain_label'] = 'target-antibody'
-                        res[combo_id] = row
-        return res
-
-    def abag_combo3(self) -> dict:
-        chain_no_pool = self.ab_chain_no()
-        res = {}
-        query = """
-            SELECT pdb_id, combo_id, chain_combo
-            FROM meta_combo3
-            WHERE combo_pdb is not null
-        ;"""
-        rows = self.list_data(query)
-        for row in rows:
-            pdb_id = row['pdb_id']
-            if pdb_id in chain_no_pool:
-                combo_id = row['combo_id']
-                chainno_chaintype = chain_no_pool[pdb_id]
-                chain_no = row['chain_combo'].split('-')
-                chain_labels = [chainno_chaintype.get(c, 'antigen') for c in chain_no]
-                # trimer: Heavy + Kappa/Lambda + antigen
-                if 'H' in chain_labels and ('antigen' in chain_labels) \
-                    and ('K' in chain_labels or 'L' in chain_labels):
-                    row['chain_label'] = '-'.join(chain_labels)
-                    res[combo_id] = row
-        return res
-    
-    def ab_heavy_seq(self):
-        query = f"""
-            SELECT DISTINCT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq
-            FROM view_antibody_imgt
-            WHERE chain_type = 'H'
-        ;"""
-        rows = self.list_data(query)
-        return rows
-
-    def ab_light_seq(self):
-        query = f"""
-            SELECT chain_id, pdb_id, uniprot_acc, allele_name, pro_seq
-            FROM view_antibody_imgt
-            WHERE chain_type IN ('L', 'K')
-        ;"""
-        rows = self.list_data(query)
-        return rows
-
-    def ab_seq(self, chain_type:str=None):
-        query = f"""
-            SELECT chain_id AS id, pdb_id, chain_seq As seq
-            FROM view_antibody
-            WHERE chain_seq IS NOT NULL
-                AND chain_type IN {chain_type};
-        """
-        rows = self.list_data(query)
-        return rows
-    
-    def ab_uniprot(self):
-        query = """
-            SELECT * FROM view_pdb_uniprot
-            WHERE keyword = 'Immunoglobulin'
-                OR keyword LIKE '%antibody%'
-        ;"""
-        rows = self.list_data(query)
-        return rows
-
-    def ab_complex(self):
-        query = """
-            SELECT * FROM view_pdb_uniprot
-            WHERE pdb_id IN(
-                SELECT DISTINCT pdb_id FROM view_pdb_uniprot
-                WHERE keyword = 'Immunoglobulin'
-                    OR keyword LIKE '%antibody%'
-            )
-        ;"""
-        rows = self.list_data(query)
-        return rows
 
     def germline_seq(self, chain_type:str):
         query = f"""
@@ -350,3 +218,48 @@ class QueryComplex(QueryDb):
         ;"""
         rows = self.list_data(query)
         return rows
+
+    def combo_ids(self, pdb_group:int, category:str):
+        query = f"""
+            SELECT combo_id
+            FROM pdb_complex   c
+            LEFT JOIN meta_pdb p ON c.pdb_id=p.pdb_id
+            WHERE p.pdb_group = {pdb_group}
+                AND category= \'{category}\'
+        ;"""
+        rows = self.list_data(query)
+        combo_ids = [i['combo_id'] for i in rows]
+        return combo_ids
+    
+    def pdb_chains(self, pdb_group:int) -> dict:
+        query = f"""
+            SELECT c.pdb_id, c.model_no, c.chain_id, d.chain_pdb,
+                f.relative_path AS chain_faa, s.chain_seq
+            FROM pdb_chainid c
+            LEFT JOIN meta_pdb       p ON c.pdb_id=p.pdb_id
+            LEFT JOIN pdb_chain_seq  s ON c.chain_id=s.chain_id
+            LEFT JOIN meta_chain_faa f ON c.chain_id=f.chain_id
+            LEFT JOIN meta_chain_pdb d ON c.chain_id=d.chain_id
+            WHERE p.pdb_group = {pdb_group}
+                AND c.model_no = 0
+                AND f.relative_path IS NOT NULL
+                AND d.chain_pdb IS NOT NULL
+        ;"""
+        df = self.list_data(query, True)
+        g = df.groupby(['pdb_id', 'model_no'])
+        res = {key: sub for key, sub in g}
+        return res
+
+    def retrieve_combo(self, pdb_group:int, combo:int, dest_table_name:str):
+            query = f"""
+                SELECT c.pdb_id, c.combo_id, c.combo_pdb
+                FROM combo{combo}   c
+                LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
+                WHERE p.pdb_group = {pdb_group}
+                    AND c.combo_pdb IS NOT NULL
+                    AND c.combo_id NOT IN (
+                        SELECT combo_id FROM {dest_table_name}
+                    )
+            ;"""
+            rows = self.list_data(query)
+            return rows

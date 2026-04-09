@@ -3,8 +3,8 @@ requirments:
     - PDB raw data
     - table meta_combo2_pdb
 example: 
-    - parallel -j8 python src/pipelines/combo2_sasa.py ::: {0..117}
-    - python src/pipelines/combo2_sasa.py 0
+    - parallel -j8 python app.py combo2_sasa ::: {0..237}
+    - python app.py combo2_sasa 0
 functions:
     - calculate SASA and analyze PPI
     - put meta data to table combo2_sasa
@@ -28,8 +28,8 @@ def retrieve_query(params, meta):
             AND S.combo_id NOT IN(
                 SELECT combo_id FROM {table_name}
             )
-            AND S.pdb_id IN (
-                SELECT pdb_id from view_antibody
+            AND S.combo_id IN (
+                SELECT combo_id from pdb_complex
             )
     ;"""
     rows = QueryComplex(params['verbose']).list_data(query)
@@ -81,14 +81,11 @@ def cal_sasa(rows, params, meta):
         yield (pdb_id, row['combo_id'], relative_path)
 
 if __name__ == "__main__":
-    params = {
-        'pdb_group': sys.argv[1],
-        'verbose': True,
+    params.update({
         'overwrite': False,
         'chunk_size': 20,
-        'data_dir': os.getenv('data_dir'),
         'table_name': 'combo2_sasa',
-    }
+    })
     # calculate delta total SASA
     rows = retrieve_query(params, meta)
     record_iter = cal_sasa(rows, params, meta)

@@ -23,7 +23,6 @@ def retrieve_pdb(params, meta):
                 WHERE pdb_id IS NOT NULL
             );
     """
-    print(query)
     rows = QueryComplex(params['verbose']).list_data(query)
     meta['rows'] = len(rows)
     print(f"New PDB: {len(rows)}")

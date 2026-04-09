@@ -70,15 +70,11 @@ def pull_chain_pdb(rows, params, meta):
             yield pdb_id, None, None
 
 if __name__ == "__main__":
-    params = {
-        'pdb_group': sys.argv[1],
-        'verbose': True,
+    params.update({
         'overwrite': False,
         'chunk_size': 100,
-        'pdb_dir': os.getenv("pdb_dir"),
-        'data_dir': os.getenv("data_dir"),
         'table_name': 'meta_chain_pdb',
-    }
+    })
     
     rows = retrieve_pdb(params, meta)
     record_iter = pull_chain_pdb(rows, params, meta)
@@ -88,5 +84,4 @@ if __name__ == "__main__":
 
     print("Try to validate files...")
     validate_data('chain_pdb', params, meta)
-
     footer(meta)

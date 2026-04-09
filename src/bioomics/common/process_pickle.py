@@ -17,18 +17,18 @@ class ProcessPickle:
             return self.save_pickle(old_data)
         return self.save_pickle(data)
 
-    def save_pickle(self, data):
+    def save_pickle(self, data) -> bool:
         try:
             with open(self.pickle_file, 'wb') as f:
                 pickle.dump(data, f)
             if self.verbose:
                 print(f"Save data to {self.pickle_file}")
-            return self.pickle_file
+            return 'succeed'
         except Exception as e:
             if self.verbose:
                 print(f"Error: Failed to save data to pickle {self.pickle_file}, error={e}")
             pass
-        return None
+        return 'fail'
 
     def load_pickle(self, default:int=None):
         try:

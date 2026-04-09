@@ -23,11 +23,20 @@ if src_dir not in sys.path:
 env_file = os.path.join(src_dir, '.env')
 load_dotenv(env_file)
 
+# initiate parameters
+params = {
+    'pdb_group': sys.argv[1] if len(sys.argv) > 1 else None,
+    'verbose': True if os.getenv('verbose') == 'true' else False,
+    'pdb_dir': os.getenv('pdb_dir'),
+    'data_dir': os.getenv('data_dir'),
+    'simulate_dir': os.getenv('simulate_dir'),
+    'predict_dir': os.getenv('predict_dir'),
+}
 meta = defaultdict(int)
 
 import socket
-from bioomics.common import Dir, WriteTmp, ProcessPickle
-from bioomics.database import BuildComplex, QueryComplex, UpdateComplex
+from bioomics.common import Dir, WriteTmp, ProcessPickle, ProcessJson
+from bioomics.database import BuildComplex, UpdateComplex, QueryComplex
 from bioomics.PDB import Pdb
 from bioomics.protein import ProcessFasta
 
@@ -43,33 +52,33 @@ def add_params(params:dict={}):
     '''
     update args and meta
     '''
-    params['script'] = sys.argv[0]
-    params['pdb_group'] = None
-    
     # host name
     params['host'] = socket.gethostname()
     # IP address of this host
     params['ip_addr'] = local_ip()
-    if params.get('test'):
-        params['pdb_group'] = 0
-        return params
+    params['script'] = sys.argv[0]
 
     print('Try to assign pdb_group...')
-    pdb_group = QueryComplex().pop_pdb_group(params['table_name'])
-    params['pdb_group'] = pdb_group
+    if len(sys.argv) > 1:
+        # by arguments in command line
+        params['pdb_group'] = sys.argv[1]
+    else:
+        #  by table meta_execute
+        pdb_group = QueryComplex().pop_pdb_group(params['table_name'])
+        params['pdb_group'] = pdb_group
+        if params['pdb_group'] is not None:
+            # add new record
+            rec = (params['table_name'], params['pdb_group'], params['host'], params['ip_addr'], params['script'])
+            BuildComplex([rec,], params['verbose']).insert_batch_records('meta_execute')
+            params['meta_execute'] = True
+            if params['verbose']:
+                print('Update meta_exeucte:', rec)
 
-    if params['verbose']:
-        print(params)
     if params['pdb_group'] is None:
         print(f"\nExit! Try process {params['table_name']}, but not pdb_group is assigned.")
         sys.exit(0)
-    
-    # add new record
-    rec = (params['table_name'], params['pdb_group'], params['host'], params['ip_addr'], params['script'])
-    BuildComplex([rec,], params['verbose']).insert_batch_records('meta_execute')
-    params['meta_execute'] = True
     if params['verbose']:
-        print('Update meta_exeucte:', rec)
+        print('Parameters', params)
     return params
 
 def header(func):
@@ -121,14 +130,18 @@ def validate_data(col_name, params, meta):
         print(f'{n}\n')
 
 def copy_data(outdir):
-    host, user = os.getenv('HOST'), os.getenv('USER')
-    if host == local_ip():
-        print(f"Skip synchronization, host={host}")
+    data_hostname = os.getenv('DATA_HOSTNAME')
+    execute_hostname = socket.gethostname()
+    if data_hostname == execute_hostname:
+        print(f"Skip synchronization, identical IP={data_hostname}")
     else:
+        print(f"Try to copy {outdir} from {execute_hostname} to {data_hostname}.")
+        data_host_user = os.getenv('DATA_HOST_USER')
+        data_host_ip = os.getenv('DATA_HOST_IP')
         cmd = ['rsync', '-avz', '--progress',
             '--mkpath', '--remove-source-files',
             f"{outdir}/*",
-            f"{user}@{host}:{outdir}/",
+            f"{data_host_user}@{data_host_ip}:{outdir}/",
         ]
         try:
             cmd = ' '.join(cmd)

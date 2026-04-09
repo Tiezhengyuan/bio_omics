@@ -3,17 +3,19 @@ requirements:
     - PDB raw data
     - table meta_pdb
 example: 
-    - parallel -j4 python src/pipelines/meta_bfactor.py ::: {0..117}
-    - python src/pipelines/meta_bfactor.py 0
+    - parallel -j4 python app.py meta_bfactor ::: {0..237}
+    - python app.py meta_bfactor 0
 functions:
     - calculate B-factor of PDB
 '''
 
-from helper import *
+from src.helper import *
 from bioomics import ProcessPickle, CalculatePlddt
 
-def retrieve_rows(pdb_group, args, meta):
-    table_name = args['table_name']
+@header
+def retrieve_rows(params, meta):
+    pdb_group = params['pdb_group']
+    table_name = params['table_name']
     query = f"""
         SELECT pdb_id, relative_path
         FROM meta_pdb
@@ -23,36 +25,35 @@ def retrieve_rows(pdb_group, args, meta):
             );
     """
     # each record must have pdb_id and pdb_file
-    rows = QueryComplex(args['verbose']).list_data(query)
+    rows = QueryComplex(params['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
-    meta['pdb_group'] = int(pdb_group)
     meta['rows'] += len(rows)
     for row in rows:
-        pdb_file = os.path.join(args['pdb_dir'], row['relative_path'])
+        pdb_file = os.path.join(params['pdb_dir'], row['relative_path'])
         if os.path.isfile(pdb_file):
             row['pdb_file'] =  pdb_file
             yield row
 
-def cal_bfactor(rows, args, meta):
+def cal_bfactor(rows, params, meta):
     for row in rows:
         pdb_id, pdb_file = row['pdb_id'], row['pdb_file']
-        endpoint = os.path.join(args['table_name'], pdb_id[:2], pdb_id)
-        outdir = os.path.join(args['data_dir'], endpoint)
+        endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
+        outdir = os.path.join(params['data_dir'], endpoint)
         Dir(outdir).init_dir()
 
         # calculate bfactor
         file_name = f"bfactor.pkl"
         pfile = os.path.join(outdir, file_name)
-        if args['overwrite'] or (not os.path.isfile(pfile)):
+        if params['overwrite'] or (not os.path.isfile(pfile)):
             # load structure before calculation
             cp = CalculatePlddt(pdb_file)
             cp.load_structure()
             
-            if args['verbose']:
+            if params['verbose']:
                 print(f"Try to calclate B-factor given {pdb_file}...")
             data = cp.complex_ca_bfactor()
             if data.get('bfactor'):
-                if args['verbose']:
+                if params['verbose']:
                     print(f"Save B-factor results to {pfile}")
                 status = ProcessPickle(pfile).save_pickle(data)
                 if status:
@@ -73,22 +74,18 @@ def cal_bfactor(rows, args, meta):
 
 
 if __name__ == "__main__":
-    args = {
-        'verbose': True,
+    params.update({
         'overwrite': False,
-        'pdb_dir': os.getenv("pdb_dir"),
-        'data_dir': os.getenv("data_dir"),
         'table_name': 'meta_bfactor',
-    }
-    pdb_group = sys.argv[1]
-    row_iter = retrieve_rows(pdb_group, args, meta)
+    })
+    row_iter = retrieve_rows(params, meta)
 
     # calculate B-factor
-    record_iter = cal_bfactor(row_iter, args, meta)
+    record_iter = cal_bfactor(row_iter, params, meta)
 
     # put bfactor into table
-    print(f"Try put meta data to {args['table_name']}...")
-    bc = BuildComplex(record_iter, args['verbose'])
-    bc.insert_batch_records(args['table_name'])
+    print(f"Try put meta data to {params['table_name']}...")
+    bc = BuildComplex(record_iter, params['verbose'])
+    bc.insert_batch_records(params['table_name'])
 
-    print(meta)
+    footer(meta)

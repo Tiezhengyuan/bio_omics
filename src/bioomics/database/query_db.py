@@ -10,7 +10,7 @@ class QueryDb(Db):
     def __init__(self, verbose:bool=False):
         super().__init__(verbose)
 
-    def list_data(self, query:str, is_df:bool=False):
+    def list_data(self, query:str, is_df:bool=False) -> list:
         for _ in range(5):
             try:
                 with mysql.connector.connect(**self.config) as connection:
