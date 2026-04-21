@@ -5,10 +5,12 @@ import os
 import json
 import re
 
+from ..common.process_pickle import ProcessPickle
 from ..common.dir import Dir
 from .distance_analyze import DistanceAnalyze
 from .sasa_analyze import SasaAnalyze
 from ..protein.analyze_seq import AnalyzeSeq
+
 
 class CollectContacts:
     def __init__(self, dir:str):
@@ -71,8 +73,7 @@ class CollectContacts:
                 })
                 yield pair
 
-    def pair_sasa_one(self, pdb_ids, type_name:str, idx:int, \
-        target_seq:str, chain_len:int=None):
+    def pair_sasa_one(self, pdb_ids, type_name:str, idx:int, target_seq:str, chain_len:int=None):
         '''
         idx should be 0 or 1
         '''
@@ -81,7 +82,8 @@ class CollectContacts:
         names, sasa = [], []
         path_iter = self.filter_files(pdb_ids, 'freesasa.p')
         for pdb_id, path in path_iter:
-            p = SasaAnalyze(path)
+            data = ProcessPickle(path).load_pickle()
+            p = SasaAnalyze(data)
             _sasa = p.get_chain_data(type_name, chain_len)
             for chain_id in _sasa:
                 names.append((pdb_id, chain_id[idx]))
@@ -118,28 +120,29 @@ class CollectContacts:
         print(antibody_sasa.shape, antigen_sasa.shape)
         return antibody_sasa, antigen_sasa
 
-    def pair_dist_one(self, pdb_ids, type_name:str, idx:int, \
-        target_seq:str, chain_len:int=None):
+    def pair_dist_one(self, pdb_ids, type_name:str, idx:int, target_seq:str, chain_len:int=None):
         aln = AnalyzeSeq(target_seq)
 
         names, dist = [], []
         path_iter = self.filter_files(pdb_ids, 'dist.p')
         for pdb_id, path in path_iter:
-            p = DistanceAnalyze(path)
+            print(path)
+            p = DistanceAnalyze({'pickle_file': path})
             _dist = p.get_chain_data(type_name, chain_len)
-            for chain_id in _dist:
-                names.append((pdb_id, chain_id[idx]))
-                sub = _dist[chain_id][idx]
-                query_seq = ''.join(sub['aa'])
-                adj_val = aln.parse_values(query_seq, -sub['value'])
-                # print(adj_val)
-                dist.append(pd.Series(adj_val))
+            break
+        #     for chain_id in _dist:
+        #         names.append((pdb_id, chain_id[idx]))
+        #         sub = _dist[chain_id][idx]
+        #         query_seq = ''.join(sub['aa'])
+        #         adj_val = aln.parse_values(query_seq, -sub['value'])
+        #         # print(adj_val)
+        #         dist.append(pd.Series(adj_val))
         
-        dist = pd.concat(dist, axis=1)
-        dist.columns = names
-        dist = dist.T
-        print(dist.shape)
-        return dist
+        # dist = pd.concat(dist, axis=1)
+        # dist.columns = names
+        # dist = dist.T
+        # print(dist.shape)
+        # return dist
 
     def pair_dist(self, pdb_ids, type_name:str=None, chain_len:int=None):
         names, antibody_dist, antigen_dist = [], [], []

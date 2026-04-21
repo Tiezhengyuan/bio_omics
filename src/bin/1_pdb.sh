@@ -14,6 +14,9 @@ parallel -j8 python ${APP} pdb_compound ::: {0..237}
 parallel -j8 python ${APP} pdb_method ::: {0..237}
 parallel -j8 python ${APP} pdb_keyword ::: {0..237}
 
+#download fasta
+parallel -j8 python ${APP} pdb_protein ::: {0..237}
+
 echo "Retriev B-factor..."
 parallel -j8 python ${APP} meta_bfactor ::: {0..237}
 parallel -j8 python ${APP} pdb_bfactor ::: {0..237}

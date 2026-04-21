@@ -5,6 +5,7 @@ requirements:
 example:
     - parallel -j10 python app.py combo2_af ::: {0..237}
     - python app.py combo2_af 0
+    - python app.py combo2_af
 function:
     - predict dimer complex
     - insert data into table combo2_alphafold

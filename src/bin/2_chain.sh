@@ -5,6 +5,7 @@ APP="/home/yuan/bio/bio_omics/app.py"
 # parallel -j8 python ${APP} put_chain ::: {0..237}
 parallel -j8 python ${APP} pdb_chainid ::: {0..237}
 
+
 # retrieve sequences by chain
 # require pdb_chain
 parallel -j8 python ${APP} chain_seq ::: {0..237}

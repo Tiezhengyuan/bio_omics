@@ -11,3 +11,4 @@ mysql-connector-python
 matplotlib-venn
 venny4py
 netCDF4
+openpyxl

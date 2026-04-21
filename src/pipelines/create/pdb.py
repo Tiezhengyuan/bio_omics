@@ -59,12 +59,13 @@ CREATE TABLE meta_mmcif(
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
+DROP TABLE IF EXISTS pdb_compound;
 CREATE TABLE pdb_compound(
     pdb_id          VARCHAR(10),
     compound_no     INT,
-    chains          VARCHAR(200),
+    chain_no        VARCHAR(5) COLLATE utf8mb4_bin NOT NULL,
     compound_text   TEXT,
-    CONSTRAINT pk_compound PRIMARY KEY (pdb_id, compound_no),
+    CONSTRAINT pk_compound PRIMARY KEY (pdb_id, compound_no, chain_no),
     CONSTRAINT fk_compound_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
@@ -209,6 +210,20 @@ CREATE TABLE pdb_complex(
     category        VARCHAR(20),
     UNIQUE(combo_id, category),
     CONSTRAINT fk_pdb_complex_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS pdb_protein;
+CREATE TABLE pdb_protein (
+    pdb_id          VARCHAR(10),
+    relative_fasta  VARCHAR(60),
+    pro_id          VARCHAR(20),
+    chain           VARCHAR(40),
+    auth_chain      VARCHAR(10),
+    pro_len         INT,
+    pro_seq         TEXT,
+    UNIQUE(pdb_id, chain),
+    CONSTRAINT fk_pdb_protein_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 """

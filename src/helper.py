@@ -141,7 +141,7 @@ def copy_data(outdir):
         cmd = ['rsync', '-avz', '--progress',
             '--mkpath', '--remove-source-files',
             f"{outdir}/*",
-            f"{data_host_user}@{data_host_ip}:{outdir}/",
+            f"{data_host_user}@{data_hostname}:{outdir}/",
         ]
         try:
             cmd = ' '.join(cmd)

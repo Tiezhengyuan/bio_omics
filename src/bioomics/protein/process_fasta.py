@@ -50,7 +50,7 @@ class ProcessFasta:
                 print(f"Failure: Can't write to {self.fa_file}, error={e}")
         return 'fail'
 
-    def load_fasta(self):
+    def load_fasta(self) -> list:
         try:
             with open(self.fa_file, 'r') as f:
                 parser = SeqIO.parse(f, 'fasta')
@@ -59,7 +59,7 @@ class ProcessFasta:
         except Exception as e:
             if self.verbose:
                 print(f"Failure: Can't read FASTA {self.fa_file}, error={e}")
-        return None
+        return []
 
     def get_first_seq(self):
         for rec in self.load_fasta():

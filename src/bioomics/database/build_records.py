@@ -34,14 +34,16 @@ class BuildRecords:
         records = []
         for compound_no, cp in p.compound.items():
             compound_no = int(compound_no)
-            chains = cp.get('chain').replace(' ', '')
             _text = []
             for _key, _value in cp.items():
                 if _key not in ('chain',) and _value:
                     _text.append(f"{_key}: {_value}")
             compound_text = ' ; '.join(_text)
-            rec = (pdb_id, compound_no, chains, compound_text)
-            records.append(rec)
+            for chain_no in cp.get('chain').split(','):
+                chain_no = chain_no.strip()
+                rec = (pdb_id, compound_no, chain_no, compound_text)
+                if rec not in records:
+                    records.append(rec)
         return records
 
     def pdb_method(self, args):
@@ -121,6 +123,7 @@ class BuildRecords:
         if self.verbose:
             print(f"Warning: no chains {pdb_id} are detectin in {pdb_file}")
         return [(pdb_id, None, None, None),]
+
                  
     def pdb_bfactor(self, args):
         records = []

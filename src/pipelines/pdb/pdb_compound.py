@@ -3,10 +3,10 @@ requirements:
     - PDB files should be synchronized to the local.
     - The table pdb is ready.
 example:
-    - parallel --delay 5 -j4 python app.py pdb_compound ::: {0..237}
+    - parallel -j8 python app.py pdb_compound ::: {0..237}
     - python app.py pdb_compound 0
 function:
-    - synchronize PDB/UniProt/alignments with data in database COMPLEX.
+    - retrieve compound in head of PDB
 '''
 
 from src.helper import *
@@ -34,13 +34,10 @@ def retrieve_pdb(params, meta):
 
 ##################################
 if __name__ == "__main__":
-    params = {
-        'pdb_group': sys.argv[1],
-        'verbose': True,
-        'pdb_dir': os.getenv("pdb_dir"),
-        'chunk_size': 100,
+    params.update({
+        'chunk_size': 5,
         'table_name': 'pdb_compound',
-    }
+    })
 
     print(f"Try to insert PDB data into table {params['table_name']}...")
     record_iter = retrieve_pdb(params, meta)

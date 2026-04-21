@@ -1,10 +1,9 @@
 '''
 '''
-import os
 import numpy as np
 import pandas as pd
 
-from ..common import ProcessPickle
+from ..common.process_pickle import ProcessPickle
 from .analyze_complex import AnalyzeComplex
 
 class DistanceAnalyze:
@@ -91,6 +90,7 @@ class DistanceAnalyze:
         return motif
 
     def get_chain_data(self, type_name:str, chain_len:int=None):
+            print(list(self.data))
             df1, df2 = None, None
             chain_id = (self.data['chains'][0][0], self.data['chains'][1][0])
             if self.data['type'] == type_name:

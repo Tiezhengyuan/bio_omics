@@ -16,6 +16,7 @@ pool = {
     'pdb_method': 'pdb.pdb_method',
     'pdb_keyword': 'pdb.pdb_keyword',
     'pdb_chainid': 'pdb.pdb_chainid',
+    'pdb_protein': 'pdb.pdb_protein',
     # pdb-analysis
     'meta_bfactor': 'pdb.meta_bfactor',
     'pdb_bfactor': 'pdb.pdb_bfactor',
@@ -52,7 +53,8 @@ pool = {
     #dynamics
     'meta_chain_relaxed': 'dynamics.meta_chain_relaxed',
     'combo2_relaxed': 'dynamics.combo2_relaxed',
-    'combo2_distance': 'dynamics.combo2_distance', 
+    'combo2_distance': 'dynamics.combo2_distance',
+    'combo2_sasa': 'dynamics.combo2_sasa',
     'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
     'combo2_contacts': 'dynamics.combo2_contacts',
     'combo3_relaxed': 'dynamics.combo3_relaxed',

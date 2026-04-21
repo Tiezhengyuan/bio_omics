@@ -46,7 +46,7 @@ def cal_dist(rows, params, meta):
         pfile = os.path.join(outdir, file_name)
         if params['overwrite'] or (not os.path.isfile(pfile)):
             input_pdb = os.path.join(params['pdb_dir'], row['relative_path'])
-            result = DistanceCalculate(input_pdb, params).process(row['chain_combo'])
+            result = DistanceCalculate(input_pdb, params).run(row['chain_combo'])
             if result:
                 result.update(row)
                 ProcessPickle(pfile, params['verbose']).save_pickle(result)

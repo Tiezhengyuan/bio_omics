@@ -1,7 +1,7 @@
 '''
 requirments:
     - PDB raw data
-    - table meta_combo2, only calculate distance of two chains 
+    - table combo2, only calculate distance of two chains 
 example: 
     - parallel -j8 python app.py combo2_distance ::: {0..237}
     - python app.py combo2_distance 0
@@ -16,17 +16,18 @@ def retrieve_query(params, meta):
     pdb_group = params['pdb_group']
     table_name = params['table_name']
     query = f"""
+        WITH temp AS (
+            SELECT pdb_id FROM pdb_complex WHERE combo=2
+            EXCEPT
+            SELECT pdb_id FROM {table_name}
+        )
         SELECT S.pdb_id, S.combo_id, S.chain_combo, S.combo_pdb
-        FROM meta_combo2   S
+        FROM combo2 S
         LEFT JOIN meta_pdb P ON S.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
-            AND P.relative_path IS NOT NULL
-            AND S.combo_id IS NOT NULL
             AND S.combo_pdb IS NOT NULL
-            AND S.combo_id IN(
-                SELECT combo_id FROM pdb_complex
-                EXCEPT
-                SELECT combo_id FROM {table_name}
+            AND S.pdb_id IN (
+                SELECT pdb_id FROM temp
             )
     ;"""
     rows = QueryComplex(params['verbose']).list_data(query)

@@ -17,7 +17,7 @@ class SasaProcess:
         self.max_span = int(max_span) if max_span else 30
         self.verbose = verbose
     
-    def process(self, pdb_files_pool:list, outfile:str=None):
+    def process(self, pdb_files_pool:list, outfile:str=None) -> list:
         data = []
         for bounded_pdb_file, unbounded_pdb_files in pdb_files_pool:
             # result is dict
@@ -40,9 +40,7 @@ class SasaProcess:
                 ProcessPickle(outfile).save_pickle(data)
                 if self.verbose:
                     print(f"Export SASA calculation to {outfile}")
-            return data
-        return None
-
+        return data
 
     def pair_freesasa(self, bounded_pdb_file:str, unbounded_pdb_files:list):
         '''

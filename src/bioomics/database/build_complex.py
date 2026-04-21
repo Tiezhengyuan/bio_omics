@@ -12,6 +12,8 @@ TABLE_COLUMNS = {
     'meta_execute': ['table_name', 'pdb_group', 'host', 'ip_addr', 'script'],
 
     # 
+    'pdb_protein': ['pdb_id', 'relative_fasta', 'pro_id', 'chain',
+        'auth_chain', 'pro_len',  'pro_seq'],
     'meta_pdb': ['pdb_id', 'relative_path', 'pdb_group'],
     'meta_mmcif': ['pdb_id', 'relative_path', 'pdb_group'],
     'pdb_chain_type': ['pdb_id', 'chain_id', 'chain_type', 'total_res', 
@@ -42,7 +44,7 @@ TABLE_COLUMNS = {
         'min_dist', 'min_res1', 'min_res2'],
     'pdb_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
     'dist_amber14': ['pdb_id', 'combo_id', 'relative_pkl'],
-    'combo2_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
+    'combo2_sasa': ['pdb_id', 'combo_id', 'delta_total_sasa', 'relative_pkl'],
     'combo2_contacts': ['pdb_id', 'combo_id', 'binding_affinity',
         'dissociation_constant', 'relative_prodigy'],
     'pdb_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
@@ -190,7 +192,7 @@ class BuildComplex(BuildDb):
     def insert_pdb_compound(self) -> tuple:
         table_name = 'pdb_compound'
         insert_query = f"""INSERT INTO {table_name} 
-            (pdb_id, compound_no, chains, compound_text)
+            (pdb_id, compound_no, chain_no, compound_text)
             VALUES (%s, %s, %s, %s)"""
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)
