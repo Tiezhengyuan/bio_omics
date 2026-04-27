@@ -31,15 +31,12 @@ params = {
     'data_dir': os.getenv('data_dir'),
     'simulate_dir': os.getenv('simulate_dir'),
     'predict_dir': os.getenv('predict_dir'),
+    'host': socket.gethostname(),
 }
 meta = defaultdict(int)
 
 import socket
-from bioomics.common import Dir, WriteTmp, ProcessPickle, ProcessJson
 from bioomics.database import BuildComplex, UpdateComplex, QueryComplex
-from bioomics.PDB import Pdb
-from bioomics.protein import ProcessFasta
-
 
 def local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

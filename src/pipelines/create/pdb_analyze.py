@@ -40,9 +40,10 @@ DROP TABLE IF EXISTS pdb_bfactor;
 CREATE TABLE pdb_bfactor(
     pdb_id          VARCHAR(10),
     model_no        INT,
-    chain_no        VARCHAR(5),
+    chain_no        VARCHAR(5) COLLATE utf8mb4_bin NOT NULL,
     avg_bfactor     FLOAT,
     bfactor         TEXT,
+    UNIQUE(pdb_id, model_no, chain_no),
     CONSTRAINT fk_pdb_bfactor_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );

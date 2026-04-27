@@ -18,5 +18,5 @@ parallel -j8 python ${APP} align_vregion ::: {0..237}
 parallel -j8 python ${APP} align_dregion ::: {0..237}
 parallel -j8 python ${APP} align_jregion ::: {0..237}
 
-parallel -j8 python ${APP} pdb_complex_antibody ::: {0..237}
+parallel -j8 python ${APP} label_antibody ::: {0..237}
 

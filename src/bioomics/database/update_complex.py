@@ -120,3 +120,22 @@ class UpdateComplex(UpdateDb):
                 and host = '{args['host']}'
         ;"""
         self.execute_update(query, None)
+
+    def design_end_time(self, predictor:str, design_id:str, endpoint:str):
+        t1 = datetime.now()
+        query = f"""
+            UPDATE {self.table_name}
+            SET endpoint = '{endpoint}', end_at = '{t1}', status='done'
+            WHERE predictor = '{predictor}'
+                AND design_id = '{design_id}'
+        ;"""
+        self.execute_update(query, None)
+    
+    def design_status(self, predictor:str, design_id:str, status:str):
+        query = f"""
+            UPDATE {self.table_name}
+            SET status='{status}'
+            WHERE predictor = '{predictor}'
+                AND design_id = '{design_id}'
+        ;"""
+        self.execute_update(query, None)

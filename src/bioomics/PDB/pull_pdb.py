@@ -60,7 +60,7 @@ class PullPdb:
                 f"https://files.rcsb.org/view/{pdb_id}.pdb",
             ]
             self._subprocess(cmd)
-        if os.path.isfile(pdb_file):
+        if self.verbose and os.path.isfile(pdb_file):
             print(f"{pdb_file} is ready.")
         return pdb_file
 

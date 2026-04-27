@@ -5,7 +5,7 @@ from .db import Db
 
 class UpdateDb(Db):
 
-    def __init__(self, table_name, verbose:bool=False):
+    def __init__(self, table_name, verbose:bool=True):
         self.table_name = table_name
         super().__init__(verbose)
 
@@ -30,7 +30,9 @@ class UpdateDb(Db):
         query = f"DELETE FROM {self.table_name};"
         return self.execute_update(query, None)
 
-    def delete_rows(self, col_name, values):
+    def delete_rows(self, col_name:str, values:list):
+        if self.verbose:
+            print(f"Try to delete rows ={values} from {self.table_name}-{col_name}")
         placeholders = ', '.join(['%s',] * len(values))
         query = f"""
             DELETE FROM {self.table_name}

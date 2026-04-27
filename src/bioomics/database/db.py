@@ -1,4 +1,3 @@
-
 '''
 configurations for mysql.connector.connection
 '''
@@ -7,7 +6,7 @@ import os
 
 class Db:
 
-    def __init__(self, verbose:bool=None):
+    def __init__(self, verbose:bool):
         self.verbose = verbose
         self.config = {
             'host': os.getenv('MYSQL_HOST'),

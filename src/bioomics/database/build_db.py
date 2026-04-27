@@ -124,7 +124,7 @@ class BuildDb(Db):
         insert data into table
         '''
         pool_size = self.chunk_size if pool_size is None else int(pool_size)
-        print(f"\nBegin to insert records into {table_name}. Scan Data...", end='')
+        print(f"\nBegin to insert records into {table_name}...", end='')
         # get records: self.data is pdb paths
         n, succeed = 0, 0
         pool, recycle_pool = [], []

@@ -1,4 +1,3 @@
-import itertools
 import os
 import pandas as pd
 
@@ -26,8 +25,8 @@ class QueryAntibody(QueryDb):
 
     def antibody_chains(self, pdb_group:int, groupby:list=None):
         query = f"""
-            SELECT pdb_id, model_no, chain_id, chain_no, chain_type, 
-                relative_faa, chain_pdb
+            SELECT pdb_id, model_no, chain_id, first_chain_id, chain_no,
+                chain_type, relative_faa, chain_pdb
             FROM view_antibody
             WHERE pdb_group = {pdb_group}
                 AND relative_faa IS NOT NULL

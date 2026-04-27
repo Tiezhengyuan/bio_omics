@@ -24,8 +24,8 @@ def retrieve_pdb(params, meta):
         LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND NOT EXISTS (
-                SELECT 1 FROM {table_name} a
-                WHERE a.combo_id = c.combo_id
+                SELECT 1 FROM {table_name} b
+                WHERE b.combo_id = c.combo_id
             )
     ;"""
     qc = QueryComplex(params['verbose'])
@@ -58,7 +58,6 @@ if __name__ == "__main__":
     add_params(params)
 
     rows = retrieve_pdb(params, meta)
-    host = socket.gethostname()
     for row in rows:
         t0 = datetime.now()
         pdb_id, combo_id = row['pdb_id'], row['combo_id']
@@ -84,7 +83,7 @@ if __name__ == "__main__":
         else:
             meta['fail'] += 1
             endpoint = None
-        rec = [pdb_id, combo_id, endpoint, host, t0]
+        rec = [pdb_id, combo_id, endpoint, params['host'], t0]
         # insertion
         if params['verbose']:
             print('### Try to insert ', rec)

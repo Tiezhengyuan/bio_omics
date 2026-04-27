@@ -43,8 +43,8 @@ SQL_TEXT = """
 DROP VIEW IF EXISTS view_ig;
 CREATE VIEW view_ig AS
     SELECT I.allele_name, I.specie, I.gene_name, I.gene_family,
-        I.chain_type, C.pdb_id, C.chain_id, C.model_no,
-        C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
+        I.chain_type, C.pdb_id, C.chain_id, C.first_chain_id,
+        C.model_no, C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
         C.release_date, C.structure_method, C.resolution, C.avg_bfactor,
         C.relative_faa, C.chain_pdb, C.pdb_group
     FROM view_pdb_chain     C
@@ -58,8 +58,8 @@ CREATE VIEW view_ig AS
 DROP VIEW IF EXISTS view_antibody;
 CREATE VIEW view_antibody AS
     SELECT I.allele_name, I.specie, I.gene_name, I.gene_family,
-        I.chain_type, C.pdb_id, C.chain_id, C.model_no,
-        C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
+        I.chain_type, C.pdb_id, C.chain_id, C.first_chain_id,
+        C.model_no, C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
         C.release_date, C.structure_method, C.resolution, C.avg_bfactor,
         C.relative_faa, C.chain_pdb, C.pdb_group
     FROM view_pdb_chain     C

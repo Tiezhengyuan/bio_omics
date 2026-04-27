@@ -198,8 +198,20 @@ CREATE TABLE pdb_faa(
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS pdb_complex;
-CREATE TABLE pdb_complex(
+DROP TABLE IF EXISTS label_chain;
+CREATE TABLE label_chain(
+    pdb_id          VARCHAR(10),
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
+    first_chain_id  VARCHAR(20),
+    chain_label     VARCHAR(20),
+    category        VARCHAR(20),
+    UNIQUE(chain_id, category),
+    CONSTRAINT fk_label_chain_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS label_complex;
+CREATE TABLE label_complex(
     pdb_id          VARCHAR(10),
     model_no        INT,
     combo_id        VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
@@ -209,7 +221,7 @@ CREATE TABLE pdb_complex(
     chain_ids       VARCHAR(100),
     category        VARCHAR(20),
     UNIQUE(combo_id, category),
-    CONSTRAINT fk_pdb_complex_pdb FOREIGN KEY (pdb_id)
+    CONSTRAINT fk_label_complex_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //

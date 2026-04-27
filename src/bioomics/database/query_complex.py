@@ -222,7 +222,7 @@ class QueryComplex(QueryDb):
     def combo_ids(self, pdb_group:int, category:str):
         query = f"""
             SELECT combo_id
-            FROM pdb_complex   c
+            FROM label_complex   c
             LEFT JOIN meta_pdb p ON c.pdb_id=p.pdb_id
             WHERE p.pdb_group = {pdb_group}
                 AND category= \'{category}\'

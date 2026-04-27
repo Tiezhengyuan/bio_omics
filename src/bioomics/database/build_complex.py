@@ -35,7 +35,10 @@ TABLE_COLUMNS = {
         'chain_combo', 'bounded_pdb', 'chain_pdbs'],
     'meta_combo2_seq': ['pdb_id', 'model_no', 'combo_id',
         'chain_combo', 'relative_csv'],
-    'pdb_complex': ['pdb_id', 'model_no', 'combo_id', 'chain_combo', 
+
+    'label_chain': ['pdb_id', 'chain_id', 'first_chain_id',
+        'chain_label', 'category'],
+    'label_complex': ['pdb_id', 'model_no', 'combo_id', 'chain_combo', 
         'chain_label', 'combo', 'chain_ids', 'category'],
 
     #analyze
@@ -145,6 +148,14 @@ TABLE_COLUMNS = {
         'pro_seq', 'record_id'],
     'absd_faa': ['seq_id', 'faa_file'],
     'absd_igblastp': ['seq_id', 'aln_file'],
+
+    #design
+    'design_dimer': ['design_id', 'category', 'chain_labels', 'target_name',
+        'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
+    'design_multimer': ['design_id', 'category', 'chain_labels', 'combo',
+        'target_name', 'target_id', 'binder_id', 'af_faa', 'target_pdb',
+        'binder_pdb'],
+    'predict': ['predictor', 'design_id', 'host', 'status'],
 }
 
 
@@ -159,8 +170,6 @@ class BuildComplex(BuildDb):
         self.recorder = BuildRecords(verbose)
     
     def insert_batch_records(self, table_name:str):
-        if self.verbose:
-            print(f"Begin to insert data into table {table_name}...")
         cols = TABLE_COLUMNS[table_name]
         fmt = ['%s',] * len(cols)
         cols_str = ', '.join(cols)

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 '''
 requirements:
-    - pdb fixed: table fixed_chain
+    - table pdb_complex where combo=1
 example:
     - parallel -j8 python app.py chain_af ::: {0..237}
     - python app.py chain_af 0
@@ -26,7 +26,7 @@ def retrieve_pdb(params, meta):
                 WHERE F.relative_path IS NOT NULL
                     AND S.first_chain_id IS NOT NULL
                     AND S.first_chain_id IN (
-                        SELECT chain_id from view_antibody
+                        SELECT first_chain_id FROM label_chain
                     )
                     AND S.first_chain_id NOT IN (
                         SELECT chain_id FROM {table_name}

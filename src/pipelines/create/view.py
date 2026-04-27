@@ -50,7 +50,8 @@ CREATE VIEW view_protein AS
 //
 DROP VIEW IF EXISTS view_pdb_chain;
 CREATE VIEW view_pdb_chain AS
-    SELECT C.chain_id, X.pro_id, C.pdb_id, C.model_no, C.chain_no,
+    SELECT C.chain_id, X.pro_id, S.first_chain_id,
+        C.pdb_id, C.model_no, C.chain_no,
         D.structure_method, D.resolution, B.avg_bfactor,
         D.release_date, D.pdb_group,
         S.chain_seq, S.pro_len,

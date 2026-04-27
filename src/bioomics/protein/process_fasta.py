@@ -61,9 +61,10 @@ class ProcessFasta:
                 print(f"Failure: Can't read FASTA {self.fa_file}, error={e}")
         return []
 
-    def get_first_seq(self):
+    def get_first_seq(self) -> str:
         for rec in self.load_fasta():
             return str(rec.seq)
+        return ''
 
     def wrong_fasta(self) -> bool:
         '''
