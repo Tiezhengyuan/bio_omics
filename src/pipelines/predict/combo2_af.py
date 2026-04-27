@@ -12,7 +12,7 @@ function:
 '''
 
 from src.helper import *
-from bioomics import Predictor
+from bioomics import Predictor, ProcessFasta
 
 @header
 def retrieve_pdb(params, meta):
@@ -63,7 +63,7 @@ if __name__ == "__main__":
         pdb_id, combo_id = row['pdb_id'], row['combo_id']
         endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id, combo_id)
         outdir = os.path.join(params['predict_dir'], endpoint)
-        Dir(outdir).init_dir()
+        Path(outdir).mkdir(parents=True, exist_ok=True)
 
         # predict
         _params = {

@@ -150,12 +150,13 @@ TABLE_COLUMNS = {
     'absd_igblastp': ['seq_id', 'aln_file'],
 
     #design
+    'design_chain': ['chain_id', 'target_name', 'pdb_id', 'parent_id',
+        'faa_file', 'pdb_file', 'chain_seq',],
     'design_dimer': ['design_id', 'category', 'chain_labels', 'target_name',
         'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
-    'design_multimer': ['design_id', 'category', 'chain_labels', 'combo',
-        'target_name', 'target_id', 'binder_id', 'af_faa', 'target_pdb',
-        'binder_pdb'],
-    'predict': ['predictor', 'design_id', 'host', 'status'],
+    'design_trimer': ['design_id', 'category', 'chain_labels', 'target_name',
+        'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
+    'predict': ['target_name', 'predictor', 'design_id', 'host', 'status'],
 }
 
 

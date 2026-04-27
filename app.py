@@ -78,11 +78,6 @@ pool = {
     'clean_predict': 'clean.clean_predict',
     'move': 'clean.move',
     'test': 'test',
-
-    # design
-    'npr1_dimer': 'design.npr1_dimer',
-    'npr1_trimer': 'design.npr1_trimer',
-    'npr1_predict': 'design.npr1_predict',
 }
 
 # build cmd

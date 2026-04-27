@@ -12,6 +12,17 @@ from create_helper import *
 
 
 SQL_TEXT = """
+DROP TABLE IF EXISTS design_chain;
+CREATE TABLE design_chain (
+    chain_id    VARCHAR(50) PRIMARY KEY,
+    target_name     VARCHAR(20),
+    pdb_id      VARCHAR(10),
+    parent_id   VARCHAR(30),
+    faa_file    VARCHAR(100) NOT NULL,
+    pdb_file    VARCHAR(200),
+    chain_seq   TEXT
+);
+//
 DROP TABLE IF EXISTS design_dimer;
 CREATE TABLE design_dimer (
     design_id       VARCHAR(100) COLLATE utf8mb4_bin PRIMARY KEY,
@@ -21,26 +32,26 @@ CREATE TABLE design_dimer (
     target_id       VARCHAR(40),
     binder_id       VARCHAR(40),
     af_faa          VARCHAR(100) NOT NULL,
-    target_pdb      VARCHAR(100),
+    target_pdb      VARCHAR(200),
     binder_pdb      VARCHAR(100)
 );
 //
-DROP TABLE IF EXISTS design_multimer;
-CREATE TABLE design_multimer (
+DROP TABLE IF EXISTS design_trimer;
+CREATE TABLE design_trimer (
     design_id       VARCHAR(100) COLLATE utf8mb4_bin PRIMARY KEY,
     category        VARCHAR(10),
     chain_labels    VARCHAR(20),
-    combo           INT,
     target_name     VARCHAR(20),
     target_id       VARCHAR(40),
     binder_id       VARCHAR(100),
     af_faa          VARCHAR(100) NOT NULL,
-    target_pdb      VARCHAR(100),
+    target_pdb      VARCHAR(200),
     binder_pdb      VARCHAR(200)
 );
 //
 DROP TABLE IF EXISTS predict;
 CREATE TABLE predict (
+    target_name    VARCHAR(20),
     predictor      VARCHAR(10),
     design_id      VARCHAR(100),
     host           VARCHAR(10),
