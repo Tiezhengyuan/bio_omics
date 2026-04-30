@@ -74,3 +74,11 @@ class QueryDb(Db):
         res = self.list_data(query, False)
         curr = res[0]['id']
         return int(curr) + 1 if curr else 1
+
+    def max_value(self, table_name:str, col:str):
+        query = f"""
+            SELECT MAX({col}) AS val
+            FROM {table_name}
+        ;"""
+        res = self.list_data(query, False)
+        return res[0]['val']

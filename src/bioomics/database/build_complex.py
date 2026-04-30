@@ -103,10 +103,10 @@ TABLE_COLUMNS = {
         'evalue', 'bit_score', 'identities', 'query_len', 'align_len',
         'query_start', 'query_end', 'query_seq', 'match_seq',
         'sbjct_seq', 'sbjct_start', 'sbjct_end',],
-    'ab_anarci': ['chain_id', 'domain_no', 'hmm_species',
-        'chain_type', 'evalue', 'score', 'seqstart_index',
-        'seqend_index', 'identity_species', 'v_gene', 'v_identity',
-        'j_gene', 'j_identity', 'aligned_seq',],
+    # 'ab_anarci': ['chain_id', 'domain_no', 'hmm_species',
+    #     'chain_type', 'evalue', 'score', 'seqstart_index',
+    #     'seqend_index', 'identity_species', 'v_gene', 'v_identity',
+    #     'j_gene', 'j_identity', 'aligned_seq',],
 
     #predict
     'chain_alphafold': ['pdb_id', 'chain_id', 'endpoint', 'host', 'predicted_at',],
@@ -144,10 +144,6 @@ TABLE_COLUMNS = {
     'ab_sabdab': ['pdb_id', 'model', 'heavy_chain', 'light_chain',
         'antigen_chain', 'antigen_type', 'resolution'],
     'ab_abybank': ['pdb_id', 'chain_type', 'chain_numbering'],
-    'absd_seq': ['absd_id', 'specie', 'version', 'pro_len', 
-        'pro_seq', 'record_id'],
-    'absd_faa': ['seq_id', 'faa_file'],
-    'absd_igblastp': ['seq_id', 'aln_file'],
 
     #design
     'design_chain': ['chain_id', 'target_name', 'pdb_id', 'parent_id',
@@ -157,6 +153,10 @@ TABLE_COLUMNS = {
     'design_trimer': ['design_id', 'category', 'chain_labels', 'target_name',
         'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
     'predict': ['target_name', 'predictor', 'design_id', 'host', 'status'],
+
+    # protein
+    'pro_seq': ['source', 'seq_len', 'prefix', 'seq',],
+
 }
 
 
@@ -170,8 +170,9 @@ class BuildComplex(BuildDb):
         self.config['database'] = os.getenv('MYSQL_DB', 'COMPLEX2')
         self.recorder = BuildRecords(verbose)
     
-    def insert_batch_records(self, table_name:str):
-        cols = TABLE_COLUMNS[table_name]
+    def insert_batch_records(self, table_name:str, cols:list=None):
+        if cols is None:
+            cols = TABLE_COLUMNS[table_name]
         fmt = ['%s',] * len(cols)
         cols_str = ', '.join(cols)
         fmt_str= ', '.join(fmt)
@@ -404,37 +405,6 @@ class BuildComplex(BuildDb):
             (pdb_id, chain_id, allele_name, specie, gene_name, gene_family,
                 chain_type, isotype, evalue, bit_score, region_names)
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        func = getattr(self.recorder, table_name)
-        self.insert(table_name, insert_query, func)
-
-#####################
-    
-    def insert_absd_source(self):
-        table_name = 'absd_source'
-        insert_query = f"""INSERT INTO {table_name}
-            (seq_id, absd_id, header, dxref_id, 
-                vgene_family, source)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """
-        func = getattr(self.recorder, table_name)
-        self.insert(table_name, insert_query, func)
-
-    def insert_absd_align_imgt(self) -> tuple:
-        table_name = 'absd_align_imgt'
-        insert_query = f"""INSERT INTO {table_name}
-            (seq_id, allele_name, gene_name, gene_family,
-                chain_type, isotype, evalue, bit_score)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        func = getattr(self.recorder, table_name)
-        self.insert(table_name, insert_query, func)
-
-    def insert_absd_align_vregion(self) -> tuple:
-        table_name = 'absd_align_vregion'
-        insert_query = f"""INSERT INTO {table_name}
-            (seq_id, region_name, identity, start, end, seq)
-            VALUES (%s, %s, %s, %s, %s, %s)
         """
         func = getattr(self.recorder, table_name)
         self.insert(table_name, insert_query, func)

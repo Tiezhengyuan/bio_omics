@@ -17,30 +17,40 @@ if src_dir not in sys.path:
 from bioomics import BuildComplex
 
 SQL_TEXT = """
-DROP TABLE IF EXISTS pro_pep;
-CREATE TABLE pro_pep (
-    pep_id      INT PRIMARY KEY,
-    seq         VARCHAR(10)
+DROP TABLE IF EXISTS pro_seq;
+CREATE TABLE pro_seq (
+    seq_id          INT AUTO_INCREMENT PRIMARY KEY,
+    source          VARCHAR(10),
+    seq_len         INT,
+    prefix          VARCHAR(6),
+    seq             TEXT NOT NULL,
+    relative_faa    VARCHAR(60)
 );
-//
-DROP TABLE IF EXISTS protein_seq;
-CREATE TABLE protein_seq (
-    pro_id      INT PRIMARY KEY,
-    prefix      VARCHAR(3),
-    pro_len     INT,
-    pro_seq     TEXT
-);
-CREATE INDEX index_prolen on protein_seq (pro_len);
-//
-DROP TABLE IF EXISTS protein_source;
-CREATE TABLE protein_source (
-    pro_id          INT,
-    source_name     VARCHAR(50),
-    source_id       VARCHAR(50),
-    UNIQUE(source_name, source_id),
-    CONSTRAINT fk_protein_source FOREIGN KEY (pro_id)
-        REFERENCES protein_seq(pro_id) ON DELETE CASCADE
-);
+# //
+# DROP TABLE IF EXISTS pro_pep;
+# CREATE TABLE pro_pep (
+#     pep_id      INT PRIMARY KEY,
+#     seq         VARCHAR(10)
+# );
+# //
+# DROP TABLE IF EXISTS protein_seq;
+# CREATE TABLE protein_seq (
+#     pro_id      INT PRIMARY KEY,
+#     prefix      VARCHAR(3),
+#     pro_len     INT,
+#     pro_seq     TEXT
+# );
+# CREATE INDEX index_prolen on protein_seq (pro_len);
+# //
+# DROP TABLE IF EXISTS protein_source;
+# CREATE TABLE protein_source (
+#     pro_id          INT,
+#     source_name     VARCHAR(50),
+#     source_id       VARCHAR(50),
+#     UNIQUE(source_name, source_id),
+#     CONSTRAINT fk_protein_source FOREIGN KEY (pro_id)
+#         REFERENCES protein_seq(pro_id) ON DELETE CASCADE
+# );
 """
 
 #####################################################################################

@@ -30,10 +30,6 @@ pool = {
     'pdb_chain_type': 'pdb.pdb_chain_type',
     'protein_pdb': 'pdb.protein_pdb',
 
-    #uniprot
-    'blastp_uniprot': 'protein.blastp_uniprot',
-    'align_uniprot': 'protein.align_uniprot',
-
     #IMGT
     'meta_vdj': 'immune.meta_vdj',
     'align_vfrag': 'immune.align_vfrag',
@@ -41,7 +37,11 @@ pool = {
     'align_dregion': 'immune.align_dregion',
     'align_jregion': 'immune.align_jregion',
     'label_antibody': 'immune.label_antibody',
-    'anarci': 'immune.anarci',
+    # 'anarci': 'immune.anarci',
+
+    #uniprot
+    'blastp_uniprot': 'protein.blastp_uniprot',
+    'align_uniprot': 'protein.align_uniprot',
 
     #structures
     'meta_chain_pdb': 'pdb.meta_chain_pdb',

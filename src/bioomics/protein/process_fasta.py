@@ -49,7 +49,7 @@ class ProcessFasta:
             if self.verbose:
                 print(f"Failure: Can't write to {self.fa_file}, error={e}")
         return 'fail'
-
+   
     def load_fasta(self) -> list:
         try:
             with open(self.fa_file, 'r') as f:

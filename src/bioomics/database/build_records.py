@@ -278,6 +278,9 @@ class BuildRecords:
         return records
 
     def align_vfrag(self, args:dict):
+        '''
+        args keys: pdb_id, aln_file, faa_file
+        '''
         records = []
         pdb_id = args['pdb_id']
 
@@ -442,64 +445,55 @@ class BuildRecords:
                     records.append(rec0)
         return records
 
-    def ab_absd_source(self, seq_record):
-        # 'header','dxref_id','vgene_family','source'
-        records = []
-        desc = seq_record.description.split("|||")
-        for _desc in desc[1:]:
-            items = [seq_record.id, desc[0]] + _desc.split(";")
-            records.append(items)
-        return records
+    # def absd_align_imgt(self, args:dict):
+    #     records = []
+    #     seq_id = args['seq_id']
 
-    def absd_align_imgt(self, args:dict):
-        records = []
-        seq_id = args['seq_id']
+    #     pi = ParseIgblast(args['aln_file'], args['faa_file'], self.verbose)
+    #     for hit in pi.retrieve_hits():
+    #         if 'allele_name' in hit:
+    #             rec = (
+    #                 seq_id,
+    #                 hit['allele_name'].split('|')[0],
+    #                 hit['gene_name'],
+    #                 hit['gene_family'],
+    #                 hit['chain_type'].upper(),
+    #                 hit['isotype'].upper(), 
+    #                 float(hit['e-value']),
+    #                 float(hit['bits-score']),
+    #             )
+    #             if rec not in records:
+    #                 records.append(rec)
 
-        pi = ParseIgblast(args['aln_file'], args['faa_file'], self.verbose)
-        for hit in pi.retrieve_hits():
-            if 'allele_name' in hit:
-                rec = (
-                    seq_id,
-                    hit['allele_name'].split('|')[0],
-                    hit['gene_name'],
-                    hit['gene_family'],
-                    hit['chain_type'].upper(),
-                    hit['isotype'].upper(), 
-                    float(hit['e-value']),
-                    float(hit['bits-score']),
-                )
-                if rec not in records:
-                    records.append(rec)
+    #     if not records:
+    #         # insert null if not hits detected
+    #         rec0 = (seq_id,) + (None,) * 7
+    #         records.append(rec0)
+    #     return records
 
-        if not records:
-            # insert null if not hits detected
-            rec0 = (seq_id,) + (None,) * 7
-            records.append(rec0)
-        return records
-
-    def absd_align_vregion(self, args:dict):
-        seq_id = args['seq_id']
-        faa_file = args['faa_file']
-        aln_file = args['aln_file']
+    # def absd_align_vregion(self, args:dict):
+    #     seq_id = args['seq_id']
+    #     faa_file = args['faa_file']
+    #     aln_file = args['aln_file']
     
-        pi = ParseIgblast(aln_file, faa_file, self.verbose)
-        records = []
-        for region in pi.retrieve_regions():
-            if 'percent identity' in region:
-                rec = (
-                    seq_id,
-                    region['region'],
-                    region['percent identity'],
-                    region['from'],
-                    region['to'],
-                    region['seq'],
-                )
-                if rec not in records:
-                    records.append(rec)
-        if not records:
-            # region name is composite primary key
-            rec = (seq_id, 'UN', None, None, None, None)
-            records.append(rec)
-        return records
+    #     pi = ParseIgblast(aln_file, faa_file, self.verbose)
+    #     records = []
+    #     for region in pi.retrieve_regions():
+    #         if 'percent identity' in region:
+    #             rec = (
+    #                 seq_id,
+    #                 region['region'],
+    #                 region['percent identity'],
+    #                 region['from'],
+    #                 region['to'],
+    #                 region['seq'],
+    #             )
+    #             if rec not in records:
+    #                 records.append(rec)
+    #     if not records:
+    #         # region name is composite primary key
+    #         rec = (seq_id, 'UN', None, None, None, None)
+    #         records.append(rec)
+    #     return records
 
         

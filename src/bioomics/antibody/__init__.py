@@ -8,7 +8,6 @@ from .imgt_ligmdb import *
 from .sabdab import *
 from .abybank import *
 
-from .absd import *
 from .parse_absd import *
 
 from .anarci import *

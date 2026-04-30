@@ -133,35 +133,8 @@ CREATE TABLE align_jregion (
     sbjct_end       INT,
     CONSTRAINT fk_jregion_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
 );
-//
-DROP TABLE IF EXISTS imgt_inn_blastp;
-CREATE TABLE imgt_inn_blastp(
-    query_pro_id    INT,
-    inn_chain_id    VARCHAR(20),
-    ref_pro_id      INT,
-    pdb_chain_id    VARCHAR(20),
-    evalue          DOUBLE,
-    bit_score       INT,
-    identity        FLOAT
-);
-//
-DROP TABLE IF EXISTS ab_anarci;
-CREATE TABLE ab_anarci (
-    chain_id            VARCHAR(20),
-    domain_no           INT,
-    hmm_species         VARCHAR(50),
-    chain_type          VARCHAR(5),
-    evalue              FLOAT,
-    score               FLOAT,
-    seqstart_index      INT,
-    seqend_index        INT,
-    identity_species    VARCHAR(50),
-    v_gene              VARCHAR(50),
-    v_identity          FLOAT,
-    j_gene              VARCHAR(50),
-    j_identity          FLOAT,
-    aligned_seq         TEXT
-);
+
+
 """
 
 #####################################################################################
