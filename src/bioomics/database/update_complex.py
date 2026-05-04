@@ -2,6 +2,8 @@ import os
 from datetime import datetime
 
 from .update_db import UpdateDb
+from .query_complex import QueryComplex
+from .build_complex import BuildComplex
 
 class UpdateComplex(UpdateDb):
 
@@ -141,3 +143,20 @@ class UpdateComplex(UpdateDb):
         res = self.execute_update(query, None)
         if res and self.verbose:
             print(f"Delete {res} rows from {table_name}.")
+
+    def put_pro_seq(self, prefix:tuple, seqs:list, source=None):
+        seq_head, seq_len = prefix
+        # get old seq
+        query = f"""
+            SELECT seq FROM pro_seq
+            WHERE seq_head = '{seq_head}' AND seq_len = {seq_len}
+        ;"""    
+        rows = QueryComplex(self.verbose).list_data(query)
+        old_seqs = [i['seq'] for i in rows]
+
+        # detect new seq
+        new_seqs = list(set(seqs).difference(set(old_seqs)))
+        if new_seqs:
+            records = [(source, _seq) for _seq in new_seqs]
+            bc = BuildComplex(records, self.verbose)
+            bc.insert_batch_records('pro_seq')

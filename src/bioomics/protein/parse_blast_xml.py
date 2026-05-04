@@ -76,23 +76,26 @@ class ParseBlastXml:
         return results
     
     @staticmethod
-    def parse_imgt_allele(input:str=None) -> tuple:
+    def parse_imgt_allele(input:str=None) -> dict:
         '''
         allele_name, specie, gene_name, gene_family, chain_type, isotype
         '''
-        allele_name, specie, gene_name, gene_family, chain_type, isotype = \
-            None, None, None, None, None, None
-        if input:
-            items = input.split('|')
-            allele_name = items[0]
-            if len(items) > 1:
-                specie = items[1]
-            if allele_name:
-                if '*' in allele_name:
-                    gene_name = allele_name.split('*')[0]
-                    if '-' in gene_name:
-                        gene_family = gene_name.split('-')[0]
-                chain_type = allele_name[2]
-                isotype = allele_name[:2]
-        return allele_name, specie, gene_name, gene_family, chain_type, isotype
+        if not input:
+            return {}
+
+        res = {}
+        items = input.split('|')
+        allele_name = items[0]
+        res['allele_name'] = allele_name
+        if len(items) > 1:
+            res['specie'] = items[1]
+        if allele_name:
+            if '*' in allele_name:
+                gene_name = allele_name.split('*')[0]
+                res['gene_name'] = gene_name
+                if '-' in gene_name:
+                    res['gene_family'] = gene_name.split('-')[0]
+            res['chain_type'] = allele_name[2]
+            res['isotype'] = allele_name[:2]
+        return res
 

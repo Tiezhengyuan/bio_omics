@@ -9,6 +9,9 @@ class UpdateDb(Db):
         super().__init__(verbose)
 
     def execute_update(self, query, record):
+        '''
+        execute one query at a time
+        '''
         record = deepcopy(record)
         try:
             connection = mysql.connector.connect(**self.config)
@@ -25,9 +28,9 @@ class UpdateDb(Db):
                 connection.close()
         return None
 
-    def empty_tables(self, table_name:str):
-        query = f"DELETE FROM {table_name};"
-        return self.execute_update(query, None)
+    # def empty_tables(self, table_name:str):
+    #     query = f"DELETE FROM {table_name};"
+    #     return self.execute_update(query, None)
 
     def delete_rows(self, table_name, col_name:str, values:list):
         if self.verbose:

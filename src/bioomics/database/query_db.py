@@ -1,6 +1,5 @@
 import gc
 import pandas as pd
-import mysql.connector
 import time
 
 from .db import Db
@@ -10,49 +9,33 @@ class QueryDb(Db):
     def __init__(self, verbose:bool=False):
         super().__init__(verbose)
 
-    def list_data(self, query:str, is_df:bool=False) -> list:
-        for _ in range(5):
-            try:
-                with mysql.connector.connect(**self.config) as connection:
-                    with connection.cursor(dictionary=True) as cursor:
-                        cursor.execute(query)
-                        rows = cursor.fetchall()
-                        if is_df:
-                            df = pd.DataFrame(rows)
-                            return df
-                        return rows
-            except Exception as e:
-                if self.verbose:
-                    print(f"error: can't connect mysql. error={e}")
+    def list_data(self, query:str, is_df:bool=False):
+        # try not more than 3 times
+        for _ in range(3):
+            res = self.execute_fetch(query)
+            if res == -1:
                 gc.collect()
                 time.sleep(5)
-        return []
-
-    # TODO: old version, deprecated in the future.
-    def list_data0(self, query:str, is_df:bool=False):
-        try:
-            connection = mysql.connector.connect(**self.config)
-            cursor = connection.cursor(dictionary=True)
-            cursor.execute(query)
-            rows = cursor.fetchall()
             if is_df:
-                df = pd.DataFrame(rows)
-                return df
-            return rows
-        except Exception as e:
-            if self.verbose:
-                print(f"Error: {e}")
-        finally:
-            if 'connection' in locals() and connection.is_connected():
-                cursor.close()
-                connection.close()
+                return pd.DataFrame(res)
+            return res
         return []
+        
+    def table_exists(self, table_name:str) -> bool:
+        res = self.execute_fetch("SHOW TABLES")
+        tables = pd.DataFrame(res).iloc[:,0].to_list()
+        if table_name in tables:
+            return True
+        return False
 
-    def table_names(self):
-        query = "SHOW TABLES;"
-        res = self.list_data(query, False)
-        res = pd.DataFrame(res).iloc[:,0]
-        return tuple(res)
+    def num_rows(self, table_name:str) -> int:
+        query = f"""
+            SELECT COUNT(*) AS count FROM {table_name}
+        """
+        rows = self.execute_fetch(query)
+        if rows:
+            return rows[0]['count']
+        return -1
 
     def unique_values(self, table_name, col_name:str) -> list:
         query = f"""
@@ -82,3 +65,9 @@ class QueryDb(Db):
         ;"""
         res = self.list_data(query, False)
         return res[0]['val']
+
+    def table_names(self):
+        query = "SHOW TABLES;"
+        res = self.list_data(query, False)
+        res = pd.DataFrame(res).iloc[:,0]
+        return tuple(res)

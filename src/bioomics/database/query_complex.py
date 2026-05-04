@@ -263,3 +263,32 @@ class QueryComplex(QueryDb):
             ;"""
             rows = self.list_data(query)
             return rows
+
+    def parse_seqid(self, seqs:list) -> tuple:
+        # group sequences
+        pool = defaultdict(list)
+        for seq in seqs:
+            seq_head = seq[:10]
+            seq_len = len(seq)
+            table_name = 'proseq_400' if seq_len <= 400 else ('proseq_1000' \
+                if seq_len <=1000 else 'proseq_long')
+            key = (table_name, seq_head)
+            if seq not in pool[key]:
+                pool[key].append(seq)
+
+        #parse, and collect unparsed
+        res, fail = {}, []
+        qc = QueryComplex(self.verbose)
+        for (table_name, seq_head), seqs in pool.items():
+            query = f"""
+                SELECT seq_id, seq FROM {table_name}
+                WHERE seq_head = '{seq_head}'
+            """
+            rows = qc.list_data(query)
+            ids = {r['seq']:r['seq_id'] for r in rows}
+            for seq in seqs:
+                if seq in ids:
+                    res[seq] = ids[seq]
+                else:
+                    fail.append(seq)
+        return res, fail

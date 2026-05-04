@@ -17,15 +17,39 @@ if src_dir not in sys.path:
 from bioomics import BuildComplex
 
 SQL_TEXT = """
-DROP TABLE IF EXISTS pro_seq;
-CREATE TABLE pro_seq (
-    seq_id          INT AUTO_INCREMENT PRIMARY KEY,
-    source          VARCHAR(10),
-    seq_len         INT,
-    prefix          VARCHAR(6),
-    seq             TEXT NOT NULL,
-    relative_faa    VARCHAR(60)
+DROP TABLE IF EXISTS proseq_400;
+CREATE TABLE proseq_400 (
+    seq_id       INT AUTO_INCREMENT PRIMARY KEY,
+    source       VARCHAR(10),
+    seq          VARCHAR(400) NOT NULL,
+    seq_head     VARCHAR(10) GENERATED ALWAYS AS (SUBSTR(seq, 1, 10)) STORED,
+    seq_len      INT GENERATED ALWAYS AS (LENGTH(seq)) STORED,
+    relative_faa VARCHAR(60),
+    UNIQUE(seq)
 );
+CREATE INDEX index_proseq400 ON proseq_400 (seq_head);
+//
+DROP TABLE IF EXISTS proseq_1000;
+CREATE TABLE proseq_1000 (
+    seq_id       INT AUTO_INCREMENT PRIMARY KEY,
+    source       VARCHAR(10),
+    seq          VARCHAR(1000) CHARACTER SET latin1,
+    seq_head     VARCHAR(10) GENERATED ALWAYS AS (SUBSTR(seq, 1, 10)) STORED,
+    seq_len      INT GENERATED ALWAYS AS (LENGTH(seq)) STORED,
+    relative_faa VARCHAR(60),
+    UNIQUE(seq)
+);
+//
+DROP TABLE IF EXISTS proseq_long;
+CREATE TABLE proseq_long (
+    seq_id       INT AUTO_INCREMENT PRIMARY KEY,
+    source       VARCHAR(10),
+    seq          TEXT NOT NULL,
+    seq_head     VARCHAR(10) GENERATED ALWAYS AS (SUBSTR(seq, 1, 10)) STORED,
+    seq_len      INT GENERATED ALWAYS AS (LENGTH(seq)) STORED,
+    relative_faa VARCHAR(60)
+);
+CREATE UNIQUE INDEX idx_proseqlong ON proseq_long (seq(255));
 # //
 # DROP TABLE IF EXISTS pro_pep;
 # CREATE TABLE pro_pep (

@@ -87,8 +87,8 @@ if __name__ == "__main__":
         # insertion
         if params['verbose']:
             print('### Try to insert ', rec)
-        bc = BuildComplex([tuple(rec),], params['verbose'])
-        bc.insert_batch_records(params['table_name'])
+        bc = BuildComplex(params['verbose'])
+        bc.insert_batch_records([tuple(rec),], params['table_name'])
 
         if endpoint:
             # delete *_env for saving space

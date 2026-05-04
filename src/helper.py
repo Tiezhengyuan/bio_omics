@@ -66,7 +66,8 @@ def add_params(params:dict={}):
         if params['pdb_group'] is not None:
             # add new record
             rec = (params['table_name'], params['pdb_group'], params['host'], params['ip_addr'], params['script'])
-            BuildComplex([rec,], params['verbose']).insert_batch_records('meta_execute')
+            bc = BuildComplex(params['verbose'])
+            bc.insert_batch_records([rec,], 'meta_execute')
             params['meta_execute'] = True
             if params['verbose']:
                 print('Update meta_exeucte:', rec)
@@ -117,11 +118,11 @@ def validate_data(col_name, params, meta):
     if n > 0:
         print(f"Number of {n} out of {len(rows)} are not existing.", end=' ')
         print(f"Try to delete rows in {table_name}...", end='')
-        uc = UpdateComplex(table_name, params['verbose'])
+        uc = UpdateComplex(params['verbose'])
         chunk_size = 100
         for i in range(0, n-chunk_size, chunk_size):
             values = del_pool[i:i+chunk_size]
-            uc.delete_rows(col_name, values)
+            uc.delete_rows(table_name, col_name, values)
             meta['delete_rows'] += len(values)
             print(i, end=' ')
         print(f'{n}\n')
@@ -151,7 +152,7 @@ def copy_data(outdir):
 def footer(meta, params:dict={}):
     # update table meta_execute with end time
     if params.get('meta_execute'):
-        UpdateComplex('meta_execute', params['verbose']).execute_end_time(params)
+        UpdateComplex(params['verbose']).execute_end_time('meta_execute', params)
     # print statistics of this run
     print('Statistics of this run', meta)
     print("Done!\n\n")

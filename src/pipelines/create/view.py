@@ -121,7 +121,14 @@ CREATE VIEW view_complex AS
     GROUP BY pdb_id
     ORDER BY num_chains, complex_type
 ;
-
+//
+DROP VIEW IF EXISTS view_proseq;
+CREATE VIEW view_proseq AS
+    SELECT seq_id, source, seq_head, seq_len, seq, relative_faa
+    FROM proseq_400
+    UNION
+    SELECT seq_id, source, seq_head, seq_len, seq, relative_faa
+    FROM proseq_1000;
 """
 
 

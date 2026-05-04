@@ -45,34 +45,44 @@ def run(row_iter, meta):
     for row in row_iter:
         hits = ParseBlastXml(row['aln_file']).hits()
         for hit in hits:
-            rec0 = (row['pdb_id'], hit['query'],)
-            hit_ids = ParseBlastXml.parse_imgt_allele(hit['hit_id'])
-            rec = rec0 + hit_ids + (
-                hit.get('evalue'),
-                hit.get('bit_score'),
-                hit.get('identities'),
-                hit.get('query_len'),
-                hit.get('align_len'),
-                hit.get('query_start'),
-                hit.get('query_end'),
-                hit.get('query_seq'),
-                hit.get('match_seq'),
-                hit.get('sbjct_seq'),
-                hit.get('sbjct_start'),
-                hit.get('sbjct_end'),
-            )
             meta['hits'] += 1
-            yield rec
+            item = {
+                'pdb_id': row['pdb_id'],
+                'chain_id': hit['query'],
+                'evalue': hit.get('evalue'),
+                'bit_score': hit.get('bit_score'),
+                'identities': hit.get('identities'),
+                'query_len': hit.get('query_len'),
+                'align_len': hit.get('align_len'),
+                'query_start': hit.get('query_start'),
+                'query_end': hit.get('query_end'),
+                'query_seq': hit.get('query_seq'),
+                'match_seq': hit.get('match_seq'),
+                'sbjct_seq': hit.get('sbjct_seq'),
+                'sbjct_start': hit.get('sbjct_start'),
+                'sbjct_end': hit.get('sbjct_end'),
+            }
+            item.update(
+                ParseBlastXml.parse_imgt_allele(hit['hit_id'])
+            )
+            rec = [item[col] for col in params['table_cols']]
+            yield tuple(rec)
+
 
 if __name__ == "__main__":
     params.update({
         'table_name': 'align_jregion',
+        'table_cols': ['pdb_id', 'chain_id', 'allele_name', 'specie',
+            'gene_name', 'gene_family', 'chain_type', 'isotype',
+            'evalue', 'bit_score', 'identities', 'query_len', 'align_len',
+            'query_start', 'query_end', 'query_seq', 'match_seq',
+            'sbjct_seq', 'sbjct_start', 'sbjct_end',],
     })
     print(f"Try to insert data into {params['table_name']}...")
     row_iter = retrieve(params, meta)
     record_iter = run(row_iter, meta)
     bc = BuildComplex(record_iter, params['verbose'])
-    bc.insert_batch_records(params['table_name'])
+    bc.insert_batch_records(params['table_name'], params['table_cols'])
 
     footer(meta)
 
