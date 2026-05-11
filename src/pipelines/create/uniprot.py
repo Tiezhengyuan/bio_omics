@@ -56,6 +56,13 @@ CREATE TABLE uniprot_feature (
         REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 );
 //
+DROP TABLE IF EXISTS uniprot_pro_seq;
+CREATE TABLE uniprot_pro_seq (
+    uniprot_acc  VARCHAR(20) PRIMARY KEY,
+    proseq_name  VARCHAR(20),
+    seq_id       INT
+);
+//
 DROP TABLE IF EXISTS uniprot_meta_alphafold;
 CREATE TABLE uniprot_meta_alphafold (
     uniprot_acc     VARCHAR(20),

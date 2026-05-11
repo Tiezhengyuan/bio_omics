@@ -17,7 +17,7 @@ class ProcessPickle:
             return self.save_pickle(old_data)
         return self.save_pickle(data)
 
-    def save_pickle(self, data) -> bool:
+    def save_pickle(self, data) -> str:
         try:
             with open(self.pickle_file, 'wb') as f:
                 pickle.dump(data, f)
@@ -30,7 +30,7 @@ class ProcessPickle:
             pass
         return 'fail'
 
-    def load_pickle(self, default:int=None):
+    def load_pickle(self, default=None):
         try:
             with open(self.pickle_file, 'rb') as f:
                 if self.verbose:

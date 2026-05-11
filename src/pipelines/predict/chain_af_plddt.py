@@ -1,16 +1,16 @@
 '''
 requirements:
     - alphafold prediciton model in PDB
-    - table chain_alphafold
+    - table chain_af
 example: 
-    - parallel -j8 python app.py chain_af_plddt ::: {0..237}
+    - parallel -j8 python app.py chain_af_plddt ::: {0..240}
     - python app.py chain_af_plddt 0
 functions:
     - calculate pLDDT
-    - put pLDDT to table chain_alphafold_plddt
+    - put pLDDT to table chain_af_plddt
 '''
 from src.helper import *
-from bioomics import CalculatePlddt
+from bioomics import ProcessPickle, CalculatePlddt
 
 @header
 def retrieve_rows(params, meta):
@@ -29,7 +29,7 @@ def retrieve_rows(params, meta):
 
     query = f"""
         SELECT c.pdb_id, a.chain_id, a.endpoint
-        FROM chain_alphafold  a
+        FROM chain_af         a
         LEFT JOIN pdb_chainid c ON a.chain_id = c.chain_id
         LEFT JOIN meta_pdb    p ON c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
@@ -43,6 +43,7 @@ def retrieve_rows(params, meta):
         for file_name in os.listdir(indir):
             if file_name.endswith('.pdb'):
                 relative_pdb = os.path.join(row['endpoint'], file_name)
+                # this file not in table chain_plddt
                 if relative_pdb not in pdb_files:
                     row['relative_pdb'] = relative_pdb
                     row['pdb_file'] = os.path.join(indir, file_name)
@@ -53,14 +54,14 @@ def retrieve_rows(params, meta):
 
 def cal_plddt(rows, params, meta):
     for row in rows:
+        meta['records'] += 1
         pdb_id = row['pdb_id']
         chain_id = row['chain_id']
         endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id, chain_id)
-        outdir = Path(params['predict_dir']) / endpoint
-        outdir.mkdir(parents=True, exist_ok=True)
+        outdir = os.path.join(params['predict_dir'], endpoint)
+        Path(outdir).mkdir(parents=True, exist_ok=True)
 
-        data = None
-        pfile = outdir / row['pkl_name']
+        pfile = os.path.join(outdir, row['pkl_name'])
         if params['overwrite'] or (not os.path.isfile(pfile)):
             # load structure before calculation
             cp = CalculatePlddt(row['pdb_file'], outdir)
@@ -79,14 +80,16 @@ def cal_plddt(rows, params, meta):
             meta['skip'] += 1
 
         # build record
+        data = ProcessPickle(pfile).load_pickle()
         if data and data.get('pLDDT'):
+            meta['insert_chains'] += 1
             relative_path = os.path.join(endpoint, row['pkl_name'])
             for item in data['pLDDT']:
+                meta['insert_records'] += 1
                 rec = (
                     row['chain_id'],
                     row['relative_pdb'],
                     row['ranking'],
-                    'alphafold2',
                     item['stats'].get('mean_plddt'),
                     relative_path,
                 )
@@ -95,7 +98,7 @@ def cal_plddt(rows, params, meta):
 if __name__ == "__main__":
     params.update({
         'overwrite': False,
-        'table_name': 'chain_plddt',
+        'table_name': 'chain_af_plddt',
     })
     # retrieve pdb_ids
     rows = retrieve_rows(params, meta)
@@ -105,7 +108,7 @@ if __name__ == "__main__":
 
     print("Try to insert pLDDT data into table")
     # insert data
-    bc = BuildComplex(plddt_data_iter, params['verbose'])
-    bc.insert_batch_records(params['table_name'])
+    bc = BuildComplex(params['verbose'])
+    bc.insert_batch_records(plddt_data_iter, params['table_name'])
 
     footer(meta)

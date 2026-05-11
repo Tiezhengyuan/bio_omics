@@ -2,7 +2,7 @@
 requirements:
     - table chain_alphafold
 example: 
-    - parallel -j8 python app.py chain_af_summary ::: {0..237}
+    - parallel -j8 python app.py chain_af_summary ::: {0..240}
     - python app.py chain_af_summary 0
 functions:
     - retrieve summary of alphafold prediction to table chain_af_summary
@@ -50,8 +50,8 @@ def retrieve_rows(params, meta):
 
     query = f"""
         SELECT a.pdb_id, a.chain_id, a.endpoint
-        FROM chain_alphafold  a
-        LEFT JOIN meta_pdb    p ON a.pdb_id = p.pdb_id
+        FROM chain_af      a
+        LEFT JOIN meta_pdb p ON a.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND a.endpoint IS NOT NULL
     ;"""
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         'table_name': 'chain_af_summary',
     })
     rows = retrieve_rows(params, meta)
-    bc = BuildComplex(rows, params['verbose'], params['chunk_size'])
-    bc.insert_batch_records(params['table_name'])
+    bc = BuildComplex(params['verbose'], params['chunk_size'])
+    bc.insert_batch_records(rows, params['table_name'])
 
     footer(meta)

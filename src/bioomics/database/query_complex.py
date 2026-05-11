@@ -14,7 +14,7 @@ class QueryComplex(QueryDb):
         query = f"""
             SELECT MAX(release_date) AS date FROM {table_name}
         ;"""
-        res = self.list_data(query, False)
+        res = self.list_data(query)
         return res[0]['date']
 
     def get_pdb_groups(self):
@@ -97,7 +97,7 @@ class QueryComplex(QueryDb):
                 SELECT pro_seq AS seq FROM protein_seq
                 WHERE pro_len = {pro_len}
             ;"""
-            rows = self.list_data(query, True)
+            rows = self.list_data(query)
             if rows:
                 db_seq = [i['seq'] for i in rows]
                 new_seq = set(input_seq).difference(db_seq)
@@ -174,7 +174,8 @@ class QueryComplex(QueryDb):
         parse chain_id if their sequences are identical
         '''
         query = "select chain_id, first_chain_id from pdb_chain_seq;"
-        df = self.list_data(query, True)
+        rows = self.list_data(query)
+        df = pd.DataFrame(rows)
 
         res = {}
         for _, sub in df.groupby('first_chain_id'):
@@ -183,13 +184,14 @@ class QueryComplex(QueryDb):
                 res[_id] = ids
         return res
     
-    def parse_chain_prediction(self):
-        query = """
-            SELECT chain_id, predictor, relative_pdb
-            FROM chain_plddt
+    def parse_chain_prediction(self, table_name:str):
+        query = f"""
+            SELECT chain_id, relative_pdb
+            FROM {table_name}
             WHERE relative_pdb REGEXP '_relaxed_'
         """
-        pred = self.list_data(query, True)
+        rows = self.list_data(query)
+        pred = pd.DataFrame(rows)
         g = pred.groupby('chain_id')
         pred = dict(tuple(g))
 
@@ -238,14 +240,15 @@ class QueryComplex(QueryDb):
             FROM pdb_chainid c
             LEFT JOIN meta_pdb       p ON c.pdb_id=p.pdb_id
             LEFT JOIN pdb_chain_seq  s ON c.chain_id=s.chain_id
-            LEFT JOIN meta_chain_faa f ON c.chain_id=f.chain_id
-            LEFT JOIN meta_chain_pdb d ON c.chain_id=d.chain_id
+            LEFT JOIN chain_faa      f ON c.chain_id=f.chain_id
+            LEFT JOIN chain_pdb      d ON c.chain_id=d.chain_id
             WHERE p.pdb_group = {pdb_group}
                 AND c.model_no = 0
                 AND f.relative_path IS NOT NULL
                 AND d.chain_pdb IS NOT NULL
         ;"""
-        df = self.list_data(query, True)
+        rows = self.list_data(query)
+        df = pd.DataFrame(rows)
         g = df.groupby(['pdb_id', 'model_no'])
         res = {key: sub for key, sub in g}
         return res
@@ -264,31 +267,51 @@ class QueryComplex(QueryDb):
             rows = self.list_data(query)
             return rows
 
-    def parse_seqid(self, seqs:list) -> tuple:
-        # group sequences
-        pool = defaultdict(list)
-        for seq in seqs:
+    def pack_proseq(self, query) -> tuple:
+        pool = {}
+        rows = self.list_data(query)
+        for row in rows:
+            seq = row['seq']
             seq_head = seq[:10]
             seq_len = len(seq)
             table_name = 'proseq_400' if seq_len <= 400 else ('proseq_1000' \
                 if seq_len <=1000 else 'proseq_long')
-            key = (table_name, seq_head)
-            if seq not in pool[key]:
-                pool[key].append(seq)
+            row['proseq_name'] = table_name
+            key = (table_name, seq_head, seq_len)
+            if key not in pool:
+                pool[key] = []
+            pool[key].append(row)
+
+        #present data
+        for key, rows in pool.items():
+            if self.verbose:
+                print(f'Present {len(key)} data with conditions={key}.')
+            yield key, rows
+
+    def parse_seqid(self, conditions, data:list) -> tuple:
+        '''
+        default key name is 'seq'
+        '''
+        if not data:
+            return ([], [])
+        # retrieve seq ~ seq_id
+        table_name, seq_head, seq_len = conditions
+        qc = QueryComplex(self.verbose)
+        query = f"""
+            SELECT seq_id, seq FROM {table_name}
+            WHERE seq_head = '{seq_head}'
+                AND seq_len = {seq_len}
+        """
+        rows = qc.list_data(query)
+        ids = {r['seq']:r['seq_id'] for r in rows}
 
         #parse, and collect unparsed
-        res, fail = {}, []
-        qc = QueryComplex(self.verbose)
-        for (table_name, seq_head), seqs in pool.items():
-            query = f"""
-                SELECT seq_id, seq FROM {table_name}
-                WHERE seq_head = '{seq_head}'
-            """
-            rows = qc.list_data(query)
-            ids = {r['seq']:r['seq_id'] for r in rows}
-            for seq in seqs:
-                if seq in ids:
-                    res[seq] = ids[seq]
-                else:
-                    fail.append(seq)
-        return res, fail
+        parsed, unknown = [], []
+        for item in data:
+            seq = item['seq']
+            if seq in ids:
+                item['seq_id'] = ids[seq]
+                parsed.append(item)
+            else:
+                unknown.append(item)
+        return (parsed, unknown)

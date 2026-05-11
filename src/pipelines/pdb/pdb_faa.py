@@ -3,36 +3,36 @@ requirements:
     - PDB data
     - table meta_pdb
 example: 
-    - parallel -j4 python app.py pdb_faa ::: {0..237}
+    - parallel -j4 python app.py pdb_faa ::: {0..240}
     - python app.py pdb_faa 0
 functions:
-    - retrieve pdb to fasta
-    - blastp against uniprot_sprot
+    - retrieve chains from pdb, and export them to fasta
 '''
 
 from src.helper import *
 from bioomics import Pdb, ProcessFasta
 
-def retrieve_pdb(params, meta):
+@header
+def retrieve(params, meta):
     pdb_group = params['pdb_group']
     table_name = params['table_name']
     query = f"""
-        SELECT pdb_id, relative_path
-        FROM meta_pdb
+        SELECT pdb_id, relative_path FROM meta_pdb
         WHERE pdb_group = {pdb_group}
             AND pdb_id NOT IN (
                 SELECT DISTINCT pdb_id FROM {table_name}
             );
     """
     rows = QueryComplex(params['verbose']).list_data(query)
-    meta['pdb_group'] = int(pdb_group)
     meta['rows'] = len(rows)
-
     print(f"{len(rows)} PDB files ready for processing...")
+    return rows
+
+def build(rows, params, meta):
     for row in rows:
         # load structure
         pdb_id = row['pdb_id']
-        pdb_file = os.path.join(params['pdb_dir'], row['relative_path'])
+        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_path'])
         p = Pdb(pdb_file, None, params['verbose'])
         p.load_structure()
 
@@ -41,8 +41,8 @@ def retrieve_pdb(params, meta):
         if model_chains:
             # prepare direcotry
             endpoint = os.path.join( params['table_name'], pdb_id[:2], pdb_id)
-            outdir = os.path.join(params['data_dir'], endpoint)
-            Dir(outdir).init_dir()
+            outdir = os.path.join(params['output_pdb_dir'], endpoint)
+            Path(outdir).mkdir(parents=True, exist_ok=True)
             
             for model_no, chains_seq in model_chains.items():
                 file_name = f"{pdb_id}_{model_no}.faa"
@@ -60,19 +60,17 @@ def retrieve_pdb(params, meta):
 
 
 if __name__ == "__main__":
-    params = {
-        'pdb_group': sys.argv[1],
-        'verbose': True,
-        'pdb_dir': os.getenv('pdb_dir'),
-        'data_dir': os.getenv('data_dir'),
+    params.update({
         'chunk_size': 50,
         'table_name': 'pdb_faa',
-    }
+    })
 
     # retrieve pdb_ids
-    record_iter = retrieve_pdb(params, meta)
-    bc = BuildComplex(record_iter, params['verbose'], params['chunk_size'])
-    bc.insert_batch_records(params['table_name'])
+    rows = retrieve(params, meta)
+    record_iter = build(rows, params, meta)
+
+    bc = BuildComplex(params['verbose'], params['chunk_size'])
+    bc.insert_batch_records(record_iter, params['table_name'])
 
     footer(meta)
 

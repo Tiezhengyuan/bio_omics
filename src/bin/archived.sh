@@ -28,11 +28,7 @@ parallel -j8 python ${PIPELINE_DIR}/chain_relaxed_amber14.py ::: {0..117}
 
 
 
-# RMSD
-parallel -j8 python ${APP_DIR}/app.py equal_seq_rmsd ::: {0..117}
 
-#contacts
-parallel -j8 python ${APP_DIR}/app.py combo2_contacts ::: {0..117}
 
 # antibody numbering
 parallel -j8 python ${APP_DIR}/app.py anarci ::: {0..117}

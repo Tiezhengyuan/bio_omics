@@ -3,14 +3,14 @@
 requirements:
     - table meta_pdb, pdb_chainid
 example:
-    - parallel -j4 python app.py pdb_chain_type ::: {0..237}
+    - parallel -j4 python app.py pdb_chain_type ::: {0..240}
     - python app.py pdb_chain_type 0
 function:
-    - fix pdb files
-    - insert data into table pdb_chain_type
+    - identify chain type according pdb file
 '''
 
 from src.helper import *
+from bioomics import Pdb
 
 @header
 def retrieve_pdb(params, meta):
@@ -26,10 +26,9 @@ def retrieve_pdb(params, meta):
     """
     rows = QueryComplex(params['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
-    meta['pdb_group'] = int(pdb_group)
     meta['rows'] += len(rows)
     for row in rows:
-        pdb_file = os.path.join(params['pdb_dir'], row['relative_path'])
+        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_path'])
         if os.path.isfile(pdb_file):
             row['pdb_file'] = pdb_file
             yield row
@@ -52,8 +51,8 @@ def detect_chain_type(rows, params, meta):
                 meta['chain'] += 1
                 yield rec
         else:
-            rec0 = (pdb_id,) + (None,) * 11
-            yield rec0
+            yield (pdb_id,) + (None,) * 11
+            meta['null'] += 1
 
 
 if __name__ == "__main__":
@@ -61,11 +60,11 @@ if __name__ == "__main__":
         'chunk_size': 50,
         'table_name': 'pdb_chain_type',
     })
-    rows = retrieve_pdb(params, meta)
-
     # retrieve chain types
+    rows = retrieve_pdb(params, meta)
     record_iter = detect_chain_type(rows, params, meta)
-    bc = BuildComplex(record_iter, params['verbose'], params['chunk_size'])
-    bc.insert_batch_records(params['table_name'])
+
+    bc = BuildComplex(params['verbose'], params['chunk_size'])
+    bc.insert_batch_records(record_iter, params['table_name'])
 
     footer(meta)

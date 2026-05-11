@@ -3,7 +3,7 @@
 requirements:
     - table meta_combo3
 example:
-    - parallel -j16 python app.py combo3_relaxed ::: {0..237}
+    - parallel -j16 python app.py combo3_relaxed ::: {0..240}
     - python app.py combo3_relaxed 0
 function:
     - fix pdb files
@@ -11,7 +11,7 @@ function:
     - insert data into table combo3_relaxed
 '''
 from src.helper import *
-from bioomics import OpenmmPdbfixer, OpenmmSimulation
+from bioomics import WriteTmp, ProcessJson, OpenmmPdbfixer, OpenmmSimulation
 
 @header
 def retrieve_pdb(params, meta):
@@ -36,7 +36,7 @@ def dry_run(rows, params, meta):
             'endpoint': endpoint,
             'output_dir': output_dir,
             'time0': time0.strftime("%Y-%m-%d %H:%M:%S"),
-            'input_pdb_file': os.path.join(params['data_dir'], row['combo_pdb'])
+            'input_pdb_file': os.path.join(params['output_pdb_dir'], row['combo_pdb'])
         }
         # fix meta
         fixed_pdb = os.path.join(output_dir, 'fixed.pdb')
@@ -87,7 +87,7 @@ def fix_and_relax(row, params, meta):
         # fix pdb
         fixed_pdb = os.path.join(outdir, 'fixed.pdb')
         if params['overwrite'] is True or not os.path.isfile(fixed_pdb):
-            input_pdb = os.path.join(params['data_dir'], row['combo_pdb'])
+            input_pdb = os.path.join(params['output_pdb_dir'], row['combo_pdb'])
             curr_params = {
                 'verbose': params['verbose'],
                 'outdir': outdir,
@@ -138,6 +138,9 @@ def fix_and_relax(row, params, meta):
         info['time1'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         ProcessJson.save_json(info, info_json)
     
+    # upload results if needed
+    copy_data(output_dir)
+
     # update record
     if 'fixed_pdb' in info:
         rec = (
@@ -165,13 +168,13 @@ if __name__ == "__main__":
 
     if params['dry_run']:
         record_iter = dry_run(rows, params, meta)
-        bc = BuildComplex(record_iter, params['verbose'], 2)
-        bc.insert_batch_records(params['table_name'])
+        bc = BuildComplex(params['verbose'], 2)
+        bc.insert_batch_records(record_iter, params['table_name'])
     else:
         for row in rows:
             rec = fix_and_relax(row, params, meta)
-            bc = BuildComplex([rec,], params['verbose'])
-            bc.insert_batch_records(params['table_name'])
+            bc = BuildComplex(params['verbose'])
+            bc.insert_batch_records([rec,], params['table_name'])
 
     # validate_data('fixed_pdb', params, meta)
     # validate_data('relaxed_pdb', params, meta)

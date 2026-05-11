@@ -1,8 +1,8 @@
 '''
 requirements:
-    - chain_plddt
+    - table: chain_af_plddt
 example: 
-    - parallel -j8 python app.py chain_rmsd ::: {0..237}
+    - parallel -j8 python app.py chain_rmsd ::: {0..240}
     - python app.py chain_rmsd 0
 functions:
     - similarity between model and sample structure
@@ -16,8 +16,8 @@ def pull_raw_pdb(params, meta):
     table_name = params['table_name']
     query = f"""
         SELECT c.pdb_id, c.chain_id, c.chain_pdb AS native_pdb
-        FROM meta_chain_pdb c 
-        LEFT JOIN meta_pdb  p ON c.pdb_id = p.pdb_id
+        FROM chain_pdb     c 
+        LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND c.chain_pdb IS NOT NULL
             AND c.chain_pdb NOT IN (
@@ -34,8 +34,8 @@ def pull_fixed_pdb(params, meta):
     table_name = params['table_name']
     query = f"""
         SELECT c.pdb_id, c.chain_id, c.fixed_pdb AS native_pdb
-        FROM meta_chain_relaxed c 
-        LEFT JOIN meta_pdb      p ON c.pdb_id = p.pdb_id
+        FROM chain_relaxed c 
+        LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND c.fixed_pdb IS NOT NULL
             AND c.fixed_pdb NOT IN (
@@ -52,8 +52,8 @@ def pull_relaxed_pdb(params, meta):
     table_name = params['table_name']
     query = f"""
         SELECT c.pdb_id, c.chain_id, c.relaxed_pdb AS native_pdb
-        FROM meta_chain_relaxed c 
-        LEFT JOIN meta_pdb      p ON c.pdb_id = p.pdb_id
+        FROM chain_relaxed c 
+        LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND c.relaxed_pdb IS NOT NULL
             AND c.relaxed_pdb NOT IN (
@@ -69,7 +69,7 @@ def calculate_rmsd(rows:list, pred:dict, params, meta):
     am = EvalPred()
     for row in rows:
         chain_id = row['chain_id']
-        native_pdb = os.path.join(params['data_dir'], row['native_pdb'])
+        native_pdb = os.path.join(params['output_pdb_dir'], row['native_pdb'])
         pdb_status = 'Raw'
         if row['native_pdb'].endswith('fixed.pdb'):
             pdb_status = 'Fixed'
@@ -99,15 +99,18 @@ if __name__ == "__main__":
         'chunk_size': 50,
         'table_name': 'chain_rmsd',
     })
+
+    qc = QueryComplex(params['verbose'])
+    pred = qc.parse_chain_prediction('chain_af_plddt')
+
     pool = [
         pull_raw_pdb(params, meta),
         pull_fixed_pdb(params, meta),
         pull_relaxed_pdb(params, meta),
     ]
-    pred = QueryComplex(params['verbose']).parse_chain_prediction()
     for rows in pool:
         record_iter = calculate_rmsd(rows, pred, params, meta)
-        bc = BuildComplex(record_iter, params['verbose'], params['chunk_size'])
-        bc.insert_batch_records(params['table_name'])
+        bc = BuildComplex(params['verbose'], params['chunk_size'])
+        bc.insert_batch_records(record_iter, params['table_name'])
 
     footer(meta)

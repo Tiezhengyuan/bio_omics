@@ -26,9 +26,9 @@ fixed_pdb -> relaxed_pdb_amber99sb
 fixed_pdb -> fixed_chain -> chain_relaxed_amber14
 
 # method 3: chain/combo -> fixed + relaxed
-meta_chain_pdb -> meta_chain_relaxed
-meta_combo2 -> combo2_relaxed
-meta_combo3 -> combo3_relaxed
+chain_pdb -> chain_relaxed
+combo2 -> combo2_relaxed
+combo3 -> combo3_relaxed
 '''
 
 SQL_TEXT = """
@@ -69,8 +69,8 @@ CREATE TABLE chain_relaxed_amber14 (
     UNIQUE (chain_id)
 );
 //
-DROP TABLE IF EXISTS meta_chain_relaxed;
-CREATE TABLE meta_chain_relaxed (
+DROP TABLE IF EXISTS chain_relaxed;
+CREATE TABLE chain_relaxed (
     pdb_id              VARCHAR(10),
     chain_id            VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     time0               DATETIME,

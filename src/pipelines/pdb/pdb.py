@@ -9,41 +9,55 @@ function:
 '''
 
 from src.helper import *
-from bioomics import PullPdb
+from bioomics import PullPdb, Pdb
 
-def scan_raw_data(db_pdb_ids, params, meta):
-    raw_pdb_dir = os.path.join(params['pdb_dir'], params['data_format'])
+def scan(db_pdb_ids, params, meta):
+    raw_pdb_dir = os.path.join(params['rawdata_pdb_dir'], params['data_format'])
     pdb_path_dict = PullPdb(raw_pdb_dir).get_raw_pdb()
 
-    ud = UpdateComplex(params['table_name'], params['verbose'])
+    uc = UpdateComplex(params['verbose'])
     for pdb_id in db_pdb_ids:
         if pdb_id in pdb_path_dict:
             del pdb_path_dict[pdb_id]
         else:
-            res = ud.delete_rows('pdb_id', pdb_id)
+            res = uc.delete_rows(params['table_name'], 'pdb_id', pdb_id)
             if res:
                 meta['delete_pdb'] += 1
             else:
                 meta['delete_fail'] += 1
     meta['new_pdb_files'] = len(pdb_path_dict)
-    return pdb_path_dict
+    pdb_files = pdb_path_dict.values()
+    return pdb_files
 
+def build(pdb_files, params, meta):
+    for pdb_file in pdb_files:
+        p = Pdb(pdb_file, None, params['verbose'])
+        p.load_structure()
+
+        pdb_id = p.structure_id
+        pdb_url = f"https://www.rcsb.org/structure/{pdb_id}"
+        release_date = p.structure.header['release_date']
+        name = p.structure.header['name']
+        rec = (pdb_id, pdb_url, release_date, name)
+        meta['records'] += 1
+        yield rec
 
 if __name__ == "__main__":
-    params = {
-        'verbose': True,
-        'pdb_dir': os.getenv('pdb_dir'),
+    params.update({
         'data_format': 'pdb',
         'table_name': 'pdb',
-    }
+    })
     # get pdb in db
     qc = QueryComplex(params['verbose'])
     db_pdb_ids = qc.unique_values(params['table_name'], 'pdb_id')
     meta['db_pdb'] = len(db_pdb_ids)
 
     # scan raw data
-    pdb_path_dict = scan_raw_data(db_pdb_ids, params, meta)
-    pdb_files = pdb_path_dict.values()
-    BuildComplex(pdb_files, params['verbose']).insert_pdb()
+    pdb_files = scan(db_pdb_ids, params, meta)
+    record_iter = build(pdb_files, params, meta)
+
+    # update table pdb
+    bc = BuildComplex(params['verbose'])
+    bc.insert_batch_records(record_iter, params['table_name'])
 
     footer(meta)

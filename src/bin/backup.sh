@@ -1,7 +1,7 @@
 #!/usr/bin/bash
 
 # example: 
-# bash src/bin/backup.sh output-predict
+# bash src/bin/backup.sh mysql
 
 name=$1
 BK_DIR="/home/yuan/output/backup_mysql"

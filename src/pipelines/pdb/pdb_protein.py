@@ -2,7 +2,7 @@
 requirements:
     - enough free space ~500GB
 example:
-    - parallel -j8 python app.py pdb_protein ::: {0..237}
+    - parallel -j8 python app.py pdb_protein ::: {0..240}
     - python app.py pdb_protein 0
 functions:
  - download fasta sequences
@@ -10,15 +10,14 @@ functions:
  '''
 
 from src.helper import *
-from bioomics import PullPdb
+from bioomics import PullPdb, ProcessFasta
 
 @header
-def retrieve_data(params, meta):
+def retrieve(params, meta):
     pdb_group = params['pdb_group']
     table_name = params['table_name']
     query = f"""
-        SELECT pdb_id
-        FROM meta_pdb
+        SELECT pdb_id FROM meta_pdb
         WHERE pdb_group = {pdb_group}
         EXCEPT
         SELECT pdb_id FROM {table_name}
@@ -28,7 +27,7 @@ def retrieve_data(params, meta):
     return rows
 
 def download_fasta(rows, params, meta):
-    p = PullPdb(params['pdb_dir'], params['verbose'])
+    p = PullPdb(params['rawdata_pdb_dir'], params['verbose'])
     for row in rows:
         pdb_id = row['pdb_id']
         fa_file, endpoint = p.download_fasta(pdb_id)
@@ -38,13 +37,15 @@ def download_fasta(rows, params, meta):
                 items = record.description.split('|')
                 pro_id = items[0]
                 s1 = re.findall(r'Chains? ([\w|,| ]*)\[?', items[1])
-                chain = s1[0] if s1 else None
+                chain = s1[0].replace(' ', '') if s1 else None
                 s2 = re.findall(r'\[auth (.)\]', items[1])
                 auth_chain = s2[0] if s2 else None
                 pro_seq = str(record.seq)
                 pro_len = len(pro_seq)
+                meta['seqs'] += 1
                 yield (pdb_id, endpoint, pro_id, chain, auth_chain, pro_len, pro_seq)
         else:
+            meta['null'] += 1
             yield (pdb_id, ) + (None,) * 6
 
 
@@ -55,8 +56,10 @@ if __name__ == "__main__":
         'table_name': 'pdb_protein',
     })
 
-    rows = retrieve_data(params, meta)
+    rows = retrieve(params, meta)
     record_iter = download_fasta(rows, params, meta)
-    bc = BuildComplex(record_iter, params['verbose'], params['chunk_size'])
-    bc.insert_batch_records(params['table_name'])
+    
+    bc = BuildComplex(params['verbose'], params['chunk_size'])
+    bc.insert_batch_records(record_iter, params['table_name'])
+
     footer(meta)

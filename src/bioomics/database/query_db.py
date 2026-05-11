@@ -9,16 +9,15 @@ class QueryDb(Db):
     def __init__(self, verbose:bool=False):
         super().__init__(verbose)
 
-    def list_data(self, query:str, is_df:bool=False):
+    def list_data(self, query:str) -> list:
         # try not more than 3 times
         for _ in range(3):
             res = self.execute_fetch(query)
             if res == -1:
                 gc.collect()
                 time.sleep(5)
-            if is_df:
-                return pd.DataFrame(res)
-            return res
+            else:
+                return res
         return []
         
     def table_exists(self, table_name:str) -> bool:
@@ -43,18 +42,16 @@ class QueryDb(Db):
             FROM {table_name}
             WHERE {col_name} IS NOT NULL;
         """
-        rows = self.list_data(query, True)
+        rows = self.list_data(query)
         if self.verbose:
             print(f"Detect {len(rows)} records in {table_name}.{col_name}.")
-        if len(rows) > 0:
-            return list(rows[col_name])
-        return []
+        return [i[col_name] for i in rows]
 
     def next_id(self, table_name, col_name):
         query = f"""
             SELECT MAX({col_name}) AS id FROM {table_name};
         """
-        res = self.list_data(query, False)
+        res = self.list_data(query)
         curr = res[0]['id']
         return int(curr) + 1 if curr else 1
 
@@ -63,11 +60,11 @@ class QueryDb(Db):
             SELECT MAX({col}) AS val
             FROM {table_name}
         ;"""
-        res = self.list_data(query, False)
+        res = self.list_data(query)
         return res[0]['val']
 
     def table_names(self):
         query = "SHOW TABLES;"
-        res = self.list_data(query, False)
+        res = self.list_data(query)
         res = pd.DataFrame(res).iloc[:,0]
         return tuple(res)

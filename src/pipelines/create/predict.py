@@ -10,19 +10,19 @@ functions:
 from create_helper import *
 
 '''
-meta_pdb -> view_pdb_chain -> chain_alphafold -> chain_alphafold_plddt
+meta_pdb -> view_pdb_chain -> chain_af -> chain_af_plddt
                                               -> chain_model_measure
-         -> meta_combo2 -> combo2_alphafold
-         -> meta_combo3 -> combo3_alphafold
+         -> meta_combo2 -> combo2_af
+         -> meta_combo3 -> combo3_af
 
 '''
 
 
 SQL_TEXT = """
-DROP TABLE IF EXISTS chain_alphafold;
-CREATE TABLE chain_alphafold (
+DROP TABLE IF EXISTS chain_af;
+CREATE TABLE chain_af (
     pdb_id              VARCHAR(10),
-    chain_id            VARCHAR(20),
+    chain_id            VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     endpoint            VARCHAR(60),
     host                VARCHAR(10),
     predicted_at        DATETIME,
@@ -33,8 +33,7 @@ CREATE TABLE chain_alphafold (
 );
 DROP TABLE IF EXISTS chain_af_summary;
 CREATE TABLE chain_af_summary (
-    predict_id      INT AUTO_INCREMENT PRIMARY KEY,
-    chain_id        VARCHAR(20),
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     ranking         INT,
     avg_plddt       FLOAT,
     avg_ptm         FLOAT,
@@ -45,14 +44,12 @@ CREATE TABLE chain_af_summary (
     UNIQUE (chain_id, relaxed_pdb)
 );
 //
-DROP TABLE IF EXISTS chain_plddt;
-CREATE TABLE chain_plddt (
-    predict_id      INT AUTO_INCREMENT PRIMARY KEY,
-    chain_id        VARCHAR(20),
+DROP TABLE IF EXISTS chain_af_plddt;
+CREATE TABLE chain_af_plddt (
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     ranking         INT,
-    predictor       VARCHAR(10),
     avg_plddt       FLOAT,
-    relative_pkl    VARCHAR(100),
+    relative_pkl    VARCHAR(200),
     relative_pdb    VARCHAR(100),
     UNIQUE (chain_id, relative_pdb)
 );
@@ -60,7 +57,7 @@ CREATE TABLE chain_plddt (
 DROP TABLE IF EXISTS chain_rmsd;
 CREATE TABLE chain_rmsd (
     pdb_id          VARCHAR(10),
-    chain_id        VARCHAR(20),
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     rmsd            FLOAT,
     chain_status    VARCHAR(20),
     native_pdb      VARCHAR(100),
@@ -72,7 +69,7 @@ CREATE TABLE chain_rmsd (
 DROP TABLE IF EXISTS chain_tmalign;
 CREATE TABLE chain_tmalign(
     pdb_id          VARCHAR(10),
-    chain_id        VARCHAR(20),
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     tm1             FLOAT,
     tm2             FLOAT,
     rmsd            FLOAT,
@@ -84,10 +81,10 @@ CREATE TABLE chain_tmalign(
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS combo2_alphafold;
-CREATE TABLE combo2_alphafold (
+DROP TABLE IF EXISTS combo2_af;
+CREATE TABLE combo2_af (
     pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(20),
+    combo_id            VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     endpoint            VARCHAR(60),
     host                VARCHAR(10),
     predicted_at        DATETIME,
@@ -96,10 +93,10 @@ CREATE TABLE combo2_alphafold (
     CONSTRAINT fk_combo2_alpha_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
-DROP TABLE IF EXISTS combo3_alphafold;
-CREATE TABLE combo3_alphafold (
+DROP TABLE IF EXISTS combo3_af;
+CREATE TABLE combo3_af (
     pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(20),
+    combo_id            VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     endpoint            VARCHAR(60),
     host                VARCHAR(10),
     predicted_at        DATETIME,

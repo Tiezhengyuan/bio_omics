@@ -20,50 +20,51 @@ pool = {
     # pdb-analysis
     'meta_bfactor': 'pdb.meta_bfactor',
     'pdb_bfactor': 'pdb.pdb_bfactor',
-    'pdb_dssp': 'pdb.pdb_dssp',
+    'chain_dssp': 'pdb.chain_dssp',
 
-    # pdb-seq
-    'chain_seq': 'pdb.pdb_chain_seq',
+    # pdb-chain
+    'chain_seq': 'pdb.chain_seq',
     'unique_chain_seq': 'pdb.unique_chain_seq',
     'pdb_faa': 'pdb.pdb_faa',
-    'meta_chain_faa': 'pdb.meta_chain_faa',
+    'chain_faa': 'pdb.chain_faa',
     'pdb_chain_type': 'pdb.pdb_chain_type',
-    'protein_pdb': 'pdb.protein_pdb',
+    'pdb_pro_seq': 'pdb.pdb_pro_seq',
+    'chain_pdb': 'pdb.chain_pdb',
 
-    #IMGT
-    'meta_vdj': 'immune.meta_vdj',
-    'align_vfrag': 'immune.align_vfrag',
-    'align_vregion': 'immune.align_vregion',
-    'align_dregion': 'immune.align_dregion',
-    'align_jregion': 'immune.align_jregion',
-    'label_antibody': 'immune.label_antibody',
-    # 'anarci': 'immune.anarci',
 
-    #uniprot
-    'blastp_uniprot': 'protein.blastp_uniprot',
-    'align_uniprot': 'protein.align_uniprot',
-
-    #structures
-    'meta_chain_pdb': 'pdb.meta_chain_pdb',
-    'combo2': 'pdb.combo2',
-    'combo3': 'pdb.combo3',
-    'combo4': 'pdb.combo4',
-    'combo5': 'pdb.combo5',
+    # uniprot
+    'uniprot': 'uniprot.uniprot',
+    'uniprot_keyword': 'uniprot.uniprot_keyword',
+    'uniprot_dbxrefs': 'uniprot.uniprot_dbxrefs',
+    'uniprot_feature': 'uniprot.uniprot_feature',
+    'uniprot_pro_seq': 'uniprot.uniprot_pro_seq',
+    'uniprot_alphafold': 'uniprot.uniprot_alphafold',
 
     #dynamics
-    'meta_chain_relaxed': 'dynamics.meta_chain_relaxed',
+    'chain_relaxed': 'dynamics.chain_relaxed',
+    'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
+    'combo2': 'dynamics.combo2',
     'combo2_relaxed': 'dynamics.combo2_relaxed',
     'combo2_distance': 'dynamics.combo2_distance',
     'combo2_sasa': 'dynamics.combo2_sasa',
-    'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
-    'combo2_contacts': 'dynamics.combo2_contacts',
+    'combo3': 'dynamics.combo3',
     'combo3_relaxed': 'dynamics.combo3_relaxed',
+    'combo4': 'dynamics.combo4',
     'combo4_relaxed': 'dynamics.combo4_relaxed',
+    'combo5': 'dynamics.combo5',
     'combo5_relaxed': 'dynamics.combo5_relaxed',
+    'combo_contacts': 'dynamics.combo_contacts',
 
-    # collect data
-    'collect_distance': 'collect.collect_distance',
-    'collect_ab_distance': 'collect.collect_ab_distance',
+    # align
+    'meta_blastp5': 'align.meta_blastp5',
+    'align_uniprot': 'align.align_uniprot',
+    'meta_vdj': 'align.meta_vdj',
+    'align_vfrag': 'align.align_vfrag',
+    'align_vregion': 'align.align_vregion',
+    'align_dregion': 'align.align_dregion',
+    'align_jregion': 'align.align_jregion',
+    'label_antibody': 'align.label_antibody',
+    # 'anarci': 'immune.anarci',
 
     # predict
     'chain_af': 'predict.chain_af',
@@ -73,6 +74,13 @@ pool = {
     'chain_tmalign': 'predict.chain_tmalign',
     'combo2_af': 'predict.combo2_af',
     'combo3_af': 'predict.combo3_af',
+
+
+    # collect data
+    'collect_distance': 'collect.collect_distance',
+    'collect_ab_distance': 'collect.collect_ab_distance',
+
+
 
     #other
     'clean_predict': 'clean.clean_predict',

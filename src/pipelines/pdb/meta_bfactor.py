@@ -3,7 +3,7 @@ requirements:
     - PDB raw data
     - table meta_pdb
 example: 
-    - parallel -j4 python app.py meta_bfactor ::: {0..237}
+    - parallel -j4 python app.py meta_bfactor ::: {0..240}
     - python app.py meta_bfactor 0
 functions:
     - calculate B-factor of PDB
@@ -17,8 +17,7 @@ def retrieve_rows(params, meta):
     pdb_group = params['pdb_group']
     table_name = params['table_name']
     query = f"""
-        SELECT pdb_id, relative_path
-        FROM meta_pdb
+        SELECT pdb_id, relative_path FROM meta_pdb
         WHERE pdb_group = {pdb_group}
             AND pdb_id NOT IN (
                 SELECT pdb_id FROM {table_name}
@@ -29,7 +28,7 @@ def retrieve_rows(params, meta):
     print(f"{len(rows)} PDB files ready...")
     meta['rows'] += len(rows)
     for row in rows:
-        pdb_file = os.path.join(params['pdb_dir'], row['relative_path'])
+        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_path'])
         if os.path.isfile(pdb_file):
             row['pdb_file'] =  pdb_file
             yield row
@@ -38,8 +37,8 @@ def cal_bfactor(rows, params, meta):
     for row in rows:
         pdb_id, pdb_file = row['pdb_id'], row['pdb_file']
         endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
-        outdir = os.path.join(params['data_dir'], endpoint)
-        Dir(outdir).init_dir()
+        outdir = os.path.join(params['output_pdb_dir'], endpoint)
+        Path(outdir).mkdir(parents=True, exist_ok=True)
 
         # calculate bfactor
         file_name = f"bfactor.pkl"
@@ -85,7 +84,7 @@ if __name__ == "__main__":
 
     # put bfactor into table
     print(f"Try put meta data to {params['table_name']}...")
-    bc = BuildComplex(record_iter, params['verbose'])
-    bc.insert_batch_records(params['table_name'])
+    bc = BuildComplex(params['verbose'])
+    bc.insert_batch_records(record_iter, params['table_name'])
 
     footer(meta)

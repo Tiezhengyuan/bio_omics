@@ -32,7 +32,8 @@ class QueryAntibody(QueryDb):
                 AND relative_faa IS NOT NULL
                 AND chain_pdb IS NOT NULL
         ;"""
-        df = self.list_data(query, True)
+        rows = self.list_data(query)
+        df = pd.DataFrame(rows)
         if groupby:
             return df.groupby(groupby)
         return df
@@ -58,8 +59,8 @@ class QueryAntibody(QueryDb):
                     SELECT chain_id FROM view_antibody
                 )
         ;"""
-        df = self.list_data(query, True)
-        return df
+        rows = self.list_data(query)
+        return pd.DataFrame(rows)
     
     def group_to_dict(self, df):
         res = {}

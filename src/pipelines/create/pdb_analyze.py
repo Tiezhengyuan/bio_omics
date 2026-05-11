@@ -67,13 +67,16 @@ CREATE TABLE pdb_chain_type(
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS pdb_dssp;
-CREATE TABLE pdb_dssp(
-    pdb_id          VARCHAR(10),
-    model_no        INT,
-    chain_no        VARCHAR(5),
-    dssp_seq        TEXT,
-    CONSTRAINT fk_pdb_dssp_pdb FOREIGN KEY (pdb_id)
+DROP TABLE IF EXISTS chain_dssp;
+CREATE TABLE chain_dssp(
+    pdb_id    VARCHAR(10),
+    chain_id  VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
+    model_no  INT,
+    chain_no  VARCHAR(5),
+    dssp_seq  TEXT,
+    host      VARCHAR(10),
+    UNIQUE(chain_id),
+    CONSTRAINT fk_chaindssp_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
@@ -99,14 +102,14 @@ CREATE TABLE combo2_sasa(
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS combo2_contacts;
-CREATE TABLE combo2_contacts(
+DROP TABLE IF EXISTS combo_contacts;
+CREATE TABLE combo_contacts(
     pdb_id                  VARCHAR(10),
     combo_id                VARCHAR(40),
     binding_affinity        FLOAT,
     dissociation_constant   FLOAT,
     relative_prodigy        VARCHAR(100),
-    CONSTRAINT fk_combo2_contacts_pdb FOREIGN KEY (pdb_id)
+    CONSTRAINT fk_combo_contacts_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //

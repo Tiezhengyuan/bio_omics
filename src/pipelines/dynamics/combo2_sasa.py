@@ -2,14 +2,14 @@
 requirments:
     - table combo2
 example: 
-    - parallel -j8 python app.py combo2_sasa ::: {0..237}
+    - parallel -j8 python app.py combo2_sasa ::: {0..240}
     - python app.py combo2_sasa 0
 functions:
     - calculate SASA and analyze PPI
     - put meta data to table combo2_sasa
 '''
 from src.helper import *
-from bioomics import SasaProcess
+from bioomics import SasaProcess, ProcessPickle, TABLE_COLUMNS
 
 @header
 def retrieve_query(params, meta):
@@ -17,12 +17,12 @@ def retrieve_query(params, meta):
     table_name = params['table_name']
     query = f"""
         WITH temp AS (
-            SELECT pdb_id FROM pdb_complex WHERE combo=2
+            SELECT pdb_id FROM label_complex WHERE combo=2
             EXCEPT
             SELECT pdb_id FROM {table_name}
         )
         SELECT S.pdb_id, S.combo_id, S.chain_combo, S.combo_pdb, S.chain_pdbs
-        FROM combo2 S
+        FROM combo2        S
         LEFT JOIN meta_pdb P ON S.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
             AND S.combo_pdb IS NOT NULL
@@ -33,18 +33,18 @@ def retrieve_query(params, meta):
     rows = QueryComplex(params['verbose']).list_data(query)
     meta['rows'] = len(rows)
     print(f"Group {pdb_group}: Collect combo2 chains from {len(rows)} PDB ...")
-    data_dir = params['data_dir']
+    _dir = params['output_pdb_dir']
     for row in rows:
-        row['combo_pdb_file'] = os.path.join(data_dir, row['combo_pdb'])
-        row['chain_pdb_files'] = [os.path.join(data_dir, f) for f in row['chain_pdbs'].split(',')]
+        row['combo_pdb_file'] = os.path.join(_dir, row['combo_pdb'])
+        row['chain_pdb_files'] = [os.path.join(_dir, f) for f in row['chain_pdbs'].split(',')]
         yield row
 
-def cal_sasa(rows, params, meta):
+def cal_sasa(row_iter, params, meta):
     # pdb_id, combo_id, combo_pdb_file, chain_pdb_files
-    for row in rows:
+    for row in row_iter:
         pdb_id = row['pdb_id']
         endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
-        outdir = os.path.join(params['data_dir'], endpoint)
+        outdir = os.path.join(params['simulate_dir'], endpoint)
         Path(outdir).mkdir(parents=True, exist_ok=True)
 
         file_name =  f"{row['combo_id']}.pkl"
@@ -63,12 +63,17 @@ def cal_sasa(rows, params, meta):
             meta['skip'] += 1
         
         # build record
-        delta_sasa, relative_path = None, None
+        item = {
+            'pdb_id': pdb_id,
+            'combo_id': row['combo_id'],
+        }
         if os.path.isfile(pfile):
-            relative_path = os.path.join(endpoint, file_name)
-            data = ProcessPickle(pfile, params['verbose']).load_pickle({})
-            delta_sasa = data[0].get('delta_total_sasa')
-        yield (pdb_id, row['combo_id'], delta_sasa, relative_path)
+            item['relative_pkl'] = os.path.join(endpoint, file_name)
+            data = ProcessPickle(pfile, params['verbose']).load_pickle([])
+            if data:
+                item['delta_total_sasa'] = data[0].get('delta_total_sasa')
+        rec = [item.get(col) for col in TABLE_COLUMNS[params['table_name']]]
+        yield tuple(rec)
 
 if __name__ == "__main__":
     params.update({
@@ -80,8 +85,8 @@ if __name__ == "__main__":
     rows = retrieve_query(params, meta)
     record_iter = cal_sasa(rows, params, meta)
 
-    bc = BuildComplex(record_iter, params['verbose'], params['chunk_size'])
-    bc.insert_batch_records(params['table_name'])
+    bc = BuildComplex(params['verbose'], params['chunk_size'])
+    bc.insert_batch_records(record_iter, params['table_name'])
 
     validate_data('relative_pkl', params, meta)
     footer(meta)

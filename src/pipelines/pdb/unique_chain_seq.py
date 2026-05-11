@@ -70,7 +70,7 @@ if __name__ == "__main__":
     data = parse_seq(seq_dict, params, meta)
 
     print(f"Try to update table {params['table_name']}...")
-    c = UpdateComplex(params['table_name'], params['verbose'])
-    c.update_chain_seq(data)
+    c = UpdateComplex(params['verbose'])
+    c.update_chain_seq(params['table_name'], data)
 
     footer(meta)

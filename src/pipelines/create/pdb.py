@@ -24,8 +24,8 @@ pdb -> meta_mmcif
                 -> pdb_chainid
                 -> pdb_chain_seq
                 -> pdb_faa
-                -> meta_chain_faa
-                -> meta_chain_pdb
+                -> chain_faa
+                -> chain_pdb
                 -> meta_combo2
                 -> meta_combo3
 '''
@@ -105,15 +105,26 @@ CREATE TABLE pdb_chain_seq(
     pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     first_chain_id  VARCHAR(20),
-    pro_len         INT,
+    pro_len         INT GENERATED ALWAYS AS (LENGTH(chain_seq)) STORED,
     chain_seq       TEXT,
     UNIQUE(chain_id),
     CONSTRAINT fk_chainseq_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS meta_chain_faa;
-CREATE TABLE meta_chain_faa(
+DROP TABLE IF EXISTS pdb_pro_seq;
+CREATE TABLE pdb_pro_seq(
+    pdb_id      VARCHAR(10),
+    chain_id    VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
+    proseq_name VARCHAR(20),
+    seq_id      INT,
+    UNIQUE (chain_id),
+    CONSTRAINT fk_pdbproseq_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
+//
+DROP TABLE IF EXISTS chain_faa;
+CREATE TABLE chain_faa(
     pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     relative_path   VARCHAR(60),
@@ -122,12 +133,12 @@ CREATE TABLE meta_chain_faa(
         REFERENCES pdb_chainid(chain_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS meta_chain_pdb;
-CREATE TABLE meta_chain_pdb(
+DROP TABLE IF EXISTS chain_pdb;
+CREATE TABLE chain_pdb(
     pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     chain_pdb       VARCHAR(60),
-    UNIQUE (pdb_id, chain_id),
+    UNIQUE (chain_id),
     CONSTRAINT fk_pdb_chain FOREIGN KEY (chain_id)
         REFERENCES pdb_chainid(chain_id) ON DELETE CASCADE
 );
@@ -230,7 +241,7 @@ CREATE TABLE pdb_protein (
     pdb_id          VARCHAR(10),
     relative_fasta  VARCHAR(60),
     pro_id          VARCHAR(20),
-    chain           VARCHAR(40),
+    chain           VARCHAR(80),
     auth_chain      VARCHAR(10),
     pro_len         INT,
     pro_seq         TEXT,

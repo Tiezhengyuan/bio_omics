@@ -3,16 +3,16 @@
 requirements:
     - combo2
 example:
-    - parallel -j10 python app.py combo2_af ::: {0..237}
+    - parallel -j10 python app.py combo2_af ::: {0..240}
     - python app.py combo2_af 0
     - python app.py combo2_af
 function:
     - predict dimer complex
-    - insert data into table combo2_alphafold
+    - insert data into table combo2_af
 '''
 
 from src.helper import *
-from bioomics import Predictor, ProcessFasta
+from bioomics import Predictor, ProcessFasta, TABLE_COLUMNS
 
 @header
 def retrieve_pdb(params, meta):
@@ -20,14 +20,15 @@ def retrieve_pdb(params, meta):
     table_name = params['table_name']
     query = f"""
         SELECT DISTINCT c.pdb_id, c.combo_id, c.combo_fasta
-        FROM combo2        c
+        FROM label_complex l
+        LEFT JOIN combo2   c ON l.combo_id = c.combo_id
         LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND NOT EXISTS (
                 SELECT 1 FROM {table_name} b
                 WHERE b.combo_id = c.combo_id
             )
-    ;"""
+    """
     qc = QueryComplex(params['verbose'])
     rows = qc.list_data(query)
     print(f"{len(rows)} PDB files ready...")
@@ -36,7 +37,7 @@ def retrieve_pdb(params, meta):
     # antibody chain should be included in combo
     ab_rows = []
     for row in rows:
-        row['faa_file'] = os.path.join(params['data_dir'], row['combo_fasta'])
+        row['faa_file'] = os.path.join(params['output_pdb_dir'], row['combo_fasta'])
         # predict short sequence for saving time
         records = ProcessFasta(row['faa_file']).load_fasta()
         if isinstance(records, list):
@@ -51,7 +52,7 @@ def retrieve_pdb(params, meta):
 
 if __name__ == "__main__":
     params.update({
-        'table_name': 'combo2_alphafold',
+        'table_name': 'combo2_af',
         'num_recycle': '3',
         'relax': True,
     })
@@ -59,8 +60,13 @@ if __name__ == "__main__":
 
     rows = retrieve_pdb(params, meta)
     for row in rows:
-        t0 = datetime.now()
         pdb_id, combo_id = row['pdb_id'], row['combo_id']
+        item = {
+            'predicted_at': datetime.now(),
+            'host': params['host'],
+            'pdb_id': pdb_id,
+            'combo_id': combo_id,
+        }
         endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id, combo_id)
         outdir = os.path.join(params['predict_dir'], endpoint)
         Path(outdir).mkdir(parents=True, exist_ok=True)
@@ -76,21 +82,21 @@ if __name__ == "__main__":
         Predictor(_params).colabfold()
 
         # build record
-        
         done_file = os.path.join(outdir, f"{combo_id}.done.txt")
         if os.path.isfile(done_file):
+            item['endpoint'] = endpoint
             meta['succeed'] += 1
         else:
             meta['fail'] += 1
-            endpoint = None
-        rec = [pdb_id, combo_id, endpoint, params['host'], t0]
+
         # insertion
+        rec = [item.get(col) for col in TABLE_COLUMNS[params['table_name']]]
         if params['verbose']:
             print('### Try to insert ', rec)
         bc = BuildComplex(params['verbose'])
         bc.insert_batch_records([tuple(rec),], params['table_name'])
 
-        if endpoint:
+        if 'endpoint' in item:
             # delete *_env for saving space
             _env_dir = os.path.join(outdir, f"{combo_id}_env")
             if os.path.isdir(_env_dir):

@@ -6,16 +6,17 @@ from datetime import datetime
 from dotenv import load_dotenv
 import functools
 import itertools
-import os
-import re
-from pathlib import Path
-import shutil
-import sys
 import numpy as np
+import os
 import pandas as pd
-import subprocess
+from pathlib import Path
+import re
+import shutil
 import socket
+import sys
+import subprocess
 
+# load env
 src_dir = os.path.dirname(__file__)
 if src_dir not in sys.path:
     sys.path.append(src_dir)
@@ -23,20 +24,21 @@ if src_dir not in sys.path:
 env_file = os.path.join(src_dir, '.env')
 load_dotenv(env_file)
 
+# load customary modules
+from bioomics.database import BuildComplex, UpdateComplex, QueryComplex
+
 # initiate parameters
 params = {
     'pdb_group': sys.argv[1] if len(sys.argv) > 1 else None,
     'verbose': True if os.getenv('verbose') == 'true' else False,
-    'pdb_dir': os.getenv('pdb_dir'),
-    'data_dir': os.getenv('data_dir'),
+    'rawdata_pdb_dir': os.getenv('rawdata_pdb_dir'),
+    'output_pdb_dir': os.getenv('output_pdb_dir'),
     'simulate_dir': os.getenv('simulate_dir'),
     'predict_dir': os.getenv('predict_dir'),
     'host': socket.gethostname(),
 }
 meta = defaultdict(int)
 
-import socket
-from bioomics.database import BuildComplex, UpdateComplex, QueryComplex
 
 def local_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -109,7 +111,7 @@ def validate_data(col_name, params, meta):
     rows = QueryComplex(params['verbose']).list_data(query)
     del_pool = []
     for row in rows:
-        pdb_file = os.path.join(params['data_dir'], row[col_name])
+        pdb_file = os.path.join(params['output_pdb_dir'], row[col_name])
         if not os.path.isfile(pdb_file):
             del_pool.append(row[col_name])
     
@@ -152,7 +154,8 @@ def copy_data(outdir):
 def footer(meta, params:dict={}):
     # update table meta_execute with end time
     if params.get('meta_execute'):
-        UpdateComplex(params['verbose']).execute_end_time('meta_execute', params)
+        uc = UpdateComplex(params['verbose'])
+        uc.execute_end_time(params)
     # print statistics of this run
     print('Statistics of this run', meta)
     print("Done!\n\n")

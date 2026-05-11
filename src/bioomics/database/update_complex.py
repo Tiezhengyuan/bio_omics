@@ -158,5 +158,5 @@ class UpdateComplex(UpdateDb):
         new_seqs = list(set(seqs).difference(set(old_seqs)))
         if new_seqs:
             records = [(source, _seq) for _seq in new_seqs]
-            bc = BuildComplex(records, self.verbose)
-            bc.insert_batch_records('pro_seq')
+            bc = BuildComplex(self.verbose)
+            bc.insert_batch_records(records, 'pro_seq')

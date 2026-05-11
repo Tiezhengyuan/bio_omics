@@ -1,43 +1,35 @@
 #!/usr/bin/python
 '''
 requirements:
-    - table pdb_complex where combo=1
+    - table label_chain
 example:
-    - parallel -j8 python app.py chain_af ::: {0..237}
+    - parallel -j8 python app.py chain_af ::: {0..240}
     - python app.py chain_af 0
 function:
     - prefix monomer
-    - insert data into table chain_alphafold
+    - insert data into table chain_af
 '''
 
 from src.helper import *
-from bioomics import Predictor
+from bioomics import Predictor, TABLE_COLUMNS
 
 @header
 def retrieve_pdb(params, meta):
     pdb_group = params['pdb_group']
     table_name = params['table_name']
     query = f"""
-        WITH tmp AS(
-            SELECT DISTINCT I.pdb_id, S.first_chain_id, F.relative_path
-                FROM pdb_chain_seq       S
-                LEFT JOIN pdb_chainid    I ON S.first_chain_id = I.chain_id
-                LEFT JOIN meta_chain_faa F ON S.first_chain_id = F.chain_id
-                WHERE F.relative_path IS NOT NULL
-                    AND S.first_chain_id IS NOT NULL
-                    AND S.first_chain_id IN (
-                        SELECT first_chain_id FROM label_chain
-                    )
-                    AND S.first_chain_id NOT IN (
-                        SELECT chain_id FROM {table_name}
-                    )  
-        )
-        SELECT T.pdb_id, T.first_chain_id AS chain_id, T.relative_path
-        FROM tmp T
-        LEFT JOIN meta_pdb P ON T.pdb_id=P.pdb_id
+        SELECT DISTINCT F.pdb_id, F.chain_id, F.relative_path
+        FROM label_chain    S
+        LEFT JOIN chain_faa F ON S.first_chain_id = F.chain_id
+        LEFT JOIN meta_pdb  P ON S.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
-            AND P.relative_path IS NOT NULL
-    ;"""
+            AND F.relative_path IS NOT NULL
+            AND S.first_chain_id IS NOT NULL
+            AND S.first_chain_id NOT IN (
+                SELECT chain_id FROM {table_name}
+                WHERE chain_id IS NOT NULL
+            )
+    """
     rows = QueryComplex(params['verbose']).list_data(query)
     print(f"{len(rows)} PDB files ready...")
     meta['rows'] += len(rows)
@@ -45,8 +37,7 @@ def retrieve_pdb(params, meta):
 
 if __name__ == "__main__":
     params.update({
-        'predict_dir': os.getenv('predict_dir'),
-        'table_name': 'chain_alphafold',
+        'table_name': 'chain_af',
         'num_recycle': '3',
         'relax': True,
         'max_iterations': '2000',
@@ -54,17 +45,21 @@ if __name__ == "__main__":
     add_params(params)
 
     rows = retrieve_pdb(params, meta)
-    host = socket.gethostname()
     for row in rows:
-        t0 = datetime.now()
         pdb_id, chain_id = row['pdb_id'], row['chain_id']
+        item = {
+            'predicted_at': datetime.now(),
+            'host': params['host'],
+            'pdb_id': pdb_id,
+            'chain_id': chain_id,
+        }
         endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id, chain_id)
         outdir = os.path.join(params['predict_dir'], endpoint)
         Path(outdir).mkdir(parents=True, exist_ok=True)
 
         # predict
         _params = {
-            'faa_file': os.path.join(params['data_dir'], row['relative_path']),
+            'faa_file': os.path.join(params['output_pdb_dir'], row['relative_path']),
             'output_dir': outdir,
         }
         _params.update(params)
@@ -72,23 +67,23 @@ if __name__ == "__main__":
             print('Arguments for prediction: ', _params)
         Predictor(_params).colabfold()
 
-        # build record
+        # check if prediction is done
         done_file = os.path.join(outdir, f"{chain_id}.done.txt")
         if os.path.isfile(done_file):
+            item['endpoint'] = endpoint
             meta['succeed'] += 1
         else:
             meta['fail'] += 1
-            endpoint = None
-        rec = [pdb_id, chain_id, endpoint, host, t0]
 
         # insertion
+        rec = [item.get(col) for col in TABLE_COLUMNS[params['table_name']]]
         if params['verbose']:
             print('### Try to insert ', rec)
-        bc = BuildComplex([tuple(rec),], params['verbose'])
-        bc.insert_batch_records(params['table_name'])
+        bc = BuildComplex(params['verbose'])
+        bc.insert_batch_records([tuple(rec),], params['table_name'])
 
         # delete *_env for saving space
-        if endpoint:
+        if 'endpoint' in item:
             _env_dir = os.path.join(outdir, f"{chain_id}_env")
             if os.path.isdir(_env_dir):
                 shutil.rmtree(_env_dir)

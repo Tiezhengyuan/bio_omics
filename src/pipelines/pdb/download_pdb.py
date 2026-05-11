@@ -9,27 +9,25 @@ functions:
 '''
 
 from src.helper import *
-from bioomics import ProcessJson, PullPdb
+from bioomics import Dir, ProcessJson, PullPdb
 
 if __name__ == "__main__":
-    args = {
-        'verbose': True,
+    params.update({
         'overwrite': False,
-        'pdb_dir': os.getenv("pdb_dir"),
-        'data_dir': os.getenv("data_dir"),
         'data_format': 'pdb',
-    }
+    })
+    
     # donwload pdb
-    raw_dir = os.path.join(args['pdb_dir'], args['data_format'])
-    PullPdb(raw_dir, args['verbose']).synchronize_pdb(args['data_format'])
+    raw_dir = os.path.join(params['rawdata_pdb_dir'], params['data_format'])
+    PullPdb(raw_dir, params['verbose']).synchronize_pdb(params['data_format'])
 
     # prepare _list dir
-    list_dir = os.path.join(args['data_dir'], '_list', args['data_format'])
+    list_dir = os.path.join(params['output_pdb_dir'], '_list', params['data_format'])
     d = Dir(list_dir)
     d.init_dir()
     d.clear_dir()
     
     # build json
-    pdb_iter = PullPdb(raw_dir).iter_raw_pdb_args(args)
+    pdb_iter = PullPdb(raw_dir).iter_raw_pdb_args(params)
     file_list = ProcessJson.iter_to_json(pdb_iter, list_dir, chunk_size=1_000)
     print(f"\n{file_list}\n")
