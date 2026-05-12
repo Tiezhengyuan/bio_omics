@@ -1,34 +1,52 @@
-#!/usr/bin/python
-'''
-requirements:
-    - a empty database is created.
-example: python src/pipelines/complex_create.py
-functions:
-    - build database known as complex2
-    - build tables
-'''
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
+/*
+proseq_400
+proseq_1000
+proseq_long
 
-
-from bioomics import BuildComplex
-
-'''
 align_imgt: igblastp of pdb chains on IMGT V-region
 align_vregion: FR and CDR idetity in v-region
 
 pdb_faa -> meta_blastp5  -> align_uniprot
         -> meta_vdj -> align_imgt
-                    -> align_vregion
+                    -> align_vregion -> label_chain
+                                     -> label_complex
                     -> align_dregion
                     -> align_jregion
+*/
+DROP TABLE IF EXISTS proseq_400;
+CREATE TABLE proseq_400 (
+    seq_id       INT AUTO_INCREMENT PRIMARY KEY,
+    source       VARCHAR(10),
+    seq          VARCHAR(400) NOT NULL,
+    seq_head     VARCHAR(10) GENERATED ALWAYS AS (SUBSTR(seq, 1, 10)) STORED,
+    seq_len      INT GENERATED ALWAYS AS (LENGTH(seq)) STORED,
+    relative_faa VARCHAR(60),
+    UNIQUE(seq)
+);
+CREATE INDEX index_proseq400 ON proseq_400 (seq_head);
 
-'''
+DROP TABLE IF EXISTS proseq_1000;
+CREATE TABLE proseq_1000 (
+    seq_id       INT AUTO_INCREMENT PRIMARY KEY,
+    source       VARCHAR(10),
+    seq          VARCHAR(1000) CHARACTER SET latin1,
+    seq_head     VARCHAR(10) GENERATED ALWAYS AS (SUBSTR(seq, 1, 10)) STORED,
+    seq_len      INT GENERATED ALWAYS AS (LENGTH(seq)) STORED,
+    relative_faa VARCHAR(60),
+    UNIQUE(seq)
+);
 
-SQL_TEXT = """
+DROP TABLE IF EXISTS proseq_long;
+CREATE TABLE proseq_long (
+    seq_id       INT AUTO_INCREMENT PRIMARY KEY,
+    source       VARCHAR(10),
+    seq          TEXT NOT NULL,
+    seq_head     VARCHAR(10) GENERATED ALWAYS AS (SUBSTR(seq, 1, 10)) STORED,
+    seq_len      INT GENERATED ALWAYS AS (LENGTH(seq)) STORED,
+    relative_faa VARCHAR(60)
+);
+CREATE UNIQUE INDEX idx_proseqlong ON proseq_long (seq(255));
+
 DROP TABLE IF EXISTS meta_blastp5;
 CREATE TABLE meta_blastp5(
     pdb_id          VARCHAR(10),
@@ -36,7 +54,7 @@ CREATE TABLE meta_blastp5(
     relative_aln    VARCHAR(60),
     CONSTRAINT fk_blastp_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
 );
-//
+
 DROP TABLE IF EXISTS align_uniprot;
 CREATE TABLE align_uniprot(
     pdb_id          VARCHAR(10),
@@ -47,7 +65,7 @@ CREATE TABLE align_uniprot(
     identity        FLOAT,
     UNIQUE (chain_id)
 );
-//
+
 DROP TABLE IF EXISTS meta_vdj;
 CREATE TABLE meta_vdj(
     pdb_id      VARCHAR(10),
@@ -57,7 +75,7 @@ CREATE TABLE meta_vdj(
     j_aln       VARCHAR(60),
     CONSTRAINT fk_align_vdj_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
 );
-//
+
 DROP TABLE IF EXISTS align_vfrag;
 CREATE TABLE align_vfrag (
     pdb_id          VARCHAR(10),
@@ -70,7 +88,7 @@ CREATE TABLE align_vfrag (
     UNIQUE(chain_id, fragment),
     CONSTRAINT fk_vfrag_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
 );
-//
+
 DROP TABLE IF EXISTS align_vregion;
 CREATE TABLE align_vregion (
     pdb_id          VARCHAR(10),
@@ -87,7 +105,7 @@ CREATE TABLE align_vregion (
     UNIQUE(chain_id),
     CONSTRAINT fk_imgt_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
 );
-//
+
 DROP TABLE IF EXISTS align_dregion;
 CREATE TABLE align_dregion (
     pdb_id          VARCHAR(10),
@@ -108,7 +126,7 @@ CREATE TABLE align_dregion (
     sbjct_end       INT,
     CONSTRAINT fk_dregion_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
 );
-//
+
 DROP TABLE IF EXISTS align_jregion;
 CREATE TABLE align_jregion (
     pdb_id          VARCHAR(10),
@@ -134,14 +152,29 @@ CREATE TABLE align_jregion (
     CONSTRAINT fk_jregion_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
 );
 
+DROP TABLE IF EXISTS label_chain;
+CREATE TABLE label_chain(
+    pdb_id          VARCHAR(10),
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
+    first_chain_id  VARCHAR(20),
+    chain_label     VARCHAR(20),
+    category        VARCHAR(20),
+    UNIQUE(chain_id, category),
+    CONSTRAINT fk_label_chain_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);
 
-"""
-
-#####################################################################################
-
-if __name__ == "__main__":
-    bc = BuildComplex(verbose=True)
-    for query in SQL_TEXT.split('//'): 
-        res = bc.create_table(query)
-        if res is None:
-            print(f"ERROR. Check the above SQL: {query}\n\n")
+DROP TABLE IF EXISTS label_complex;
+CREATE TABLE label_complex(
+    pdb_id          VARCHAR(10),
+    model_no        INT,
+    combo_id        VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
+    chain_combo     VARCHAR(20),
+    chain_label     VARCHAR(50),
+    combo           INT,
+    chain_ids       VARCHAR(100),
+    category        VARCHAR(20),
+    UNIQUE(combo_id, category),
+    CONSTRAINT fk_label_complex_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+);

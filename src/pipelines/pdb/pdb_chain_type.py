@@ -1,7 +1,7 @@
 #!/usr/bin/python
 '''
 requirements:
-    - table meta_pdb, pdb_chainid
+    - table meta_pdb
 example:
     - parallel -j4 python app.py pdb_chain_type ::: {0..240}
     - python app.py pdb_chain_type 0

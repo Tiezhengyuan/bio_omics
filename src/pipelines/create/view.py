@@ -9,81 +9,8 @@ functions:
 '''
 from create_helper import *
 
-'''
-//
-DROP VIEW IF EXISTS view_chain_seq;
-CREATE VIEW view_chain_seq AS
-    WITH first_chain_seq AS (
-        SELECT MIN(chain_id) AS first_chain_id, COUNT(*) AS num_seq,
-            chain_seq AS unique_seq
-        FROM pdb_chain_seq
-        GROUP BY chain_seq
-        HAVING chain_seq IS NOT NULL
-    )
-    SELECT C.pdb_id, C.chain_id, F.first_chain_id,
-        F.num_seq, C.pro_len, C.chain_seq
-    FROM pdb_chain_seq C
-    LEFT JOIN first_chain_seq F
-    ON C.chain_seq = F.unique_seq
-;
-//
-DROP VIEW IF EXISTS view_protein;
-CREATE VIEW view_protein AS
-    SELECT S.source_name, S.source_id, P.pro_id, P.pro_seq
-    FROM protein_source   S
-    LEFT JOIN protein_seq P ON S.pro_id = P.pro_id
-;
-
-'''
-
 
 SQL_TEXT = """
-DROP VIEW IF EXISTS view_pdb;
-CREATE VIEW view_pdb AS
-    SELECT P.pdb_id, P.pdb_url, B.relative_path, B.pdb_group,
-        P.release_date, P.name, M.structure_method, M.resolution
-    FROM pdb P, meta_pdb B, pdb_method M
-    WHERE P.pdb_id = B.pdb_id
-        AND P.pdb_id = M.pdb_id
-        AND B.relative_path IS NOT NULL
-        AND M.resolution IS NOT NULL
-;
-//
-DROP VIEW IF EXISTS view_pdb_chain;
-CREATE VIEW view_pdb_chain AS
-    SELECT C.chain_id, C.pdb_id, C.model_no, C.chain_no,
-        S.first_chain_id, X.proseq_name,X.seq_id,
-        D.structure_method, D.resolution, B.avg_bfactor,
-        D.release_date, D.pdb_group,
-        S.chain_seq, S.pro_len,
-        F.relative_path AS relative_faa, P.chain_pdb
-    FROM pdb_chainid        C
-    LEFT JOIN pdb_chain_seq S ON C.chain_id = S.chain_id
-    LEFT JOIN chain_faa     F ON C.chain_id = F.chain_id
-    LEFT JOIN chain_pdb     P ON C.chain_id = P.chain_id
-    LEFT JOIN view_pdb      D ON C.pdb_id = D.pdb_id
-    LEFT JOIN pdb_pro_seq   X ON C.chain_id = X.chain_id
-    LEFT JOIN pdb_bfactor   B ON C.pdb_id = B.pdb_id 
-        AND C.model_no = B.model_no AND C.chain_no = B.chain_no
-    WHERE S.chain_seq IS NOT NULL
-;
-//
-DROP VIEW IF EXISTS view_pdb_uniprot;
-CREATE VIEW view_pdb_uniprot AS
-    SELECT A.chain_id, A.pdb_id, A.uniprot_acc, U.name,
-        C.chain_no, C.chain_seq,
-        A.identity, U.pro_seq,
-        C.structure_method, C.resolution,
-        C.relative_faa, C.chain_pdb
-    FROM align_uniprot       A
-    LEFT JOIN uniprot        U ON A.uniprot_acc = U.uniprot_acc
-    LEFT JOIN view_pdb_chain C ON A.chain_id = C.chain_id
-    WHERE A.bit_score >= 50
-        AND A.evalue <= 1e-10
-        AND A.identity >= .3
-        AND C.model_no = 0
-;
-//
 /* human transmembrane proteins */
 DROP VIEW IF EXISTS view_htrm;
 CREATE VIEW view_htrm AS
@@ -99,7 +26,7 @@ CREATE VIEW view_htrm AS
             WHERE keyword LIKE 'Transmembrane'
         )
 ;
-//
+
 /* drug protein */
 DROP VIEW IF EXISTS view_drug;
 CREATE VIEW view_drug AS
@@ -113,25 +40,94 @@ CREATE VIEW view_drug AS
         AND D.db_name = 'DrugBank'
 ;
 //
-DROP VIEW IF EXISTS view_complex;
-CREATE VIEW view_complex AS
-    SELECT pdb_id, count(*) AS num_chains, GROUP_CONCAT(DISTINCT 
-        chain_type ORDER BY chain_type) AS complex_type
-    FROM pdb_chain_type
-    GROUP BY pdb_id
-    ORDER BY num_chains, complex_type
+/* allergen */
+DROP VIEW IF EXISTS view_allergen;
+CREATE VIEW view_allergen AS
+    SELECT C.chain_id, C.pdb_id,  C.uniprot_acc,
+        C.chain_no, C.name, D.db_acc AS allergen_acc,
+        C.chain_seq, C.pro_seq, C.relative_faa , C.relative_pdb
+    FROM view_pdb_uniprot     C
+    LEFT JOIN uniprot         U ON C.uniprot_acc = U.uniprot_acc
+    LEFT JOIN uniprot_dbxrefs D ON C.uniprot_acc = D.uniprot_acc
+    WHERE D.db_name = 'allergome'
+        AND U.organism LIKE '%Homo sapiens%'
 ;
 //
-DROP VIEW IF EXISTS view_proseq;
-CREATE VIEW view_proseq AS
-    SELECT 's400' AS proseq_name, seq_id, source, seq_head, seq_len, seq, relative_faa
-    FROM proseq_400
-    UNION
-    SELECT 's1000' AS proseq_name, seq_id, source, seq_head, seq_len, seq, relative_faa
-    FROM proseq_1000
-    UNION
-    SELECT 'long' AS proseq_name, seq_id, source, seq_head, seq_len, seq, relative_faa
-    FROM proseq_long;
+DROP VIEW IF EXISTS view_tcr;
+CREATE VIEW view_tcr AS
+    SELECT I.allele_name, I.gene_name, I.gene_family,
+        I.chain_type, C.pdb_id, C.chain_id, C.model_no,
+        C.chain_no, C.pro_id, C.chain_seq, C.structure_method,
+        C.resolution, C.relative_faa, C.relative_pdb, C.pdb_group
+    FROM view_pdb_chain C, align_vregion I
+    WHERE C.chain_id = I.chain_id
+        AND I.evalue <= 1e-10
+        AND I.bit_score >= 50
+        AND I.isotype = 'TR'
+;       
+//
+DROP VIEW IF EXISTS view_ig;
+CREATE VIEW view_ig AS
+    SELECT I.allele_name, I.specie, I.gene_name, I.gene_family,
+        I.chain_type, C.pdb_id, C.chain_id, C.first_chain_id,
+        C.model_no, C.chain_no, C.pro_id, C.chain_seq, C.pro_len,
+        C.release_date, C.structure_method, C.resolution, C.avg_bfactor,
+        C.relative_faa, C.chain_pdb, C.pdb_group
+    FROM view_pdb_chain     C
+    LEFT JOIN align_vregion I ON C.chain_id = I.chain_id
+    WHERE C.model_no = 0
+        AND I.evalue <= 1e-5
+        AND I.bit_score >= 50
+        AND I.isotype = 'IG'
+;
+//
+//
+DROP VIEW IF EXISTS view_ab_dssp;
+CREATE VIEW view_ab_dssp AS
+    WITH tmp AS (
+        SELECT I.allele_name, I.specie, I.gene_name, I.gene_family,
+            I.chain_type, C.pdb_id, C.chain_id, C.model_no, C.chain_no,
+            S.chain_seq, S.pro_len
+        FROM align_vregion I, pdb_chainid C, pdb_chain_seq S
+        WHERE I.chain_id = C.chain_id
+            AND I.chain_id = S.chain_id
+            AND I.evalue <= 1e-10
+            AND I.bit_score >= 100
+            AND I.isotype = 'IG'
+    )
+    SELECT A.pdb_id, A.chain_id, A.allele_name, A.specie,
+        A.gene_name, A.gene_family, A.chain_type, B.avg_bfactor,
+        A.chain_seq, B.bfactor, D.dssp_seq
+    FROM tmp A
+    LEFT JOIN pdb_bfactor B ON A.pdb_id=B.pdb_id 
+        AND A.model_no=B.model_no AND A.chain_no=B.chain_no
+    LEFT JOIN pdb_dssp D ON A.pdb_id=D.pdb_id
+        AND A.model_no=D.model_no AND A.chain_no=D.chain_no
+    WHERE B.bfactor is not null
+        AND D.dssp_seq is not null
+;
+//
+DROP VIEW IF EXISTS view_antibody_complex;
+CREATE VIEW view_antibody_complex AS
+    SELECT * FROM view_pdb_uniprot
+    WHERE pdb_id IN (
+        SELECT DISTINCT pdb_id FROM view_antibody
+    )
+    ORDER BY pdb_id
+;
+//
+/* antibody sequences from ABSD aligned with IMGT V-region */
+DROP VIEW IF EXISTS view_abseq_imgt;
+CREATE VIEW view_abseq_imgt AS
+    SELECT S.seq_id, S.specie, I.allele_name, I.gene_name, I.gene_family,
+        I.chain_type, I.isotype, S.pro_seq, F.faa_file, A.aln_file
+    FROM absd_seq S, absd_faa F, absd_igblastp A, absd_align_imgt I
+    WHERE S.seq_id = F.seq_id
+        AND S.seq_id = A.seq_id
+        AND S.seq_id = I.seq_id
+        AND I.evalue <= 1e-10
+        AND I.bit_score >= 50
+;
 """
 
 

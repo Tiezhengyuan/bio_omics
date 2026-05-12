@@ -1,22 +1,13 @@
-#!/usr/bin/python
-'''
-requirements:
-    - a empty database is created.
-example: python src/pipelines/create_uniprot.py
-functions:
-    - build database known as complex2
-    - build tables
-'''
-import os
-import sys
-src_dir = os.path.dirname(os.path.dirname(__file__))
-if src_dir not in sys.path:
-    sys.path.append(src_dir)
+/*
+uniprot -> uniprot_keyword
+        -> uniprot_dbxrefs
+        -> uniprot_feature
 
+        +proseq_8 -> uniprot_pro_seq
+        -> uniport_af -> uniprot_af_rmsd
 
-from bioomics import BuildComplex
+*/
 
-SQL_TEXT = """
 CREATE TABLE uniprot (
     uniprot_acc     VARCHAR(20),
     name            VARCHAR(100),
@@ -25,7 +16,7 @@ CREATE TABLE uniprot (
     pro_seq         TEXT,
     CONSTRAINT pk_uniprot PRIMARY KEY (uniprot_acc)
 );
-//
+
 CREATE TABLE uniprot_keyword (
     uniprot_acc     VARCHAR(20),
     keyword         VARCHAR(300),
@@ -33,7 +24,7 @@ CREATE TABLE uniprot_keyword (
     CONSTRAINT fk_uniprot_keyword_uniprot FOREIGN KEY (uniprot_acc)
         REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 );
-//
+
 CREATE TABLE uniprot_dbxrefs (
     uniprot_acc     VARCHAR(20),
     db_name         VARCHAR(50),
@@ -42,7 +33,7 @@ CREATE TABLE uniprot_dbxrefs (
     CONSTRAINT fk_uniprot_dbxrefs_uniprot FOREIGN KEY (uniprot_acc)
         REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 );
-//
+
 DROP TABLE IF EXISTS uniprot_feature;
 CREATE TABLE uniprot_feature (
     uniprot_acc     VARCHAR(20),
@@ -55,14 +46,14 @@ CREATE TABLE uniprot_feature (
     CONSTRAINT fk_feature_uniprot FOREIGN KEY (uniprot_acc)
         REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 );
-//
+
 DROP TABLE IF EXISTS uniprot_pro_seq;
 CREATE TABLE uniprot_pro_seq (
     uniprot_acc  VARCHAR(20) PRIMARY KEY,
     proseq_name  VARCHAR(20),
     seq_id       INT
 );
-//
+
 DROP TABLE IF EXISTS uniprot_af;
 CREATE TABLE uniprot_af (
     uniprot_acc     VARCHAR(20),
@@ -70,7 +61,17 @@ CREATE TABLE uniprot_af (
     CONSTRAINT fk_alphafold_uniprot FOREIGN KEY (uniprot_acc)
     REFERENCES uniprot(uniprot_acc)
 );
-//
+
+DROP TABLE IF EXISTS uniprot_af_rmsd;
+CREATE TABLE uniprot_af_rmsd (
+    chain_id        VARCHAR(20),
+    uniprot_acc     VARCHAR(20),
+    ca_rmsd         FLOAT,
+    native_pdb      VARCHAR(100),
+    model_pdb       VARCHAR(100),
+    UNIQUE (chain_id, uniprot_acc)
+);
+
 DROP TABLE IF EXISTS uniprot_af_plddt;
 CREATE TABLE uniprot_af_plddt (
     uniprot_acc     VARCHAR(20),
@@ -81,23 +82,3 @@ CREATE TABLE uniprot_af_plddt (
     CONSTRAINT fk_plddt_uniprot FOREIGN KEY (uniprot_acc)
     REFERENCES uniprot(uniprot_acc)
 );
-//
-DROP TABLE IF EXISTS uniprot_af_rmsd;
-CREATE TABLE uniprot_af_rmsd (
-    chain_id        VARCHAR(20),
-    uniprot_acc     VARCHAR(20),
-    ca_rmsd         FLOAT,
-    native_pdb      VARCHAR(100),
-    model_pdb       VARCHAR(100),
-    UNIQUE (chain_id, uniprot_acc)
-);
-"""
-
-#####################################################################################
-
-if __name__ == "__main__":
-    bc = BuildComplex(verbose=True)
-    for query in SQL_TEXT.split('//'): 
-        res = bc.create_table(query)
-        if res is None:
-            print(f"ERROR. Check the above SQL: {query}\n\n")
