@@ -92,13 +92,13 @@ CREATE TABLE combo2_distance(
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //
-DROP TABLE IF EXISTS combo2_sasa;
-CREATE TABLE combo2_sasa(
+DROP TABLE IF EXISTS combo_sasa;
+CREATE TABLE combo_sasa(
     pdb_id           VARCHAR(10),
     combo_id         VARCHAR(40),
     delta_total_sasa FLOAT,
     relative_pkl     VARCHAR(60),
-    CONSTRAINT fk_combo2_sasa_pdb FOREIGN KEY (pdb_id)
+    CONSTRAINT fk_combo_sasa_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 //

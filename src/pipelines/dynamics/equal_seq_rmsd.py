@@ -14,8 +14,7 @@ from bioomics import EvalPred
 
 def pull_chain_pdb(params, meta):
     query = f"""
-        SELECT chain_id, chain_pdb
-        FROM chain_pdb
+        SELECT chain_id, chain_pdb FROM chain_pdb
         WHERE chain_pdb IS NOT NULL
     """
     rows = QueryComplex(params['verbose']).list_data(query)

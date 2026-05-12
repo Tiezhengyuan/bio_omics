@@ -18,14 +18,15 @@ python ${APP} uniprot_pro_seq
 
 
 #alphafold prediction
-python ${APP} uniprot_alphafold
+python ${APP} uniprot_af
+
+# RMSD between chain pdb and uniprot prediction by alphafold
+parallel -j8 python ${APP} uniprot_af_rmsd ::: {0..240}
 
 
 # pLDDT of alphafold modelling
 # python ${APP} uniprot_alphafold_plddt
 
-# RMSD between chain pdb and uniprot prediction by alphafold
-# parallel -j4 python ${APP} uniprot_alphafold_rmsd ::: {0..46}
 
 
 

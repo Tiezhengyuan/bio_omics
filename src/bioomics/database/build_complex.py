@@ -40,11 +40,11 @@ TABLE_COLUMNS = {
     'uniprot_feature': ['uniprot_acc', 'feature', 'start', 'end', 
         'seq', 'note', 'evidence'],
     'uniprot_pro_seq': ['uniprot_acc', 'proseq_name', 'seq_id',],
-    'uniprot_alphafold': ['uniprot_acc', 'pdb_path'],
+    'uniprot_af': ['uniprot_acc', 'pdb_path'],
     # 'uniprot_alphafold_plddt': ['uniprot_acc', 'model_no', 'chain_no',
     #     'avg_plddt', 'pickle_file',],
-    # 'uniprot_alphafold_rmsd': ['chain_id', 'uniprot_acc', 'ca_rmsd', 
-    #     'native_pdb', 'model_pdb'],
+    'uniprot_af_rmsd': ['chain_id', 'uniprot_acc', 'ca_rmsd', 
+        'native_pdb', 'model_pdb'],
     # 'uniprot_rmsd': ['chain_id', 'native_pdb', 'uniprot_acc', 
     #     'model_pdb', 'ca_rmsd'],
 
@@ -98,8 +98,7 @@ TABLE_COLUMNS = {
         'chain_pdb', 'equal_chain_pdb',],
     'combo2_distance': ['pdb_id', 'combo_id', 'relative_pkl',\
         'min_dist', 'min_res1', 'min_res2'],
-    'combo2_sasa': ['pdb_id', 'combo_id', 'delta_total_sasa',
-        'relative_pkl'],
+    'combo_sasa': ['pdb_id', 'combo_id', 'delta_total_sasa', 'relative_pkl'],
     'combo_contacts': ['pdb_id', 'combo_id', 'binding_affinity',
         'dissociation_constant', 'relative_prodigy'],
 
@@ -116,20 +115,28 @@ TABLE_COLUMNS = {
     'combo2_af': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
     'combo3_af': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
 
+    # meta
+    'meta': ['pdb_group', 'host', 'ip_addr', 'script'],
+    'meta_execute': ['table_name', 'pdb_group', 'host', 'ip_addr', 'script'],
+
+    #design
+    'design_chain': ['chain_id', 'target_name', 'pdb_id', 'parent_id',
+        'faa_file', 'pdb_file', 'chain_seq',],
+    'design_dimer': ['design_id', 'category', 'chain_labels', 'target_name',
+        'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
+    'design_trimer': ['design_id', 'category', 'chain_labels', 'target_name',
+        'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
+    'predict': ['target_name', 'predictor', 'design_id', 'host', 'status'],
 
 
-
+    #################
     #analyze
     'meta_combo2_pdb': ['pdb_id', 'model_no', 'combo_id',
         'chain_combo', 'bounded_pdb', 'chain_pdbs'],
     'meta_combo2_seq': ['pdb_id', 'model_no', 'combo_id',
         'chain_combo', 'relative_csv'],
-
-
     'pdb_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
     'dist_amber14': ['pdb_id', 'combo_id', 'relative_pkl'],
-
-
     'pdb_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
 
     # fix
@@ -159,32 +166,12 @@ TABLE_COLUMNS = {
         'relaxed_energy', 'time0', 'endpoint'],
 
 
-
-
     'ab_anarci': ['chain_id', 'domain_no', 'hmm_species',
         'chain_type', 'evalue', 'score', 'seqstart_index',
         'seqend_index', 'identity_species', 'v_gene', 'v_identity',
         'j_gene', 'j_identity', 'aligned_seq',],
 
 
-
-
-
-
-    # meta
-    'meta': ['pdb_group', 'host', 'ip_addr', 'script'],
-    'meta_execute': ['table_name', 'pdb_group', 'host', 'ip_addr', 'script'],
-
-
-
-    #design
-    'design_chain': ['chain_id', 'target_name', 'pdb_id', 'parent_id',
-        'faa_file', 'pdb_file', 'chain_seq',],
-    'design_dimer': ['design_id', 'category', 'chain_labels', 'target_name',
-        'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
-    'design_trimer': ['design_id', 'category', 'chain_labels', 'target_name',
-        'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
-    'predict': ['target_name', 'predictor', 'design_id', 'host', 'status'],
 
 }
 

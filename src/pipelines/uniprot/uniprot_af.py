@@ -4,9 +4,9 @@ requirements:
     - alphafold database should be downloaded
     - table uniprot
 example:
-    - python app.py uniprot_alphafold
+    - python app.py uniprot_af
 function:
-    - put path of predict pdb into uniprot_alphafold
+    - put path of predict pdb into uniprot_af
 '''
 
 from src.helper import *
@@ -37,7 +37,7 @@ def build_iter(file_iter, ids, meta):
 if __name__ == "__main__":
     params.update({
         'alphafold_model': '/home/yuan/rawdata/alphafold.ebi.ac.uk/swissprot_pdb_v6',
-        'table_name': 'uniprot_alphafold',
+        'table_name': 'uniprot_af',
     })
 
     # collect local path

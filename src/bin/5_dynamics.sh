@@ -32,12 +32,11 @@ parallel -j8 python ${APP} combo5 ::: {0..240}
 parallel -j8 python ${APP} combo5_relaxed ::: {0..240}
 
 
-# meta_combo2
 # atom distance
 parallel -j8 python ${APP} combo2_distance ::: {0..240}
-# SASA
-parallel -j8 python ${APP} combo2_sasa ::: {0..240}
 
+# SASA
+parallel -j8 python ${APP} combo_sasa ::: {0..240}
 
 # simulate binding affinity
 parallel -j8 python ${APP} combo_contacts ::: {0..240}

@@ -63,16 +63,16 @@ CREATE TABLE uniprot_pro_seq (
     seq_id       INT
 );
 //
-DROP TABLE IF EXISTS uniprot_meta_alphafold;
-CREATE TABLE uniprot_meta_alphafold (
+DROP TABLE IF EXISTS uniprot_af;
+CREATE TABLE uniprot_af (
     uniprot_acc     VARCHAR(20),
     pdb_path        VARCHAR(200),
     CONSTRAINT fk_alphafold_uniprot FOREIGN KEY (uniprot_acc)
     REFERENCES uniprot(uniprot_acc)
 );
 //
-DROP TABLE IF EXISTS uniprot_alphafold_plddt;
-CREATE TABLE uniprot_alphafold_plddt (
+DROP TABLE IF EXISTS uniprot_af_plddt;
+CREATE TABLE uniprot_af_plddt (
     uniprot_acc     VARCHAR(20),
     model_no        INT,
     chain_no        VARCHAR(5),
@@ -82,23 +82,13 @@ CREATE TABLE uniprot_alphafold_plddt (
     REFERENCES uniprot(uniprot_acc)
 );
 //
-DROP TABLE IF EXISTS uniprot_rmsd;
-CREATE TABLE uniprot_rmsd (
-    chain_id        VARCHAR(20),
-    native_pdb      VARCHAR(200),
-    uniprot_acc     VARCHAR(20),
-    model_pdb       VARCHAR(200),
-    ca_rmsd         FLOAT,
-    UNIQUE (chain_id, uniprot_acc)
-);
-//
-DROP TABLE IF EXISTS uniprot_alphafold_rmsd;
-CREATE TABLE uniprot_alphafold_rmsd (
+DROP TABLE IF EXISTS uniprot_af_rmsd;
+CREATE TABLE uniprot_af_rmsd (
     chain_id        VARCHAR(20),
     uniprot_acc     VARCHAR(20),
     ca_rmsd         FLOAT,
-    native_pdb      VARCHAR(200),
-    model_pdb       VARCHAR(200),
+    native_pdb      VARCHAR(100),
+    model_pdb       VARCHAR(100),
     UNIQUE (chain_id, uniprot_acc)
 );
 """

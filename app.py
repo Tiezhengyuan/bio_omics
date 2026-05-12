@@ -38,7 +38,8 @@ pool = {
     'uniprot_dbxrefs': 'uniprot.uniprot_dbxrefs',
     'uniprot_feature': 'uniprot.uniprot_feature',
     'uniprot_pro_seq': 'uniprot.uniprot_pro_seq',
-    'uniprot_alphafold': 'uniprot.uniprot_alphafold',
+    'uniprot_af': 'uniprot.uniprot_af',
+    'uniprot_af_rmsd': 'uniprot.uniprot_af_rmsd',
 
     #dynamics
     'chain_relaxed': 'dynamics.chain_relaxed',
@@ -46,13 +47,14 @@ pool = {
     'combo2': 'dynamics.combo2',
     'combo2_relaxed': 'dynamics.combo2_relaxed',
     'combo2_distance': 'dynamics.combo2_distance',
-    'combo2_sasa': 'dynamics.combo2_sasa',
     'combo3': 'dynamics.combo3',
     'combo3_relaxed': 'dynamics.combo3_relaxed',
     'combo4': 'dynamics.combo4',
     'combo4_relaxed': 'dynamics.combo4_relaxed',
     'combo5': 'dynamics.combo5',
     'combo5_relaxed': 'dynamics.combo5_relaxed',
+
+    'combo_sasa': 'dynamics.combo_sasa',
     'combo_contacts': 'dynamics.combo_contacts',
 
     # align
