@@ -29,11 +29,10 @@ CREATE TABLE pdb(
 DROP TABLE IF EXISTS meta_pdb;
 CREATE TABLE meta_pdb(
     pdb_id          VARCHAR(10),
-    relative_path   VARCHAR(60),
+    relative_pdb    VARCHAR(60),
+    relative_cif    VARCHAR(60),
     pdb_group       INT,
-    UNIQUE (pdb_id),
-    CONSTRAINT fk_meta_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
+    UNIQUE (pdb_id)
 );
 
 DROP TABLE IF EXISTS pdb_compound;
@@ -71,7 +70,7 @@ CREATE TABLE pdb_protein (
     pro_id          VARCHAR(20),
     chain           VARCHAR(80),
     auth_chain      VARCHAR(10),
-    pro_len         INT,
+    pro_len         INT GENERATED ALWAYS AS (LENGTH(pro_seq)) STORED,
     pro_seq         TEXT,
     UNIQUE(pdb_id, chain),
     CONSTRAINT fk_pdb_protein_pdb FOREIGN KEY (pdb_id)

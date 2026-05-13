@@ -14,18 +14,8 @@ from bioomics import Pdb
 
 @header
 def retrieve_pdb(params, meta):
-    pdb_group = params['pdb_group']
-    table_name = params['table_name']
-    query = f"""
-        SELECT pdb_id, relative_path
-        FROM meta_pdb
-        WHERE pdb_group = {pdb_group}
-            AND pdb_id NOT IN (
-                SELECT pdb_id FROM {table_name}
-            );
-    """
-    rows = QueryComplex(params['verbose']).list_data(query)
-    meta['pdb_group'] = int(pdb_group)
+    qc = QueryComplex(params['verbose'])
+    rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
     meta['rows'] += len(rows)
     print(f"{len(rows)} PDB files ready for processing...")
     return rows
@@ -33,7 +23,7 @@ def retrieve_pdb(params, meta):
 def pull_chain_pdb(rows, params, meta):
     for row in rows:
         pdb_id = row['pdb_id']
-        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_path'])
+        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
         p = Pdb(pdb_file, None, params['verbose'])
         p.load_structure()
 

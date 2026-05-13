@@ -123,18 +123,20 @@ class PullPdb:
 
     def pdb_id(self, path):
         file_name = os.path.basename(path)
+        # pdb
         if path.endswith('.ent.gz'):
             pdb_id = re.sub(r'^pdb|\.ent\.gz$', '', file_name)
             return pdb_id.upper()
+        # mmCIF
         elif path.endswith('.cif.gz'):
             pdb_id = file_name.split('.')[0]
             return pdb_id.upper()
         elif path.endswith('.pdb'):
             pdb_id = re.sub(r'\pdb$', '', file_name)
             return pdb_id.upper()
-        return file_name
+        return None
     
-    def iter_raw_pdb_args(self, args:dict):
+    def iter_raw_pdb_args(self, args:dict={}):
         '''
         scan pdf files incursively
         '''

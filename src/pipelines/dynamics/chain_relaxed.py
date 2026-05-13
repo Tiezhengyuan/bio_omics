@@ -26,7 +26,7 @@ def retrieve_pdb(params, meta):
         WHERE P.pdb_group = {pdb_group}
             AND I.model_no = 0
             AND S.chain_seq IS NOT NULL
-            AND P.relative_path IS NOT NULL
+            AND P.relative_pdb IS NOT NULL
             AND C.chain_id NOT IN (
                 SELECT chain_id FROM {table_name}
             )

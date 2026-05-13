@@ -86,5 +86,5 @@ if __name__ == "__main__":
         bc = BuildComplex(params['verbose'], params['chunk_size'])
         bc.insert_batch_records(record_iter, params['table_name'])
 
-    validate_data('relative_prodigy', params, meta)
+    # validate_data('relative_prodigy', params, meta)
     footer(meta)

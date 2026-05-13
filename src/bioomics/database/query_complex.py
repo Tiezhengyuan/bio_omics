@@ -35,6 +35,21 @@ class QueryComplex(QueryDb):
             return res[0]['pdb_group']
         return None
     
+    def meta_pdb(self, pdb_group:int, table_name:str=None):
+        query = f"""
+            SELECT pdb_id, relative_pdb
+            FROM meta_pdb
+            WHERE pdb_group = {pdb_group}
+                AND relative_pdb IS NOT NULL"""
+        if table_name:
+            query += f"""
+                AND pdb_id NOT IN (
+                    SELECT pdb_id FROM {table_name}
+                    WHERE pdb_id IS NOT NULL
+                )"""
+        rows = self.list_data(query)
+        return rows
+    
     def parse_modelling(self):
         query = """
             SELECT A.chain_id, A.pdb_id, A.uniprot_acc, U.pdb_path
@@ -224,7 +239,7 @@ class QueryComplex(QueryDb):
     def combo_ids(self, pdb_group:int, category:str):
         query = f"""
             SELECT combo_id
-            FROM label_complex   c
+            FROM label_complex c
             LEFT JOIN meta_pdb p ON c.pdb_id=p.pdb_id
             WHERE p.pdb_group = {pdb_group}
                 AND category= \'{category}\'
@@ -237,11 +252,11 @@ class QueryComplex(QueryDb):
         query = f"""
             SELECT c.pdb_id, c.model_no, c.chain_id, d.chain_pdb,
                 f.relative_path AS chain_faa, s.chain_seq
-            FROM pdb_chainid c
-            LEFT JOIN meta_pdb       p ON c.pdb_id=p.pdb_id
-            LEFT JOIN pdb_chain_seq  s ON c.chain_id=s.chain_id
-            LEFT JOIN chain_faa      f ON c.chain_id=f.chain_id
-            LEFT JOIN chain_pdb      d ON c.chain_id=d.chain_id
+            FROM pdb_chainid        c
+            LEFT JOIN meta_pdb      p ON c.pdb_id=p.pdb_id
+            LEFT JOIN pdb_chain_seq s ON c.chain_id=s.chain_id
+            LEFT JOIN chain_faa     f ON c.chain_id=f.chain_id
+            LEFT JOIN chain_pdb     d ON c.chain_id=d.chain_id
             WHERE p.pdb_group = {pdb_group}
                 AND c.model_no = 0
                 AND f.relative_path IS NOT NULL
@@ -256,7 +271,7 @@ class QueryComplex(QueryDb):
     def retrieve_combo(self, pdb_group:int, combo:int, dest_table_name:str):
             query = f"""
                 SELECT c.pdb_id, c.combo_id, c.combo_pdb
-                FROM combo{combo}   c
+                FROM combo{combo}  c
                 LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
                 WHERE p.pdb_group = {pdb_group}
                     AND c.combo_pdb IS NOT NULL

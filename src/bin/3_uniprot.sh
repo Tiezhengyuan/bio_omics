@@ -27,8 +27,3 @@ parallel -j8 python ${APP} uniprot_af_rmsd ::: {0..240}
 # pLDDT of alphafold modelling
 # python ${APP} uniprot_alphafold_plddt
 
-
-
-
-
-

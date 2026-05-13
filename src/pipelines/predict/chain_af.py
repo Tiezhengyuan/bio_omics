@@ -3,7 +3,7 @@
 requirements:
     - table label_chain
 example:
-    - parallel -j8 python app.py chain_af ::: {0..240}
+    - parallel -j4 python app.py chain_af ::: {0..240}
     - python app.py chain_af 0
 function:
     - prefix monomer

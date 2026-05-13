@@ -8,16 +8,15 @@ echo "Push PDB to table pdb"
 python ${APP} pdb
 # python ${PIPELINE_DIR}/put_pdb2
 
-echo "Prepare pdf file path into table meta_pdb"
+echo "Detect pdb/cif file path into table meta_pdb"
 python ${APP} meta_pdb
-# python ${APP} put_meta_mmcif
 
 # require meta_pdb
 parallel -j8 python ${APP} pdb_compound ::: {0..240}
 parallel -j8 python ${APP} pdb_method ::: {0..240}
 parallel -j8 python ${APP} pdb_keyword ::: {0..240}
 
-#download fasta
+#download original proseq in fasta
 parallel -j8 python ${APP} pdb_protein ::: {0..240}
 
 echo "Retriev B-factor..."

@@ -25,8 +25,8 @@ def retrieve_data(params, meta):
     table_name = params['table_name']
     query = f"""
         SELECT c.pdb_id, c.model_no, c.combo_id, c.chain_combo,
-            c.chain_label, c.chain_ids, p.relative_path
-        FROM label_complex   c
+            c.chain_label, c.chain_ids, p.relative_pdb
+        FROM label_complex c
         LEFT JOIN meta_pdb p on c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND combo = {chains_num}
@@ -44,7 +44,7 @@ def retrieve_data(params, meta):
     # add key: input_pdb, chain_seqs, chain_ids
     for row in rows:
         # absolute path
-        row['input_pdb'] = os.path.join(params['rawdata_pdb_dir'], row['relative_path'])
+        row['input_pdb'] = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
         # parse files and sequences
         key = (row['pdb_id'], row['model_no'])
         if key in pdb_chains:

@@ -13,21 +13,11 @@ from bioomics import Pdb
 
 @header
 def retrieve(args, meta):
-    pdb_group = args['pdb_group']
-    table_name = args['table_name']
-    query = f"""
-        SELECT DISTINCT C.pdb_id, P.relative_path
-        FROM pdb_chainid   C
-        LEFT JOIN meta_pdb P ON C.pdb_id = P.pdb_id
-        WHERE P.pdb_group = {pdb_group}
-            AND C.chain_id NOT IN (
-                SELECT chain_id FROM {table_name}
-            );
-    """
-    rows = QueryComplex(args['verbose']).list_data(query)
+    qc = QueryComplex(params['verbose'])
+    rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
     meta['rows'] = len(rows)
     for row in rows:
-        row['pdb_file'] = os.path.join(args['rawdata_pdb_dir'], row['relative_path'])
+        row['pdb_file'] = os.path.join(args['rawdata_pdb_dir'], row['relative_pdb'])
         yield row
 
 def build(row_iter, params, meta):

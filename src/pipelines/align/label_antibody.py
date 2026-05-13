@@ -1,8 +1,7 @@
 #!/usr/bin/python
 '''
 requirements:
-    - meta_pdb
-    - table view_antibody
+    - view_antibody
 example:
     - parallel -j8 python app.py label_antibody ::: {0..240}
     - python app.py label_antibody 0
@@ -21,8 +20,8 @@ def ab_chain(params, meta):
         FROM view_antibody
         WHERE pdb_group = {pdb_group}
             AND chain_id NOT IN (
-            SELECT chain_id from {table_name}
-        )
+                SELECT chain_id from {table_name}
+            )
     """
     rows = QueryComplex(params['verbose']).list_data(query)
     meta['ab_chain'] += len(rows)

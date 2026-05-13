@@ -11,8 +11,9 @@ function:
 from src.helper import *
 from bioomics import ProcessJson
 
-def get_meta_json(pdb_ids, params, meta):
-    list_dir = os.path.join(params['output_pdb_dir'], '_list', params['data_format'])
+def get_meta_json(data, pdb_ids, params, meta):
+    data_format = params['data_format']
+    list_dir = os.path.join(params['output_pdb_dir'], '_list', data_format)
     for file_name in os.listdir(list_dir):
         if file_name.endswith('.json'):
             pdb_group = os.path.splitext(file_name)[0]
@@ -24,23 +25,38 @@ def get_meta_json(pdb_ids, params, meta):
                 pdb_id = item['pdb_id']
                 if pdb_id not in pdb_ids:
                     relative_path = item['pdb_file'].replace(params['rawdata_pdb_dir'], '')
-                    print(relative_path)
                     if relative_path.startswith('/'):
                         relative_path = relative_path[1:]
-                    meta['new_pdb'] += 1
-                    yield (pdb_id, relative_path, int(pdb_group))
+                    meta[f'new_{data_format}'] += 1
+                    if pdb_id not in data:
+                        data[pdb_id] = {
+                            'pdb_id': pdb_id,
+                            'pdb_group': int(pdb_group),
+                        }
+                    data[pdb_id][data_format] = relative_path
                 else:
-                    meta['skip_pdb'] += 1
+                    meta[f'skip_{data_format}'] += 1
+
+
+def build(data, meta):
+    for pdb_id, item in data.items():
+        meta['insert_records'] += 1
+        rec = (pdb_id, item.get('pdb'), item.get('mmCIF'), item['pdb_group'],)
+        yield rec
 
 if __name__ == "__main__":
     params.update({
-        'data_format': 'pdb',
         'table_name': 'meta_pdb',
     })
     # retrieve pdb in database
     qc = QueryComplex(params['verbose'])
     pdb_ids = qc.unique_values(params['table_name'], 'pdb_id')
-    record_iter = get_meta_json(pdb_ids, params, meta)
+
+    data = {}
+    for data_format in ('pdb', 'mmCIF'):
+        params['data_format'] = data_format
+        get_meta_json(data, pdb_ids, params, meta)
+    record_iter = build(data, meta)
 
     print(f"Try to insert PDB meta data into table {params['table_name']}...")
     bc = BuildComplex(params['verbose'])

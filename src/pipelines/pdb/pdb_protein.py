@@ -14,15 +14,8 @@ from bioomics import PullPdb, ProcessFasta
 
 @header
 def retrieve(params, meta):
-    pdb_group = params['pdb_group']
-    table_name = params['table_name']
-    query = f"""
-        SELECT pdb_id FROM meta_pdb
-        WHERE pdb_group = {pdb_group}
-        EXCEPT
-        SELECT pdb_id FROM {table_name}
-    """
-    rows = QueryComplex(params['verbose']).list_data(query)
+    qc = QueryComplex(params['verbose'])
+    rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
     meta['rows'] = len(rows)
     return rows
 
@@ -41,13 +34,11 @@ def download_fasta(rows, params, meta):
                 s2 = re.findall(r'\[auth (.)\]', items[1])
                 auth_chain = s2[0] if s2 else None
                 pro_seq = str(record.seq)
-                pro_len = len(pro_seq)
                 meta['seqs'] += 1
-                yield (pdb_id, endpoint, pro_id, chain, auth_chain, pro_len, pro_seq)
+                yield (pdb_id, endpoint, pro_id, chain, auth_chain, pro_seq)
         else:
             meta['null'] += 1
-            yield (pdb_id, ) + (None,) * 6
-
+            yield (pdb_id, ) + (None,) * 5
 
 if __name__ == "__main__":
     params.update({

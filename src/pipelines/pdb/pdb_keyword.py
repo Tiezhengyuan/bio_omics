@@ -3,7 +3,7 @@ note:
     - PDB files should be synchronized to the local.
     - The table pdb is ready.
 example:
-    - parallel -j4 python app.py pdb_keyword ::: {0..240}
+    - parallel -j8 python app.py pdb_keyword ::: {0..240}
     - python app.py pdb_keyword 0
 function:
     synchronize PDB/UniProt/alignments with data in database COMPLEX.
@@ -14,19 +14,11 @@ from bioomics import Pdb
 
 @header
 def retrieve(params, meta):
-    pdb_group = params['pdb_group']
-    table_name = params['table_name']
-    query = f"""
-        SELECT pdb_id, relative_path FROM meta_pdb
-        WHERE pdb_group = {pdb_group}
-            AND pdb_id NOT IN (
-                SELECT DISTINCT pdb_id FROM {table_name}
-            );
-    """
-    rows = QueryComplex(params['verbose']).list_data(query)
+    qc = QueryComplex(params['verbose'])
+    rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
     meta['rows'] = len(rows)
     for row in rows:
-        row['pdb_file'] = os.path.join(params['rawdata_pdb_dir'], row['relative_path'])
+        row['pdb_file'] = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
         yield row
 
 def build(row_iter, params, meta):

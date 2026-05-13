@@ -3,7 +3,7 @@
 requirements:
     - table meta_pdb
 example:
-    - parallel -j4 python app.py pdb_chain_type ::: {0..240}
+    - parallel -j8 python app.py pdb_chain_type ::: {0..240}
     - python app.py pdb_chain_type 0
 function:
     - identify chain type according pdb file
@@ -14,21 +14,12 @@ from bioomics import Pdb
 
 @header
 def retrieve_pdb(params, meta):
-    pdb_group = params['pdb_group']
-    table_name = params['table_name']
-    query = f"""
-        SELECT pdb_id, relative_path
-        FROM meta_pdb
-        WHERE pdb_group = {pdb_group}
-            AND pdb_id NOT IN (
-                SELECT pdb_id FROM {table_name}
-            );
-    """
-    rows = QueryComplex(params['verbose']).list_data(query)
+    qc = QueryComplex(params['verbose'])
+    rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
     print(f"{len(rows)} PDB files ready...")
     meta['rows'] += len(rows)
     for row in rows:
-        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_path'])
+        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
         if os.path.isfile(pdb_file):
             row['pdb_file'] = pdb_file
             yield row

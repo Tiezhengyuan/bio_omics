@@ -10,13 +10,11 @@ from .build_records import BuildRecords
 TABLE_COLUMNS = {
     # pdb
     'pdb': ['pdb_id', 'pdb_url', 'release_date', 'name',],
-    'meta_pdb': ['pdb_id', 'relative_path', 'pdb_group'],
-    'meta_mmcif': ['pdb_id', 'relative_path', 'pdb_group'],
+    'meta_pdb': ['pdb_id', 'relative_pdb', 'relative_cif', 'pdb_group'],
     'pdb_compound': ['pdb_id', 'compound_no', 'chain_no', 'compound_text',],
     'pdb_method': ['pdb_id', 'structure_method', 'resolution',],
     'pdb_keyword': ['pdb_id', 'keyword',],
-    'pdb_protein': ['pdb_id', 'relative_fasta', 'pro_id', 'chain',
-        'auth_chain', 'pro_len',  'pro_seq'],
+    'pdb_protein': ['pdb_id', 'relative_fasta', 'pro_id', 'chain', 'auth_chain', 'pro_seq'],
     'meta_bfactor': ['pdb_id', 'relative_pkl'],
     'pdb_bfactor': ['pdb_id', 'model_no', 'chain_no', 'avg_bfactor', 'bfactor'],
 
@@ -131,13 +129,7 @@ TABLE_COLUMNS = {
 
     #################
     #analyze
-    'meta_combo2_pdb': ['pdb_id', 'model_no', 'combo_id',
-        'chain_combo', 'bounded_pdb', 'chain_pdbs'],
-    'meta_combo2_seq': ['pdb_id', 'model_no', 'combo_id',
-        'chain_combo', 'relative_csv'],
-    'pdb_distance': ['pdb_id', 'combo_id', 'relative_pkl'],
     'dist_amber14': ['pdb_id', 'combo_id', 'relative_pkl'],
-    'pdb_sasa': ['pdb_id', 'combo_id', 'relative_pkl'],
 
     # fix
     'fixed_pdb': ['pdb_id', 'relative_path', 'time0'],
@@ -187,7 +179,7 @@ class BuildComplex(InsertDb, DeleteDb):
         self.config['database'] = os.getenv('MYSQL_DB', 'COMPLEX2')
         self.recorder = BuildRecords(verbose)
     
-    def insert_batch_records(self, data, table_name:str, cols:list=None):
+    def insert_batch_records(self, data, table_name:str, cols=None):
         if cols is None:
             cols = TABLE_COLUMNS[table_name]
         fmt = ['%s',] * len(cols)
