@@ -27,15 +27,17 @@ load_dotenv(env_file)
 # load customary modules
 from bioomics.database import BuildComplex, UpdateComplex, QueryComplex
 
+
 # initiate parameters
 params = {
+    'host': socket.gethostname(),
     'pdb_group': sys.argv[1] if len(sys.argv) > 1 else None,
     'verbose': True if os.getenv('verbose') == 'true' else False,
     'rawdata_pdb_dir': os.getenv('rawdata_pdb_dir'),
     'output_pdb_dir': os.getenv('output_pdb_dir'),
     'simulate_dir': os.getenv('simulate_dir'),
     'predict_dir': os.getenv('predict_dir'),
-    'host': socket.gethostname(),
+    'design_dir': os.getenv('design_dir'),
 }
 meta = defaultdict(int)
 

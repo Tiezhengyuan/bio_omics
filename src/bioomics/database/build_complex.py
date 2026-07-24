@@ -5,6 +5,38 @@ import os
 from .insert_db import InsertDb
 from .delete_db import DeleteDb
 from .build_records import BuildRecords
+'''
+    
+    #################
+    #analyze
+    'dist_amber14': ['pdb_id', 'combo_id', 'relative_pkl'],
+
+    # fix
+    'fixed_pdb': ['pdb_id', 'relative_path', 'time0'],
+    'fixed_chainid': ['pdb_id', 'model_no', 'fixed_model_no',
+        'chain_no', 'fixed_chain_no'],
+    'fixed_chain': ['pdb_id', 'chain_id', 'model_no',
+        'chain_no', 'relative_pdb'],
+    'fixed_combo2': ['pdb_id', 'model_no', 'combo_id',
+        'chain_combo', 'relative_pdb'],
+    'fixed_combo3': ['pdb_id', 'model_no', 'combo_id',
+        'chain_combo', 'relative_pdb'],
+    'pdb_chain_fixed': ['chain_id', 'relative_pdb', 'time0'],
+
+    # simulate
+    'relaxed_pdb_amber99sb': ['pdb_id', 'original_energy',
+        'relaxed_energy', 'time0', 'relative_pdb'],
+    'relaxed_pdb_amber14': ['pdb_id', 'original_energy',
+        'relaxed_energy', 'time0', 'relative_pdb'],
+    'relaxed_amber14_chain': ['pdb_id', 'chain_id', 'model_no',
+        'chain_no', 'relative_pdb'],
+    'relaxed_amber14_combo2': ['pdb_id', 'combo_id', 'model_no',
+        'chain_combo', 'endpoint_prefix'],
+    'relaxed_amber14_combo3': ['pdb_id', 'combo_id', 'model_no',
+        'chain_combo', 'endpoint_prefix'],
+    'chain_relaxed_amber14': ['chain_id', 'original_energy',
+        'relaxed_energy', 'time0', 'endpoint'],
+'''
 
 # build SQL query string
 TABLE_COLUMNS = {
@@ -118,53 +150,47 @@ TABLE_COLUMNS = {
     'meta_execute': ['table_name', 'pdb_group', 'host', 'ip_addr', 'script'],
 
     #design
-    'design_chain': ['chain_id', 'target_name', 'pdb_id', 'parent_id',
-        'faa_file', 'pdb_file', 'chain_seq',],
+    'design_chain': ['target_name', 'chain_id', 'parent_id', 'pdb_id',
+        'chain_no', 'faa_file', 'pdb_file', 'binder_pdb',
+        'chain_seq', 'epitope_pos'],
     'design_dimer': ['design_id', 'category', 'chain_labels', 'target_name',
-        'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
+        'target_id', 'target_chain_no', 'binder_id', 'binder_chain_no',
+        'af_faa', 'target_pdb', 'binder_pdb', 'pdb_files'],
     'design_trimer': ['design_id', 'category', 'chain_labels', 'target_name',
-        'target_id', 'binder_id', 'af_faa', 'target_pdb', 'binder_pdb'],
+        'target_id', 'target_chain_no', 'binder_id', 'binder_chain_no',
+        'af_faa', 'target_pdb', 'binder_pdb', 'pdb_files'],
+    
     'predict': ['target_name', 'predictor', 'design_id', 'host', 'status'],
+    'predict_summary': ['summary_id', 'predict_id', 'ranking', 'avg_plddt',
+        'avg_ptm', 'max_pae', 'relative_json', 'relaxed_pdb', 'unrelaxed_pdb'],
+    'unrelaxed_plddt': ['summary_id', 'relative_pdb', 'relative_pkl', 
+        'chain_no', 'avg_plddt',],
+    'relaxed_plddt': ['summary_id', 'relative_pdb', 'relative_pkl', 
+        'chain_no', 'avg_plddt',],
+    'unrelaxed_contacts': ['summary_id', 'relative_pdb', 'binding_affinity',
+        'dissociation_constant', 'relative_prodigy'],
+    'relaxed_contacts': ['summary_id', 'relative_pdb', 'binding_affinity',
+        'dissociation_constant', 'relative_prodigy'],
+    'relaxed_dist': ['summary_id', 'relative_pdb', 'chain_combo',
+        'min_dist', 'min_res1', 'min_res2', 'relative_pkl'],
+    'unrelaxed_dist': ['summary_id', 'relative_pdb', 'chain_combo',
+        'min_dist', 'min_res1', 'min_res2', 'relative_pkl'],
+    'unrelaxed_sasa': ['summary_id', 'delta_total_sasa', 'relative_pkl', 'relative_pdb',],
+    'relaxed_sasa': ['summary_id', 'delta_total_sasa', 'relative_pkl', 'relative_pdb',],
+    'unrelaxed_dist_cdr': ['summary_id', 'binder_id', 'fragment', 
+        'res_no', 'res', 'min_dist',],
+    'relaxed_dist_cdr': ['summary_id', 'binder_id', 'fragment', 
+        'res_no', 'res', 'min_dist',],
 
 
-    #################
-    #analyze
-    'dist_amber14': ['pdb_id', 'combo_id', 'relative_pkl'],
-
-    # fix
-    'fixed_pdb': ['pdb_id', 'relative_path', 'time0'],
-    'fixed_chainid': ['pdb_id', 'model_no', 'fixed_model_no',
-        'chain_no', 'fixed_chain_no'],
-    'fixed_chain': ['pdb_id', 'chain_id', 'model_no',
-        'chain_no', 'relative_pdb'],
-    'fixed_combo2': ['pdb_id', 'model_no', 'combo_id',
-        'chain_combo', 'relative_pdb'],
-    'fixed_combo3': ['pdb_id', 'model_no', 'combo_id',
-        'chain_combo', 'relative_pdb'],
-    'pdb_chain_fixed': ['chain_id', 'relative_pdb', 'time0'],
-
-    # simulate
-    'relaxed_pdb_amber99sb': ['pdb_id', 'original_energy',
-        'relaxed_energy', 'time0', 'relative_pdb'],
-    'relaxed_pdb_amber14': ['pdb_id', 'original_energy',
-        'relaxed_energy', 'time0', 'relative_pdb'],
-    'relaxed_amber14_chain': ['pdb_id', 'chain_id', 'model_no',
-        'chain_no', 'relative_pdb'],
-    'relaxed_amber14_combo2': ['pdb_id', 'combo_id', 'model_no',
-        'chain_combo', 'endpoint_prefix'],
-    'relaxed_amber14_combo3': ['pdb_id', 'combo_id', 'model_no',
-        'chain_combo', 'endpoint_prefix'],
-    'chain_relaxed_amber14': ['chain_id', 'original_energy',
-        'relaxed_energy', 'time0', 'endpoint'],
+    'docking': ['target_name', 'design_id', 'host', 'status'],
+    
 
 
     'ab_anarci': ['chain_id', 'domain_no', 'hmm_species',
         'chain_type', 'evalue', 'score', 'seqstart_index',
         'seqend_index', 'identity_species', 'v_gene', 'v_identity',
         'j_gene', 'j_identity', 'aligned_seq',],
-
-
-
 }
 
 
@@ -226,4 +252,23 @@ class BuildComplex(InsertDb, DeleteDb):
         s2, f2 = self.insert_records(seq1000, 'proseq_1000', cols)
         s3, f3 = self.insert_records(seqlong, 'proseq_long', cols)
         return s1 + s2 + s3, f1 + f2 + f3
-        
+    
+    def put_design_chain(self, data):
+        table_name = 'design_chain'
+
+        # delete old rows
+        target_name = data['target_name']
+        chain_id = data['chain_id']
+        query = f"""
+            DELETE FROM {table_name}
+            WHERE target_name = '{target_name}'
+                AND chain_id = '{chain_id}'
+        """
+        self.execute(query)
+
+        # insert new record
+        cols = TABLE_COLUMNS[table_name]
+        rec = [data.get(i) for i in cols]
+        if self.verbose:
+            print(rec)
+        self.insert_batch_records([rec,], table_name)

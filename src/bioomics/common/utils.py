@@ -1,5 +1,8 @@
 '''
 '''
+import os
+import socket
+import subprocess
 
 class Utils:
 
@@ -23,7 +26,6 @@ class Utils:
                     input[key] = [input[key], value]
         return input
 
-
     @staticmethod
     def update_nested_dict(input:dict, keys:list, value, current=None):
         if len(keys) == 0:
@@ -31,3 +33,32 @@ class Utils:
         Utils.update_dict(input, keys[0], value)
         Utils.update_nested_dict(input, keys[1:], value, current)
 
+    @staticmethod
+    def copy_data(outdir) -> bool:
+        data_hostname = os.getenv('DATA_HOSTNAME')
+        if not data_hostname:
+            print("No data hostname is assigned, skip synchronization.")
+            return False
+        
+        execute_hostname = socket.gethostname()
+        if data_hostname == execute_hostname:
+            print(f"Skip synchronization, identical IP={data_hostname}")
+        else:
+            print(f"Try to copy {outdir} from {execute_hostname} to {data_hostname}.")
+            data_host_user = os.getenv('DATA_HOST_USER')
+            data_host_ip = os.getenv('DATA_HOST_IP')
+            cmd = [
+                'rsync', '-avz', '--progress',
+                '--mkpath', '--remove-source-files',
+                f"{outdir}/*",
+                f"{data_host_user}@{data_hostname}:{outdir}/",
+            ]
+            try:
+                cmd = ' '.join(cmd)
+                print(cmd)
+                res = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
+                print('Synchronize results: ', res.stdout, res.stderr)
+                return True
+            except Exception as e:
+                print(f"ERROR: Synchronization between {outdir}, err={e}")
+        return False

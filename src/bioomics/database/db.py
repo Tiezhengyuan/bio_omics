@@ -41,11 +41,11 @@ class Db:
                 connection.close()
         return False
 
-    def execute_fetch(self, query):
+    def execute_fetch(self, query, values=None):
         try:
             connection = mysql.connector.connect(**self.config)
             cursor = connection.cursor(dictionary=True)
-            cursor.execute(query)
+            cursor.execute(query, values)
             res = cursor.fetchall()
             connection.commit()
             return res

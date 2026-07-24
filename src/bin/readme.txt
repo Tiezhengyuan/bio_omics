@@ -23,3 +23,19 @@ bash src/bin/5_predict.sh
 ###############create only
 #IMGT
 bash src/bin/IMGT.sh
+
+
+# backup
+
+~/.my.conf
+
+[mysqldump]
+user=your_username
+password=your_password
+host=localhost
+
+chmod 600 ~/.my.conf
+
+#comand
+mysqldump COMPLEX2 > /media/yuan/bk3/mysql/complex2_$(date +%Y%m%d).sql
+

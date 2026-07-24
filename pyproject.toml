@@ -1,0 +1,69 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bio-omics"
+version = "0.1.0"
+description = "ETL of structure omics data"
+readme = "README.md"
+authors = [
+    {name = "Tiezheng Yuan", email = "tiezhengyuan@hotmail.com"}
+]
+requires-python = "==3.12.13"
+dependencies = [
+    "anarci>=2026.2.13.2",
+    "bio>=1.8.3",
+    "bs4>=0.0.2",
+    "freesasa>=2.2.1",
+    "hmmer>=3.4.0.2",
+    "lxml>=6.1.1",
+    "matplotlib>=3.11.1",
+    "matplotlib-venn>=1.1.2",
+    "mdanalysis>=2.10.0",
+    "mysql-connector-python>=9.7.0",
+    "netcdf4>=1.7.4",
+    "openmm[cuda12]>=8.5.2",
+    "pandas>=3.0.5",
+    "pdbfixer",
+    "plotly>=6.9.0",
+    "prodigy-prot>=2.4.0",
+    "py3dmol>=2.5.5",
+    "python-dotenv>=1.2.2",
+    "redis>=8.0.1",
+    "requests>=2.34.2",
+    "scikit-learn>=1.9.0",
+    "seaborn>=0.13.2",
+    "sh>=2.3.0",
+    "torch>=2.7.1",
+    "torchaudio>=2.7.1",
+    "torchvision>=0.22.1",
+    "urllib3>=2.7.0",
+    "venny4py>=1.0.4",
+]
+
+[dependency-groups]
+dev = [
+    "ipython>=9.0.0",
+    "mypy>=1.16.0",
+    "pytest>=9.1.1",
+    "ruff>=0.12.0",
+    "ddt>=1.7.2",
+    "jupyter>=1.1.1",
+    "notebook>=7.6.1",
+]
+
+[tool.uv.sources]
+pdbfixer = { git = "https://github.com/openmm/pdbfixer.git" }
+
+[tool.uv]
+package = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[project.scripts]
+bomics = "app.main:main"
+test-env = "scripts.test_env:main"
+test-pp = "pipelines.test:main"
+

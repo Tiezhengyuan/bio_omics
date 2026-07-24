@@ -1,6 +1,8 @@
 '''
 distance between two atoms
 '''
+import itertools
+
 import numpy as np
 import pandas as pd
 import MDAnalysis as mda
@@ -8,8 +10,9 @@ from MDAnalysis.analysis.distances import distance_array
 
 from ..constants.amino_acids import EXTRA_LONGER_NAMES
 from .distance_analyze import DistanceAnalyze
+from .pdb import Pdb
 
-class DistanceCalculate(DistanceAnalyze):
+class DistanceCalculate:
 
     def __init__(self, pdb_file:str, args:dict):
         '''
@@ -18,29 +21,10 @@ class DistanceCalculate(DistanceAnalyze):
         max_span: max 10 amino acids between two contacts
         '''
         self.pdb_file = pdb_file
-        super().__init__(args)
+        self.verbose = args.get('verbose', False)
+        self.dist_cutoff = float(args.get('dist_cutoff', 5))
+        self.max_span = int(args.get('max_span', 10))
         self.dist1, self.dist2 = None, None
-    
-    def process(self, chain_combo:str):
-        '''
-        chain_combo: example 'A-C' stands for A and C
-        '''
-        chain1_id, chain2_id = chain_combo.split('-')
-        dist1, dist2 = self.cal_dist(chain1_id, chain2_id)
-        if dist1 is not None and dist2 is not None:
-            if len(dist1) > 0 and len(dist2) > 0:
-                motif1 = self.parse_seq(dist1)
-                motif2 = self.parse_seq(dist2)
-                if self.verbose:
-                    print(f"input: {self.pdb_file}, contacts: {len(motif1)} vs {len(motif2)}")
-                return {
-                    'chain1': chain1_id,
-                    'dist1': dist1,
-                    'motif1': motif1,
-                    'chain2': chain2_id,
-                    'dist2': dist2,
-                    'motif2': motif2,
-                }
     
     def cal_dist(self, chain1_id:str, chain2_id:str):
         try:
@@ -99,4 +83,53 @@ class DistanceCalculate(DistanceAnalyze):
         except Exception as e:
             print(f"ERROR: calculate distance, pdb={self.pdb_file}, err={e}")
         return None, None
+    
+    def process(self, chain_combo:str) -> dict:
+        '''
+        chain_combo: example 'A-C' stands for A and C
+        '''
+        chain1_id, chain2_id = chain_combo.split('-')
+        dist1, dist2 = self.cal_dist(chain1_id, chain2_id)
+        if dist1 is not None and dist2 is not None:
+            if len(dist1) > 0 and len(dist2) > 0:
+                motif1 = DistanceAnalyze.parse_seq(dist1, self.dist_cutoff, self.max_span)
+                motif2 = DistanceAnalyze.parse_seq(dist2, self.dist_cutoff, self.max_span)
+                if self.verbose:
+                    n1, n2 = len(motif1), len(motif2)
+                    print(f"input: {self.pdb_file}, contacts: {n1} vs {n2}")
+                return {
+                    'chain_combo': chain_combo,
+                    'chain1': chain1_id,
+                    'dist1': dist1,
+                    'motif1': motif1,
+                    'chain2': chain2_id,
+                    'dist2': dist2,
+                    'motif2': motif2,
+                }
+        return {}
+    
+    def __call__(self) -> list:
+        res = []
 
+        p = Pdb(self.pdb_file)
+        p.load_structure()
+        chain_no_pool = p.get_model_chain_no(model_no=0)
+        if len(chain_no_pool) > 1:
+            for (chain1_id, chain2_id) in itertools.combinations(chain_no_pool, 2):
+                dist1, dist2 = self.cal_dist(chain1_id, chain2_id)
+                if dist1 is not None and dist2 is not None:
+                    if len(dist1) > 0 and len(dist2) > 0:
+                        motif1 = DistanceAnalyze.parse_seq(dist1, self.dist_cutoff, self.max_span)
+                        motif2 = DistanceAnalyze.parse_seq(dist2, self.dist_cutoff, self.max_span)
+                        res.append({
+                            'dist_cutoff': self.dist_cutoff,
+                            'max_span': self.max_span,
+                            'chain_combo': f"{chain1_id}-{chain2_id}",
+                            'chain1': chain1_id,
+                            'dist1': dist1,
+                            'motif1': motif1,
+                            'chain2': chain2_id,
+                            'dist2': dist2,
+                            'motif2': motif2,
+                        })
+        return res

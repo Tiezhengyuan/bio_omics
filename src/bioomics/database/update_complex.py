@@ -116,33 +116,7 @@ class UpdateComplex(UpdateDb):
         ;"""
         self.execute_update(query, None)
 
-    def design_end(self, predictor:str, design_id:str, endpoint:str):
-        t1 = datetime.now()
-        query = f"""
-            UPDATE predict
-            SET endpoint = '{endpoint}', end_at = '{t1}', status='done'
-            WHERE predictor = '{predictor}'
-                AND design_id = '{design_id}'
-        ;"""
-        self.execute_update(query, None)
-    
-    def design_status(self, predictor:str, design_id:str, status:str):
-        query = f"""
-            UPDATE predict SET status='{status}'
-            WHERE predictor = '{predictor}'
-                AND design_id = '{design_id}'
-        ;"""
-        self.execute_update(query, None)
 
-    def design_delete(self, table_name:str, target_name:str, category:str):
-        query = f"""
-            DELETE FROM {table_name}
-            WHERE target_name = '{target_name}'
-                AND category = '{category}'
-        ;"""
-        res = self.execute_update(query, None)
-        if res and self.verbose:
-            print(f"Delete {res} rows from {table_name}.")
 
     def put_pro_seq(self, prefix:tuple, seqs:list, source=None):
         seq_head, seq_len = prefix

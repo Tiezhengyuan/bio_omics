@@ -19,7 +19,20 @@ class QueryDb(Db):
             else:
                 return res
         return []
-        
+
+    def parse_data(self, query:str, values:tuple) -> list:
+        placeholders = ', '.join(['%s'] * len(values))
+        query += f"({placeholders})"
+        # try not more than 3 times
+        for _ in range(3):
+            res = self.execute_fetch(query, tuple(values))
+            if res == -1:
+                gc.collect()
+                time.sleep(5)
+            else:
+                return res
+        return []
+    
     def table_exists(self, table_name:str) -> bool:
         res = self.execute_fetch("SHOW TABLES")
         tables = pd.DataFrame(res).iloc[:,0].to_list()

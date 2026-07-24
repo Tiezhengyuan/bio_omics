@@ -34,6 +34,56 @@ install other packages
     pip install -r src/bin/requirements.txt
     ```
 
+
+########################
+### uv: rebuilt
+
+#rebuild
+cd ~/bio/bio_omics
+uv sync --group dev --inexact
+
+#test
+uv run test-env
+
+########################
+### uv: newly built
+
+uv venv --python 3.12
+source .venv/bin/activate
+uv init
+
+#install 
+uv add torch torchvision torchaudio --defaul-index https://download.pytorch.org/whl/cu12
+
+
+install openmm
+```
+uv add openmm[cuda12]
+```
+confirm installation
+```
+python -m openmm.testInstallation
+```
+#install pdbfixer
+uv add  git+https://github.com/openmm/pdbfixer.git"
+python -c "import pdbfixer"
+
+
+#uv sync --group dev --inexact
+uv sync --group dev
+
+install pyrosetta after uv sync
+```
+uv pip install pyrosetta --find-links https://west.rosettacommons.org/pyrosetta/quarterly/release
+```
+
+Test installation
+```
+test-env
+# uv run test-env
+```
+
+
 #####################################################
 ## ENV simulate2
 install simulation packages
@@ -101,3 +151,5 @@ pixi init
 
 pixi install
 pixi run install-pyrosetta
+
+

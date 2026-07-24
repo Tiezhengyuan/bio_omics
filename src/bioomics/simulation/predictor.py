@@ -32,3 +32,20 @@ class Predictor:
         except Exception as e:
             print('ERROR: failed in alphafold through colabfold, error=', e)
         return False
+
+    def haddock3(self):
+        cmd = ['haddock3', self.args['cfg_file'],]
+        try:
+            if self.args['verbose']:
+                print('\n\nLoad haddock3: ', ' '.join(cmd))
+            # cmd = ' '.join(cmd)
+            result = subprocess.run(cmd, shell=False,
+                capture_output=True, text=True)
+            if self.args['verbose']:
+                print('status: ', result.returncode)
+                print('stdout: ', result.stdout)
+                print('stderr: ', result.stderr)
+            return True
+        except Exception as e:
+            print('ERROR: failed in haddock3, error=', e)
+        return False

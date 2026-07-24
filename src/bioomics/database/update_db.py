@@ -28,23 +28,3 @@ class UpdateDb(Db):
                 connection.close()
         return None
 
-    # def empty_tables(self, table_name:str):
-    #     query = f"DELETE FROM {table_name};"
-    #     return self.execute_update(query, None)
-
-    def delete_rows(self, table_name, col_name:str, values:list):
-        if self.verbose:
-            print(f"Try to delete rows ={values} from {table_name}-{col_name}")
-        placeholders = ', '.join(['%s',] * len(values))
-        query = f"""
-            DELETE FROM {table_name}
-            WHERE {col_name} IN ({placeholders})
-        """
-        return self.execute_update(query, values)
-
-    def delete_null_rows(self, table_name, col_name):
-        query = f"""
-            DELETE FROM {table_name}
-            WHERE {col_name} IS NULL
-        """
-        return self.execute_update(query, None)

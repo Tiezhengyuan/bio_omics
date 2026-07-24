@@ -76,13 +76,18 @@ pool = {
     'chain_tmalign': 'predict.chain_tmalign',
     'combo2_af': 'predict.combo2_af',
     'combo3_af': 'predict.combo3_af',
-
+    
+    # design
+    'predict_summary': 'design.predict_summary',
+    'predict_plddt': 'design.predict_plddt',
+    'predict_contacts': 'design.predict_contacts',
+    'predict_dist': 'design.predict_dist',
+    'predict_sasa': 'design.predict_sasa',
+    'dist_cdr': 'design.dist_cdr',
 
     # collect data
     'collect_distance': 'collect.collect_distance',
     'collect_ab_distance': 'collect.collect_ab_distance',
-
-
 
     #other
     'clean_predict': 'clean.clean_predict',
@@ -90,24 +95,28 @@ pool = {
     'test': 'test',
 }
 
-# build cmd
-project_dir = os.path.dirname(__file__)
-name = sys.argv[1] if len(sys.argv) > 1 else None
+def main():
+    # build cmd
+    project_dir = os.path.dirname(__file__)
+    name = sys.argv[1] if len(sys.argv) > 1 else None
 
 
-cmd = ['python', '-m',]
-path_prefix = 'src.pipelines.'
-if name in pool:
-    cmd.append(path_prefix + pool[name])
-else:
-    print("\nError: The argument <module_name> is not defined.\n")
-    print("Usage: python app.py <module_name> [pdb_group]\n")
-    sys.exit(1)
+    cmd = ['python', '-m',]
+    path_prefix = 'src.pipelines.'
+    if name in pool:
+        cmd.append(path_prefix + pool[name])
+    else:
+        print("\nError: The argument <module_name> is not defined.\n")
+        print("Usage: python app.py <module_name> [pdb_group]\n")
+        sys.exit(1)
 
-# pass arguments
-args = sys.argv[2:] if len(sys.argv) > 2 else []
-cmd += args
-print(f"Run python script: {cmd}")
+    # pass arguments
+    args = sys.argv[2:] if len(sys.argv) > 2 else []
+    cmd += args
+    print(f"Run python script: {cmd}")
 
-# run
-result = subprocess.run(cmd)
+    # run
+    result = subprocess.run(cmd)
+
+if __name__ == "__main__":
+    main()

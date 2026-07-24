@@ -63,8 +63,8 @@ def cal_dist(rows, params, meta):
         }
         if os.path.isfile(pfile):
             item['relative_pkl'] = os.path.join(endpoint, file_name)
-            p = DistanceAnalyze({'pickle_file': pfile})
-            dist_value, res1, res2 = p.get_distance(False, 0)
+            data = ProcessPickle(pfile).load_pickle([])
+            dist_value, res1, res2 = DistanceAnalyze.get_distance(data, False, 0)
             item.update({
                 'min_dist': dist_value,
                 'min_res1': res1,

@@ -26,3 +26,20 @@ class DeleteDb(Db):
         if self.verbose:
             print(f"Try to drop database {db_name}...")
         return self.execute(query)
+
+    def delete_rows(self, table_name, col_name:str, values:list):
+        if self.verbose:
+            print(f"Try to delete rows ={values} from {table_name}-{col_name}")
+        placeholders = ', '.join(['%s',] * len(values))
+        query = f"""
+            DELETE FROM {table_name}
+            WHERE {col_name} IN ({placeholders})
+        """
+        return self.execute(query)
+
+    def delete_null_rows(self, table_name, col_name):
+        query = f"""
+            DELETE FROM {table_name}
+            WHERE {col_name} IS NULL
+        """
+        return self.execute(query)
