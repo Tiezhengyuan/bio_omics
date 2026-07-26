@@ -301,7 +301,7 @@ class QueryComplex(QueryDb):
         #present data
         for key, rows in pool.items():
             if self.verbose:
-                print(f'Present {len(key)} data with conditions={key}.')
+                print(f'Present {len(rows)} data with the conditions={key}.')
             yield key, rows
 
     def parse_seqid(self, conditions, data:list) -> tuple:
@@ -315,8 +315,7 @@ class QueryComplex(QueryDb):
         qc = QueryComplex(self.verbose)
         query = f"""
             SELECT seq_id, seq FROM {table_name}
-            WHERE seq_head = '{seq_head}'
-                AND seq_len = {seq_len}
+            WHERE seq_head = '{seq_head}' AND seq_len = {seq_len}
         """
         rows = qc.list_data(query)
         ids = {r['seq']:r['seq_id'] for r in rows}

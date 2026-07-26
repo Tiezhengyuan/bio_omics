@@ -2,13 +2,12 @@
 requirements:
     - The table pdb_chain_seq is ready.
 example:
-    - python app.py unique_chain_seq
+    - bomics unique_chain_seq
 function:
     - assign unique id to chain protein sequences
 '''
 
 from src.helper import *
-from bioomics import UpdateComplex
 
 def unique_seqs(params, meta):
     table_name = params['table_name']

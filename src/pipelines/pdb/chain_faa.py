@@ -1,7 +1,7 @@
 '''
 example: 
-    - parallel -j8 python app.py chain_faa ::: {0..240}
-    - python app.py chain_faa 0
+    - parallel -j8 bomics chain_faa ::: {0..241}
+    - bomics chain_faa 0
 functions:
     - retrieve pdb to fasta by chains
     - used by aligners, namely blastp
@@ -23,22 +23,22 @@ def export_chain_faa(rows, params, meta):
     for row in rows:
         # load structure
         pdb_id = row['pdb_id']
-        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
+        pdb_file = params['rawdata_dir'] / row['relative_pdb']
         p = Pdb(pdb_file, None, params['verbose'])
         p.load_structure()
 
         # retrieve chains
         chains = p.parse_chains()
         if chains:
-            endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
-            outdir = os.path.join(params['output_pdb_dir'], endpoint)
+            endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id
+            outdir = params['output_pdb_dir'] / endpoint
             Path(outdir).mkdir(parents=True, exist_ok=True)
 
             for item in chains:
                 chain_id = item['chain_id']
                 file_name = f"{chain_id}.faa"
-                outfile = os.path.join(outdir, file_name)
-                if params['overwrite'] or (not os.path.isfile(outfile)):
+                outfile = outdir / file_name
+                if params['overwrite'] or not outfile.is_file():
                     chain_seq = p._chain_seq(item['chain'])
                     if chain_seq:
                         pf = ProcessFasta(outfile, params['verbose'])
@@ -49,8 +49,8 @@ def export_chain_faa(rows, params, meta):
                 else:
                     meta['skip_faa'] += 1
                 # build record
-                if os.path.isfile(outfile):
-                    relative_path = os.path.join(endpoint, file_name)
+                if outfile.is_file():
+                    relative_path = str(endpoint / file_name)
                     yield pdb_id, chain_id, relative_path
                 else:
                     yield pdb_id, chain_id, None

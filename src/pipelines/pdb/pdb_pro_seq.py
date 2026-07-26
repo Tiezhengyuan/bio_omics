@@ -1,6 +1,6 @@
 '''
 example: 
-    - python app.py pdb_pro_seq
+    - bomics pdb_pro_seq
 functions:
     - add new PDB sequences into proseq_* tables
     - parse pdb_chain_seq.chain_id with view_proseq.seq_id

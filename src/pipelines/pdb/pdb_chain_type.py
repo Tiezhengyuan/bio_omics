@@ -3,8 +3,8 @@
 requirements:
     - table meta_pdb
 example:
-    - parallel -j8 python app.py pdb_chain_type ::: {0..240}
-    - python app.py pdb_chain_type 0
+    - parallel -j8 bomics pdb_chain_type ::: {0..241}
+    - bomics pdb_chain_type 0
 function:
     - identify chain type according pdb file
 '''
@@ -19,8 +19,8 @@ def retrieve_pdb(params, meta):
     print(f"{len(rows)} PDB files ready...")
     meta['rows'] += len(rows)
     for row in rows:
-        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
-        if os.path.isfile(pdb_file):
+        pdb_file = params['rawdata_dir'] / row['relative_pdb']
+        if pdb_file.is_file():
             row['pdb_file'] = pdb_file
             yield row
 
@@ -35,10 +35,20 @@ def detect_chain_type(rows, params, meta):
         if chains:
             for item in chains:
                 counts = p.residue_type(item['chain'])
-                rec = (pdb_id, item['chain_id'], counts['type'], counts['total_res'], \
-                    counts['non_water_res'],  counts['aa_res'], counts['dna_res'], \
-                    counts['rna_res'], counts['water_res'], counts['ion_res'], \
-                    counts['hetero_res'], counts['other_res'])
+                rec = (
+                    pdb_id,
+                    item['chain_id'],
+                    counts['type'],
+                    counts['total_res'],
+                    counts['non_water_res'],
+                    counts['aa_res'],
+                    counts['dna_res'],
+                    counts['rna_res'],
+                    counts['water_res'],
+                    counts['ion_res'],
+                    counts['hetero_res'],
+                    counts['other_res']
+                )
                 meta['chain'] += 1
                 yield rec
         else:

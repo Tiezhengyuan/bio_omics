@@ -177,10 +177,12 @@ CREATE TABLE pdb_chain_type(
 DROP TABLE IF EXISTS chain_pdb;
 CREATE TABLE chain_pdb(
     pdb_id          VARCHAR(10),
-    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
+    chain_id        VARCHAR(20),
     chain_pdb       VARCHAR(60),
     UNIQUE (chain_id),
-    CONSTRAINT fk_pdb_chain FOREIGN KEY (chain_id)
+    CONSTRAINT fk_chain_pdb_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE,
+    CONSTRAINT fk_chain_pdb_chainid FOREIGN KEY (chain_id)
         REFERENCES pdb_chainid(chain_id) ON DELETE CASCADE
 );
 

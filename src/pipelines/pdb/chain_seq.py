@@ -2,8 +2,8 @@
 requirements:
     - The table pdb_chainid is ready.
 example:
-    - parallel -j4 python app.py chain_seq ::: {0..240}
-    - python app.py chain_seq 0
+    - parallel -j4 bomics chain_seq ::: {0..241}
+    - bomics chain_seq 0
 function:
     - assign unique id to chain protein sequences
 '''
@@ -17,8 +17,9 @@ def retrieve(args, meta):
     rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
     meta['rows'] = len(rows)
     for row in rows:
-        row['pdb_file'] = os.path.join(args['rawdata_pdb_dir'], row['relative_pdb'])
-        yield row
+        row['pdb_file'] = args['rawdata_dir'] / row['relative_pdb']
+        if row['pdb_file'].is_file():
+            yield row
 
 def build(row_iter, params, meta):
     for row in row_iter:

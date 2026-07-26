@@ -3,8 +3,8 @@ requirements:
     - PDB raw data
     - table pdb, meta_chain_pdb
 example: 
-    - parallel -j8 python app.py chain_dssp ::: {0..240}
-    - python app.py chain_dssp 0
+    - parallel -j8 bomics chain_dssp ::: {0..241}
+    - bomics chain_dssp 0
 functions:
     - Analyze secondary structure by chains
     - put dssp sequence to table chain_dssp
@@ -33,8 +33,8 @@ def search_pdb(params, meta):
     rows = QueryComplex(params['verbose']).list_data(query)
     meta['rows'] = len(rows)
     for row in rows:
-        pdb_file = os.path.join(params['output_pdb_dir'], row['chain_pdb'])
-        if os.path.isfile(pdb_file):
+        pdb_file = params['output_pdb_dir'] / row['chain_pdb']
+        if pdb_file.is_file():
             row['pdb_file'] = pdb_file
             yield row
 

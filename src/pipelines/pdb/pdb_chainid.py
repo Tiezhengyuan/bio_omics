@@ -3,8 +3,8 @@ note:
     - PDB files should be synchronized to the local.
     - The table pdb is ready.
 example:
-    - parallel -j8 python app.py pdb_chainid ::: {0..240}
-    - python app.py pdb_chainid 0
+    - parallel -j8 bomics pdb_chainid ::: {0..241}
+    - bomics pdb_chainid 0
 function:
     - parse chain by pdb-model-chain and assign with chain_id.
 '''
@@ -18,8 +18,9 @@ def retrieve_pdb(params, meta):
     print(f"New PDB: {len(rows)}")
     meta['rows'] = len(rows)
     for row in rows:
-        row['pdb_file'] = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
-        yield row
+        row['pdb_file'] = params['rawdata_dir'] / row['relative_pdb']
+        if row['pdb_file'].is_file():
+            yield row
 
 def build(row_iter, params, meta):
     for row in row_iter:

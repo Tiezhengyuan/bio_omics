@@ -1,7 +1,7 @@
 '''
 example: 
-    - parallel -j8 python app.py chain_pdb ::: {0..240}
-    - python app.py chain_pdb 0
+    - parallel -j8 bomics chain_pdb ::: {0..241}
+    - bomics chain_pdb 0
 functions:
     - retrieve pdb to pdb by chain
     - data are required by B-factor, DSSP analysis
@@ -23,30 +23,30 @@ def retrieve_pdb(params, meta):
 def pull_chain_pdb(rows, params, meta):
     for row in rows:
         pdb_id = row['pdb_id']
-        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
+        pdb_file = params['rawdata_dir'] / row['relative_pdb']
         p = Pdb(pdb_file, None, params['verbose'])
         p.load_structure()
 
         model_chains = p.parse_model_chains()
         model_no = 0
         if model_no in model_chains:
-            endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
-            outdir = os.path.join(params['output_pdb_dir'], endpoint)
-            Path(outdir).mkdir(parents=True, exist_ok=True)
+            endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id
+            outdir = params['output_pdb_dir'] / endpoint
+            outdir.mkdir(parents=True, exist_ok=True)
 
             for item in model_chains[model_no]:
                 chain_id = item['chain_id']
                 file_name = f'{chain_id}.pdb'
-                outfile = os.path.join(outdir, file_name)
-                if params['overwrite'] or not os.path.isfile(outfile):
+                outfile = outdir / file_name
+                if params['overwrite'] or not outfile.is_file():
                     chain_no = item['chain_no']
                     p.to_chain_pdb(model_no, [chain_no,], outfile)
                     meta['chains'] += 1
                 else:
                     meta['skip'] += 1
                 
-                if os.path.isfile(outfile):
-                    relative_path = os.path.join(endpoint, file_name)
+                if outfile.is_file():
+                    relative_path = str(endpoint / file_name)
                     yield pdb_id, chain_id, relative_path
                 else:
                     yield pdb_id, chain_id, None

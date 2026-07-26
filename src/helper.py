@@ -106,7 +106,7 @@ def validate_data(col_name, params, meta):
     pdb_group = params['pdb_group']
     table_name = params['table_name']
     # scan no existing files
-    print(f"Scan {table_name}.{col_name}, group={pdb_group}.", end=' ')
+    print(f"Scan {table_name}.{col_name}, group={pdb_group}...")
     query = f"""
         SELECT S.pdb_id, S.{col_name}
         FROM {table_name}  S
@@ -118,7 +118,8 @@ def validate_data(col_name, params, meta):
     del_pool = []
     for row in rows:
         pdb_file = params['output_pdb_dir'] / row[col_name]
-        if not os.path.isfile(pdb_file):
+        if not pdb_file.is_file():
+            print(pdb_file)
             del_pool.append(row[col_name])
     
     # delete rows
@@ -126,14 +127,16 @@ def validate_data(col_name, params, meta):
     if n > 0:
         print(f"Number of {n} out of {len(rows)} are not existing.", end=' ')
         print(f"Try to delete rows in {table_name}...", end='')
-        uc = UpdateComplex(params['verbose'])
+        dc = DeleteComplex(params['verbose'])
         chunk_size = 100
         for i in range(0, n-chunk_size, chunk_size):
             values = del_pool[i:i+chunk_size]
-            uc.delete_rows(table_name, col_name, values)
+            dc.delete_rows(table_name, col_name, values)
             meta['delete_rows'] += len(values)
             print(i, end=' ')
         print(f'{n}\n')
+    else:
+        print(f"PASS: Validate {table_name}.{col_name}.")
 
 def copy_data(outdir):
     data_hostname = os.getenv('DATA_HOSTNAME')
