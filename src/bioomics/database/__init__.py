@@ -9,3 +9,4 @@ from .build_complex import *
 from .query_complex import *
 from .query_antibody import *
 from .update_complex import *
+from .delete_complex import *

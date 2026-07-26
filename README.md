@@ -50,4 +50,14 @@ Note:
 ```
 
 
+# Development
+
+refresh install and start mysql database
+```
+docker compose down -v
+
+sudo rm -rf ~/bio/mysql/*
+
+docker compose up -d
+```
 

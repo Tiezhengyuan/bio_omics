@@ -52,7 +52,8 @@ CREATE TABLE meta_blastp5(
     pdb_id          VARCHAR(10),
     model_no        INT,
     relative_aln    VARCHAR(60),
-    CONSTRAINT fk_blastp_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
+    CONSTRAINT fk_blastp_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS align_uniprot;
@@ -73,7 +74,8 @@ CREATE TABLE meta_vdj(
     v_aln       VARCHAR(60),
     d_aln       VARCHAR(60),
     j_aln       VARCHAR(60),
-    CONSTRAINT fk_align_vdj_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
+    CONSTRAINT fk_align_vdj_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS align_vfrag;
@@ -86,7 +88,8 @@ CREATE TABLE align_vfrag (
     seq_to          INT,
     seq             TEXT,
     UNIQUE(chain_id, fragment),
-    CONSTRAINT fk_vfrag_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
+    CONSTRAINT fk_vfrag_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS align_vregion;
@@ -103,7 +106,8 @@ CREATE TABLE align_vregion (
     bit_score       INT,
     region_names    VARCHAR(100),
     UNIQUE(chain_id),
-    CONSTRAINT fk_imgt_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
+    CONSTRAINT fk_vregion_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id)  ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS align_dregion;
@@ -124,7 +128,8 @@ CREATE TABLE align_dregion (
     sbjct_seq       VARCHAR(50),
     sbjct_start     INT,
     sbjct_end       INT,
-    CONSTRAINT fk_dregion_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
+    CONSTRAINT fk_dregion_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS align_jregion;
@@ -149,7 +154,8 @@ CREATE TABLE align_jregion (
     sbjct_seq       VARCHAR(50),
     sbjct_start     INT,
     sbjct_end       INT,
-    CONSTRAINT fk_jregion_pdb FOREIGN KEY (pdb_id) REFERENCES pdb(pdb_id)
+    CONSTRAINT fk_jregion_pdb FOREIGN KEY (pdb_id)
+        REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS label_chain;

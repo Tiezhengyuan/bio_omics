@@ -3,8 +3,8 @@ requirements:
     - PDB raw data
     - table meta_pdb
 example: 
-    - parallel -j8 python app.py meta_bfactor ::: {0..240}
-    - python app.py meta_bfactor 0
+    - parallel -j8 bomics meta_bfactor ::: {0..241}
+    - bomics meta_bfactor 0
 functions:
     - calculate B-factor of PDB
 '''
@@ -19,22 +19,22 @@ def retrieve_rows(params, meta):
     print(f"{len(rows)} PDB files ready...")
     meta['rows'] += len(rows)
     for row in rows:
-        pdb_file = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
-        if os.path.isfile(pdb_file):
+        pdb_file = params['rawdata_dir'] / row['relative_pdb']
+        if pdb_file.is_file():
             row['pdb_file'] =  pdb_file
             yield row
 
 def cal_bfactor(rows, params, meta):
     for row in rows:
         pdb_id, pdb_file = row['pdb_id'], row['pdb_file']
-        endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
-        outdir = os.path.join(params['output_pdb_dir'], endpoint)
-        Path(outdir).mkdir(parents=True, exist_ok=True)
+        endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id
+        outdir = params['output_pdb_dir'] / endpoint
+        outdir.mkdir(parents=True, exist_ok=True)
 
         # calculate bfactor
         file_name = f"bfactor.pkl"
-        pfile = os.path.join(outdir, file_name)
-        if params['overwrite'] or (not os.path.isfile(pfile)):
+        pfile = outdir / file_name
+        if params['overwrite'] or not pfile.is_file():
             # load structure before calculation
             cp = CalculatePlddt(pdb_file)
             cp.load_structure()
@@ -57,8 +57,8 @@ def cal_bfactor(rows, params, meta):
 
         # build record
         rec = (pdb_id, None)
-        if os.path.isfile(pfile):
-            relative_path = os.path.join(endpoint, file_name)
+        if pfile.is_file():
+            relative_path = str(endpoint / file_name)
             rec = (pdb_id, relative_path)
         yield rec
 

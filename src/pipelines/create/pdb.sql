@@ -68,7 +68,7 @@ CREATE TABLE pdb_protein (
     pdb_id          VARCHAR(10),
     relative_fasta  VARCHAR(60),
     pro_id          VARCHAR(20),
-    chain           VARCHAR(80),
+    chain           VARCHAR(80) COLLATE utf8mb4_bin,
     auth_chain      VARCHAR(10),
     pro_len         INT GENERATED ALWAYS AS (LENGTH(pro_seq)) STORED,
     pro_seq         TEXT,

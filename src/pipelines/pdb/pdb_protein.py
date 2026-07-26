@@ -1,11 +1,9 @@
 '''
-requirements:
-    - enough free space ~500GB
 example:
-    - parallel -j8 python app.py pdb_protein ::: {0..240}
-    - python app.py pdb_protein 0
+    - parallel -j8 bomics pdb_protein ::: {0..241}
+    - bomics pdb_protein 0
 functions:
- - download fasta sequences
+ - download original protein sequences and save into *.faa
  - update table pdb_protein
  '''
 
@@ -20,7 +18,7 @@ def retrieve(params, meta):
     return rows
 
 def download_fasta(rows, params, meta):
-    p = PullPdb(params['rawdata_pdb_dir'], params['verbose'])
+    p = PullPdb(params['rawdata_dir'], params['verbose'])
     for row in rows:
         pdb_id = row['pdb_id']
         fa_file, endpoint = p.download_fasta(pdb_id)

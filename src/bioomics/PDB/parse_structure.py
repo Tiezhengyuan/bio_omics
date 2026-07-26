@@ -26,12 +26,12 @@ class ParseStructure:
         self.structure = None
         self.chains = []
 
-    def header_values(self, key):
+    def header_values(self, key:str, default=None):
         try:
             return self.structure.header[key]
         except Exception as e:
             pass
-        return None
+        return default
 
     @property
     def name(self):
@@ -52,14 +52,14 @@ class ParseStructure:
 
     @property
     def compound(self):
-        return self.header_values('compound')
+        return self.header_values('compound', {})
 
     @property
-    def keywords(self):
+    def keywords(self) -> list:
         res= self.header_values('keywords')
         if res:
             return re.split(r',\s*', res)
-        return None
+        return []
 
     @property
     def source(self):

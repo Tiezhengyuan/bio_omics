@@ -35,7 +35,7 @@ class DeleteDb(Db):
             DELETE FROM {table_name}
             WHERE {col_name} IN ({placeholders})
         """
-        return self.execute(query)
+        return self.execute(query, values)
 
     def delete_null_rows(self, table_name, col_name):
         query = f"""

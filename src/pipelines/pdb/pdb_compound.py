@@ -3,8 +3,8 @@ requirements:
     - PDB files should be synchronized to the local.
     - The table pdb is ready.
 example:
-    - parallel -j8 python app.py pdb_compound ::: {0..240}
-    - python app.py pdb_compound 0
+    - parallel -j8 bomics pdb_compound ::: {0..241}
+    - bomics pdb_compound 0
 function:
     - retrieve compound in head of PDB
 '''
@@ -16,15 +16,14 @@ def retrieve(params, meta):
     rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
     meta['rows'] += len(rows)
     for row in rows:
-        row['pdb_file'] = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
-        yield row
+        row['pdb_file'] = params['rawdata_dir'] / row['relative_pdb']
+        if row['pdb_file'].exists():
+            yield row
 
 def build(rows, params, meta):
     for row in rows:
-        pdb_id = row['pdb_id']
-        pdb_file = row['pdb_file']
         # load pdb
-        p = Pdb(pdb_file, None, params['verbose'])
+        p = Pdb(row['pdb_file'], None, params['verbose'])
         p.load_structure()
         # build record
         for compound_no, cp in p.compound.items():
@@ -36,7 +35,7 @@ def build(rows, params, meta):
             compound_text = ' ; '.join(_text)
             for chain_no in cp.get('chain').split(','):
                 chain_no = chain_no.strip()
-                rec = (pdb_id, compound_no, chain_no, compound_text)
+                rec = (row['pdb_id'], compound_no, chain_no, compound_text)
                 meta['records'] += 1
                 yield rec
 

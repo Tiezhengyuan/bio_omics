@@ -21,11 +21,12 @@ src_dir = os.path.dirname(__file__)
 if src_dir not in sys.path:
     sys.path.append(src_dir)
 
-env_file = os.path.join(src_dir, '.env')
+project_dir = os.path.dirname(src_dir)
+env_file = os.path.join(project_dir, '.env')
 load_dotenv(env_file)
 
 # load customary modules
-from bioomics.database import BuildComplex, UpdateComplex, QueryComplex
+from bioomics.database import BuildComplex, UpdateComplex, QueryComplex, DeleteComplex
 
 
 # initiate parameters
@@ -33,12 +34,15 @@ params = {
     'host': socket.gethostname(),
     'pdb_group': sys.argv[1] if len(sys.argv) > 1 else None,
     'verbose': True if os.getenv('verbose') == 'true' else False,
-    'rawdata_pdb_dir': os.getenv('rawdata_pdb_dir'),
-    'output_pdb_dir': os.getenv('output_pdb_dir'),
-    'simulate_dir': os.getenv('simulate_dir'),
-    'predict_dir': os.getenv('predict_dir'),
-    'design_dir': os.getenv('design_dir'),
+    'rawdata_dir': Path(os.getenv('rawdata_dir')),
+    'output_dir': Path(os.getenv('output_dir')),
 }
+params['rawdata_pdb_dir'] = params['rawdata_dir'] / 'pdb'
+params['output_pdb_dir'] = params['output_dir'] / 'pdb'
+params['output_protein_dir'] = params['output_dir'] / 'protein'
+params['simulate_dir'] = params['output_dir'] / 'simulate'
+params['predict_dir'] = params['output_dir'] / 'predict'
+params['design_dir'] = params['output_dir'] / 'design'
 meta = defaultdict(int)
 
 
@@ -113,7 +117,7 @@ def validate_data(col_name, params, meta):
     rows = QueryComplex(params['verbose']).list_data(query)
     del_pool = []
     for row in rows:
-        pdb_file = os.path.join(params['output_pdb_dir'], row[col_name])
+        pdb_file = params['output_pdb_dir'] / row[col_name]
         if not os.path.isfile(pdb_file):
             del_pool.append(row[col_name])
     

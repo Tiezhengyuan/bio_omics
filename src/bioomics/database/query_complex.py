@@ -40,7 +40,8 @@ class QueryComplex(QueryDb):
             SELECT pdb_id, relative_pdb
             FROM meta_pdb
             WHERE pdb_group = {pdb_group}
-                AND relative_pdb IS NOT NULL"""
+                AND relative_pdb IS NOT NULL
+        """
         if table_name:
             query += f"""
                 AND pdb_id NOT IN (

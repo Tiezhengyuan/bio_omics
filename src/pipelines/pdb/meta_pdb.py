@@ -13,7 +13,7 @@ from bioomics import ProcessJson
 
 def get_meta_json(data, pdb_ids, params, meta):
     data_format = params['data_format']
-    list_dir = os.path.join(params['output_pdb_dir'], '_list', data_format)
+    list_dir = params['output_pdb_dir'] / '_list' / data_format
     for file_name in os.listdir(list_dir):
         if file_name.endswith('.json'):
             pdb_group = os.path.splitext(file_name)[0]
@@ -24,7 +24,7 @@ def get_meta_json(data, pdb_ids, params, meta):
             for item in pdb_meta:
                 pdb_id = item['pdb_id']
                 if pdb_id not in pdb_ids:
-                    relative_path = item['pdb_file'].replace(params['rawdata_pdb_dir'], '')
+                    relative_path = item['pdb_file'].replace(str(params['rawdata_dir']), '')
                     if relative_path.startswith('/'):
                         relative_path = relative_path[1:]
                     meta[f'new_{data_format}'] += 1

@@ -1,24 +1,24 @@
 #! /usr/bin/bash
-APP="/home/yuan/bio/bio_omics/app.py"
+APP="uv --directory /home/yuan/bio/bio_omics run bomics"
 
 echo "Download PDB data to the local..."
-python ${APP} download_pdb
+${APP} download_pdb
+${APP} download_cif
 
 echo "Push PDB to table pdb"
-python ${APP} pdb
-# python ${PIPELINE_DIR}/put_pdb2
+${APP} pdb
 
 echo "Detect pdb/cif file path into table meta_pdb"
-python ${APP} meta_pdb
+${APP} meta_pdb
 
 # require meta_pdb
-parallel -j8 python ${APP} pdb_compound ::: {0..240}
-parallel -j8 python ${APP} pdb_method ::: {0..240}
-parallel -j8 python ${APP} pdb_keyword ::: {0..240}
+parallel -j8 ${APP} pdb_compound ::: {0..241}
+parallel -j8 ${APP} pdb_method ::: {0..241}
+parallel -j8 ${APP} pdb_keyword ::: {0..241}
 
 #download original proseq in fasta
-parallel -j8 python ${APP} pdb_protein ::: {0..240}
+parallel -j8 ${APP} pdb_protein ::: {0..241}
 
 echo "Retriev B-factor..."
-parallel -j8 python ${APP} meta_bfactor ::: {0..240}
-parallel -j8 python ${APP} pdb_bfactor ::: {0..240}
+parallel -j8 ${APP} meta_bfactor ::: {0..241}
+parallel -j8 ${APP} pdb_bfactor ::: {0..241}

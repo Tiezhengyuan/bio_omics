@@ -12,7 +12,7 @@ class Db:
         self.config = {
             'host': os.getenv('MYSQL_HOST'),
             'user': os.getenv('MYSQL_USER'),
-            'password': os.getenv('MYSQL_PW'),
+            'password': os.getenv('MYSQL_PASSWORD'),
             'use_pure': True,
             'buffered': True,
             'autocommit': True,    # avoid transaction issues
@@ -20,11 +20,11 @@ class Db:
             'pool_size': 1,        # Single connection for stability
         }
 
-    def execute(self, query) -> bool:
+    def execute(self, query, values=None) -> bool:
         try:
             connection = mysql.connector.connect(**self.config)
             cursor = connection.cursor(dictionary=True)
-            cursor.execute(query)
+            cursor.execute(query, values)
             connection.commit()
             return True
         except mysql.connector.Error as e:

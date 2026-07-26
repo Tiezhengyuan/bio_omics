@@ -12,15 +12,14 @@ from src.helper import *
 from bioomics import PullPdb, Pdb
 
 def scan(db_pdb_ids, params, meta):
-    raw_pdb_dir = os.path.join(params['rawdata_pdb_dir'], params['data_format'])
-    pdb_path_dict = PullPdb(raw_pdb_dir).get_raw_pdb()
+    pdb_path_dict = PullPdb(params['rawdata_pdb_dir']).get_raw_pdb()
 
-    uc = UpdateComplex(params['verbose'])
+    dc = DeleteComplex(params['verbose'])
     for pdb_id in db_pdb_ids:
         if pdb_id in pdb_path_dict:
             del pdb_path_dict[pdb_id]
         else:
-            res = uc.delete_rows(params['table_name'], 'pdb_id', pdb_id)
+            res = dc.delete_rows(params['table_name'], 'pdb_id', [pdb_id,])
             if res:
                 meta['delete_pdb'] += 1
             else:
@@ -44,7 +43,6 @@ def build(pdb_files, params, meta):
 
 if __name__ == "__main__":
     params.update({
-        'data_format': 'pdb',
         'table_name': 'pdb',
     })
     # get pdb in db

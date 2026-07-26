@@ -3,8 +3,8 @@ note:
     - PDB files should be synchronized to the local.
     - The table pdb is ready.
 example:
-    - parallel -j4 python app.py pdb_method ::: {0..240}
-    - python app.py pdb_method 0
+    - parallel -j4 bomics pdb_method ::: {0..241}
+    - bomics pdb_method 0
 function:
     synchronize PDB/UniProt/alignments with data in database COMPLEX.
 '''
@@ -18,8 +18,9 @@ def retrieve(params, meta):
     rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
     meta['rows'] += len(rows)
     for row in rows:
-        row['pdb_file'] = os.path.join(params['rawdata_pdb_dir'], row['relative_pdb'])
-        yield row
+        row['pdb_file'] = params['rawdata_dir'] / row['relative_pdb']
+        if row['pdb_file'].exists():
+            yield row
 
 def build(row_iter, params, meta):
     for row in row_iter:

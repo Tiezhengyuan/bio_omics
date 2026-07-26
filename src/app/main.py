@@ -10,6 +10,7 @@ import subprocess
 pool = {
     #pdb
     'download_pdb': 'pdb.download_pdb',
+    'download_cif': 'pdb.download_cif',
     'pdb': 'pdb.pdb',
     'meta_pdb': 'pdb.meta_pdb',
     'pdb_compound': 'pdb.pdb_compound',

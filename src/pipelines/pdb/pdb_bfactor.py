@@ -3,8 +3,8 @@ requirements:
     - bfactor.pkl
     - table meta_bfactor
 example: 
-    - parallel -j8 python app.py pdb_bfactor ::: {0..240}
-    - python app.py pdb_bfactor 0
+    - parallel -j8 bomics pdb_bfactor ::: {0..241}
+    - bomics pdb_bfactor 0
 functions:
     - put average bfactor to table pdb_bfactor
 '''
@@ -31,8 +31,8 @@ def retrieve_pdb(params, meta):
     print(f"{len(rows)} files ready...")
     meta['rows'] += len(rows)
     for row in rows:
-        row['pickle_file'] = os.path.join(params['output_pdb_dir'], row['relative_pkl'])
-        if os.path.isfile(row['pickle_file']):
+        row['pickle_file'] = params['output_pdb_dir'] / row['relative_pkl']
+        if row['pickle_file'].is_file():
             yield row
 
 def pdb_bfactor(row_iter, meta):
@@ -52,8 +52,7 @@ def pdb_bfactor(row_iter, meta):
                 meta['records'] += 1
         except Exception as e:
             meta['fail'] += 1
-            if os.path.isfile(pfile):
-                os.remove(pfile)
+            pfile.unlink(missing_ok=True)
             print(f"Warning: pfile={pfile}, error={e}")
         if tag == 0:
             meta['null'] += 1

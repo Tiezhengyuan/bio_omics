@@ -9,26 +9,26 @@ functions:
 '''
 
 from src.helper import *
-from bioomics import Dir, ProcessJson, PullPdb
+from bioomics import ProcessJson, PullPdb
 
 if __name__ == "__main__":
     params.update({
         'overwrite': False,
+        'data_format': 'pdb',
     })
     
-    for data_format in ('pdb', 'mmCIF'):
-        params['data_format'] = data_format
-        # donwload pdb
-        raw_dir = os.path.join(params['rawdata_pdb_dir'], data_format)
-        PullPdb(raw_dir, params['verbose']).synchronize_pdb(data_format)
+    # donwload pdb
+    p = PullPdb(params['rawdata_dir'], params['verbose'])
+    p.synchronize_pdb(params['data_format'])
 
-        # prepare _list dir
-        list_dir = os.path.join(params['output_pdb_dir'], '_list', params['data_format'])
-        d = Dir(list_dir)
-        d.init_dir()
-        d.clear_dir()
-        
-        # build json
-        pdb_iter = PullPdb(raw_dir).iter_raw_pdb_args(params)
-        file_list = ProcessJson.iter_to_json(pdb_iter, list_dir, chunk_size=1_000)
-        print(f"\n{file_list}\n")
+    # prepare _list dir
+    list_dir = params['output_pdb_dir'] /'_list' / params['data_format']
+    print(list_dir)
+    shutil.rmtree(list_dir, ignore_errors=True)
+    list_dir.mkdir(parents=True, exist_ok=True)
+    
+    # build json
+    raw_dir = params['rawdata_dir'] / params['data_format']
+    pdb_iter = PullPdb(raw_dir, params['verbose']).iter_raw_pdb_args(params)
+    file_list = ProcessJson.iter_to_json(pdb_iter, list_dir, chunk_size=1_000)
+    print(f"\n{file_list}\n")
