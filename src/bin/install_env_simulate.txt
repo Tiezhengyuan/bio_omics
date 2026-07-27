@@ -1,4 +1,12 @@
-#################################################333
+#### prerequisites
+install blast
+(
+    cd ~/Downloads
+    wget https://ftp.debian.org/debian/pool/main/n/ncbi-blast+/ncbi-blast+_2.17.0+ds-7_amd64.deb
+    sudo dpkg -i ncbi-blast+_2.17.0+ds-7_amd64.deb
+)
+
+#################################################
 ## conda ENV: simulate
 
 install simulation packages

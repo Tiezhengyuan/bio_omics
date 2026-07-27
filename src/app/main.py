@@ -40,6 +40,7 @@ pool = {
     'uniprot_dbxrefs': 'uniprot.uniprot_dbxrefs',
     'uniprot_feature': 'uniprot.uniprot_feature',
     'uniprot_pro_seq': 'uniprot.uniprot_pro_seq',
+    'uniprot_align_db': 'uniprot.uniprot_align_db',
     'uniprot_af': 'uniprot.uniprot_af',
     'uniprot_af_rmsd': 'uniprot.uniprot_af_rmsd',
 

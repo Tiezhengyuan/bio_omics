@@ -4,8 +4,8 @@ requirements:
     - table meta_faa, meta_pdb
     - blastp database
 example: 
-    - parallel -j8 python app.py meta_blastp5 ::: {0..240}
-    - python app.py meta_blastp5 0
+    - parallel -j8 bomics meta_blastp5 ::: {0..241}
+    - bomics meta_blastp5 0
 functions:
     - blastp against uniprot_sprot
     - put aln_file into meta_blastp5
@@ -41,15 +41,15 @@ def run(rows, params, meta):
     for row in rows:
         pdb_id = row['pdb_id']
         model_no = row['model_no']
-        endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
+        endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id
         outfile_name = f"{pdb_id}_{model_no}.uniprot.blastp{outfmt}"
         
-        query_fa = os.path.join(params['output_pdb_dir'], row['relative_faa'])
-        if os.path.isfile(query_fa):
-            outdir = os.path.join(params['output_pdb_dir'], endpoint)
-            aln_file = os.path.join(outdir, outfile_name)
-            if params['overwrite'] or not os.path.isfile(aln_file):
-                Path(outdir).mkdir(parents=True, exist_ok=True)
+        query_fa = params['output_pdb_dir'] / row['relative_faa']
+        if query_fa.is_file():
+            outdir = params['output_pdb_dir'] / endpoint
+            aln_file = outdir / outfile_name
+            if params['overwrite'] or not aln_file.is_file():
+                outdir.mkdir(parents=True, exist_ok=True)
                 pb = ProcessBlast(verbose=params['verbose'])
                 status = pb.blastp(query_fa, params['db_uniprot'], aln_file, outfmt)
                 meta[status] += 1
@@ -60,14 +60,14 @@ def run(rows, params, meta):
         
         # build record
         relative_aln = None
-        if os.path.isfile(aln_file):
+        if aln_file.is_file():
             meta['aln_file'] += 1
-            relative_aln = os.path.join(endpoint, outfile_name)
+            relative_aln = str(endpoint / outfile_name)
         yield pdb_id, model_no, relative_aln
 
 if __name__ == "__main__":
     params.update({
-        'overwrite': True,
+        'overwrite': False,
         'db_uniprot': os.getenv('db_uniprot'),
         'chunk_size': 10,
         'table_name': 'meta_blastp5',

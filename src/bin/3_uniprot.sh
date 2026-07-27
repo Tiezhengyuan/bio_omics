@@ -20,6 +20,8 @@ wait $P1 $P2 $P3
 echo 'load sequence to proseq_400, proseq_1000 or prseq_long'
 ${APP} uniprot_pro_seq
 
+#build blastp database
+${APP} uniprot_align_db
 
 #alphafold prediction
 # ${APP} uniprot_af
