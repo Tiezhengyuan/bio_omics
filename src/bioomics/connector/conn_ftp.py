@@ -11,10 +11,10 @@ from ..common import Dir
 
 class ConnFTP:
 
-    def __init__(self, url:str, overwrite:bool=None, run_gunzip:bool=None):
+    def __init__(self, url:str, overwrite:bool, run_gunzip:bool):
         self.url = url
-        self.overwrite = False if overwrite is None else True
-        self.run_gunzip = False if run_gunzip is None else True
+        self.overwrite = overwrite
+        self.run_gunzip = run_gunzip
 
     def connect(self, endpoint:str=None):
         ftp = FTP(self.url, timeout=100)

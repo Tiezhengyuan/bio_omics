@@ -38,6 +38,7 @@ params = {
     'output_dir': Path(os.getenv('output_dir')),
 }
 params['rawdata_pdb_dir'] = params['rawdata_dir'] / 'pdb'
+params['rawdata_uniprot_dir'] = params['rawdata_dir'] / 'UniProt'
 params['output_pdb_dir'] = params['output_dir'] / 'pdb'
 params['output_protein_dir'] = params['output_dir'] / 'protein'
 params['simulate_dir'] = params['output_dir'] / 'simulate'

@@ -1,6 +1,6 @@
 '''
 example: 
-    - python app.py uniprot_pro_seq
+    - bomics uniprot_pro_seq
 functions:
     - add new UniProt sequences into proseq_* tables
     - parse uniprot.uniprot_acc with view_proseq.seq_id

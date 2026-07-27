@@ -34,6 +34,7 @@ pool = {
 
 
     # uniprot
+    'download_uniprot': 'uniprot.download_uniprot',
     'uniprot': 'uniprot.uniprot',
     'uniprot_keyword': 'uniprot.uniprot_keyword',
     'uniprot_dbxrefs': 'uniprot.uniprot_dbxrefs',

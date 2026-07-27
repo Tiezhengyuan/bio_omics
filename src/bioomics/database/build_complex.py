@@ -64,7 +64,7 @@ TABLE_COLUMNS = {
         'chain_no', 'dssp_seq',],
    
     # uniprot
-    'uniprot': ['uniprot_acc', 'name', 'organism', 'pro_len', 'pro_seq'],
+    'uniprot': ['uniprot_acc', 'pro_name', 'organism', 'pro_seq', 'creation_date', 'seq_date'],
     'uniprot_keyword': ['uniprot_acc', 'keyword'],
     'uniprot_dbxrefs': ['uniprot_acc', 'db_name', 'db_acc'],
     'uniprot_feature': ['uniprot_acc', 'feature', 'start', 'end', 

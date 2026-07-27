@@ -2,7 +2,7 @@
 requirements:
     - uniprot_sprot.dat is downloaded
 example:
-    - python app.py uniprot_feature
+    - bomics uniprot_feature
 function:
     - synchronize PDB/UniProt/alignments with data in database COMPLEX.
 '''
@@ -13,15 +13,12 @@ from bioomics import Uniprot, ParseDatRecord
 def get_record(params, meta):
     qc = QueryComplex(params['verbose'])
     db_acc = qc.unique_values(params['table_name'], 'uniprot_acc')
-    u = Uniprot(params['uniprot_sprot_dat'])
-    for record in u.dat_iter():
-        uniprot_acc = record.id
-        if uniprot_acc not in db_acc:
-            meta['uniprot_record'] += 1
-            yield record
-        else:
-            meta['skip'] += 1
-        
+    
+    u = Uniprot(params['rawdata_uniprot_dir'])
+    for record in u.filter_uniprot_sprot_dat(db_acc):
+        meta['uniprot_records'] += 1
+        yield record
+                
 def build(data_iter, meta):
     for record in data_iter:
         tag = 0
@@ -47,7 +44,6 @@ def build(data_iter, meta):
 ##################################
 if __name__ == "__main__":
     params.update({
-        'uniprot_sprot_dat': os.getenv('uniprot_sprot_dat'),
         'table_name': 'uniprot_feature',
     })
     # prepare record

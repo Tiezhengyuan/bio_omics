@@ -7,30 +7,34 @@ uniprot -> uniprot_keyword
         -> uniport_af -> uniprot_af_rmsd
 
 */
-
+DROP TABLE IF EXISTS uniprot;
 CREATE TABLE uniprot (
-    uniprot_acc     VARCHAR(20),
-    name            VARCHAR(100),
-    organism        VARCHAR(200),
-    pro_len         INT,
-    pro_seq         TEXT,
+    uniprot_acc   VARCHAR(20),
+    pro_name      VARCHAR(100),
+    organism      VARCHAR(200),
+    pro_len       INT GENERATED ALWAYS AS (LENGTH(pro_seq)) STORED,
+    pro_seq       TEXT,
+    creation_date DATE,
+    seq_date      DATE,
     CONSTRAINT pk_uniprot PRIMARY KEY (uniprot_acc)
 );
 
+DROP TABLE IF EXISTS uniprot_keyword;
 CREATE TABLE uniprot_keyword (
     uniprot_acc     VARCHAR(20),
     keyword         VARCHAR(300),
     UNIQUE (uniprot_acc, keyword),
-    CONSTRAINT fk_uniprot_keyword_uniprot FOREIGN KEY (uniprot_acc)
+    CONSTRAINT fk_keyword_uniprot FOREIGN KEY (uniprot_acc)
         REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 );
 
+DROP TABLE IF EXISTS uniprot_dbxrefs;
 CREATE TABLE uniprot_dbxrefs (
     uniprot_acc     VARCHAR(20),
     db_name         VARCHAR(50),
     db_acc          VARCHAR(50),
     UNIQUE (uniprot_acc, db_name, db_acc),
-    CONSTRAINT fk_uniprot_dbxrefs_uniprot FOREIGN KEY (uniprot_acc)
+    CONSTRAINT fk_dbxrefs_uniprot FOREIGN KEY (uniprot_acc)
         REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 );
 
@@ -51,34 +55,39 @@ DROP TABLE IF EXISTS uniprot_pro_seq;
 CREATE TABLE uniprot_pro_seq (
     uniprot_acc  VARCHAR(20) PRIMARY KEY,
     proseq_name  VARCHAR(20),
-    seq_id       INT
+    seq_id       INT,
+    CONSTRAINT fk_proseq_uniprot FOREIGN KEY (uniprot_acc)
+        REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS uniprot_af;
-CREATE TABLE uniprot_af (
-    uniprot_acc     VARCHAR(20),
-    pdb_path        VARCHAR(200),
-    CONSTRAINT fk_alphafold_uniprot FOREIGN KEY (uniprot_acc)
-    REFERENCES uniprot(uniprot_acc)
-);
+-- DROP TABLE IF EXISTS uniprot_af;
+-- CREATE TABLE uniprot_af (
+--     uniprot_acc     VARCHAR(20),
+--     pdb_path        VARCHAR(200),
+--     CONSTRAINT fk_af_uniprot FOREIGN KEY (uniprot_acc)
+--     REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
+-- );
 
-DROP TABLE IF EXISTS uniprot_af_rmsd;
-CREATE TABLE uniprot_af_rmsd (
-    chain_id        VARCHAR(20),
-    uniprot_acc     VARCHAR(20),
-    ca_rmsd         FLOAT,
-    native_pdb      VARCHAR(100),
-    model_pdb       VARCHAR(100),
-    UNIQUE (chain_id, uniprot_acc)
-);
+-- DROP TABLE IF EXISTS uniprot_af_rmsd;
+-- CREATE TABLE uniprot_af_rmsd (
+--     chain_id        VARCHAR(20),
+--     uniprot_acc     VARCHAR(20),
+--     ca_rmsd         FLOAT,
+--     native_pdb      VARCHAR(100),
+--     model_pdb       VARCHAR(100),
+--     UNIQUE (chain_id, uniprot_acc),
+--     CONSTRAINT fk_afrmsd_uniprot FOREIGN KEY (uniprot_acc)
+--         REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 
-DROP TABLE IF EXISTS uniprot_af_plddt;
-CREATE TABLE uniprot_af_plddt (
-    uniprot_acc     VARCHAR(20),
-    model_no        INT,
-    chain_no        VARCHAR(5),
-    avg_plddt       FLOAT,
-    pickle_file     VARCHAR(200),
-    CONSTRAINT fk_plddt_uniprot FOREIGN KEY (uniprot_acc)
-    REFERENCES uniprot(uniprot_acc)
-);
+-- );
+
+-- DROP TABLE IF EXISTS uniprot_af_plddt;
+-- CREATE TABLE uniprot_af_plddt (
+--     uniprot_acc     VARCHAR(20),
+--     model_no        INT,
+--     chain_no        VARCHAR(5),
+--     avg_plddt       FLOAT,
+--     pickle_file     VARCHAR(200),
+--     CONSTRAINT fk_plddt_uniprot FOREIGN KEY (uniprot_acc)
+--     REFERENCES uniprot(uniprot_acc)
+-- );

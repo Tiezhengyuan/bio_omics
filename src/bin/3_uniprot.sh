@@ -2,6 +2,9 @@
 $ bash src/bin/3_uniprot.sh
 APP="uv --directory /home/yuan/bio/bio_omics run bomics"
 
+# download data
+${APP} download_uniprot
+
 # load uniprot_acc
 ${APP} uniprot
 
@@ -19,10 +22,10 @@ ${APP} uniprot_pro_seq
 
 
 #alphafold prediction
-${APP} uniprot_af
+# ${APP} uniprot_af
 
 # RMSD between chain pdb and uniprot prediction by alphafold
-parallel -j8 ${APP} uniprot_af_rmsd ::: {0..241}
+# parallel -j8 ${APP} uniprot_af_rmsd ::: {0..241}
 
 
 # pLDDT of alphafold modelling

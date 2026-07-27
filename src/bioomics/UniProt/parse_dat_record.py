@@ -1,6 +1,7 @@
 '''
 record is defined in *.dat
 '''
+from datetime import datetime
 
 class ParseDatRecord:
 
@@ -39,6 +40,20 @@ class ParseDatRecord:
     def organism(self):
         return self.record.annotations['organism']
     
+    @property
+    def creation_date(self):
+        date_str = self.record.annotations.get('date')
+        if date_str:
+            return datetime.strptime(date_str, '%d-%b-%Y')
+        return None    
+    
+    @property
+    def seq_date(self):
+        date_str = self.record.annotations.get('date_last_sequence_update')
+        if date_str:
+            return datetime.strptime(date_str, '%d-%b-%Y')
+        return None
+        
     def is_imgt(self) -> bool:
         kw = self.keywords()
         for k in kw:
