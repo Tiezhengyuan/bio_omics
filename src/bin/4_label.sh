@@ -26,3 +26,5 @@ parallel -j8 ${APP} align_jregion ::: {0..241}
 
 # label chains
 parallel -j8 ${APP} label_antibody ::: {0..241}
+
+

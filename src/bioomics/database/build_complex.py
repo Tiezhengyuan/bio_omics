@@ -1,10 +1,13 @@
 '''
 insert data into empty table
 '''
+from pathlib import Path
 import os
 from .insert_db import InsertDb
 from .delete_db import DeleteDb
 from .build_records import BuildRecords
+from ..protein import ProcessFasta
+
 '''
     
     #################
@@ -55,7 +58,7 @@ TABLE_COLUMNS = {
     'pdb_chain_seq': ['pdb_id', 'chain_id', 'chain_seq'],
     'pdb_faa': ['pdb_id', 'model_no', 'relative_faa'],
     'chain_faa': ['pdb_id', 'chain_id', 'relative_path'],
-    'pdb_pro_seq': ['pdb_id', 'chain_id', 'proseq_name', 'seq_id'],
+    'pdb_proseq': ['pdb_id', 'chain_id', 'proseq_name', 'seq_id'],
     'pdb_chain_type': ['pdb_id', 'chain_id', 'chain_type', 'total_res', 
         'non_water_res', 'aa_res', 'dna_res', 'rna_res', 'water_res',
         'ion_res', 'hetero_res', 'other_res'],
@@ -69,7 +72,7 @@ TABLE_COLUMNS = {
     'uniprot_dbxrefs': ['uniprot_acc', 'db_name', 'db_acc'],
     'uniprot_feature': ['uniprot_acc', 'feature', 'start', 'end', 
         'seq', 'note', 'evidence'],
-    'uniprot_pro_seq': ['uniprot_acc', 'proseq_name', 'seq_id',],
+    'uniprot_proseq': ['uniprot_acc', 'proseq_name', 'seq_id',],
     'uniprot_af': ['uniprot_acc', 'pdb_path'],
     # 'uniprot_alphafold_plddt': ['uniprot_acc', 'model_no', 'chain_no',
     #     'avg_plddt', 'pickle_file',],
@@ -220,7 +223,6 @@ class BuildComplex(InsertDb, DeleteDb):
         if self.verbose:
             print(f"\nBegin to insert records into {table_name}...", end='')
         return self.func_insert(data, insert_query, func)
-
    
     def insert_pdb_chain(self, data):
         table_name = 'pdb_chain'
@@ -230,29 +232,6 @@ class BuildComplex(InsertDb, DeleteDb):
         func = getattr(self.recorder, table_name)
         return self.func_insert(data, insert_query, func)
 
-    def insert_proseq(self, rows:list, source=None) -> tuple:
-        # separate sequences by length
-        seq400, seq1000, seqlong = [], [], []
-        for row in rows:
-            seq = row['seq']
-            rec = (source, seq)
-            # duplicates should be excluded
-            if len(seq) <= 400:
-                if rec not in seq400:
-                    seq400.append(rec)
-            elif 400 < len(seq) <= 1000:
-                if rec not in seq1000:
-                    seq1000.append(rec)
-            else:
-                if rec not in seqlong:
-                    seqlong.append(rec)
-        #
-        cols = ['source', 'seq']
-        s1, f1 = self.insert_records(seq400, 'proseq_400', cols)
-        s2, f2 = self.insert_records(seq1000, 'proseq_1000', cols)
-        s3, f3 = self.insert_records(seqlong, 'proseq_long', cols)
-        return s1 + s2 + s3, f1 + f2 + f3
-    
     def put_design_chain(self, data):
         table_name = 'design_chain'
 

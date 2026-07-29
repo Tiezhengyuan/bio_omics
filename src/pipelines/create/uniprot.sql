@@ -51,8 +51,8 @@ CREATE TABLE uniprot_feature (
         REFERENCES uniprot(uniprot_acc) ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS uniprot_pro_seq;
-CREATE TABLE uniprot_pro_seq (
+DROP TABLE IF EXISTS uniprot_proseq;
+CREATE TABLE uniprot_proseq (
     uniprot_acc  VARCHAR(20) PRIMARY KEY,
     proseq_name  VARCHAR(20),
     seq_id       INT,

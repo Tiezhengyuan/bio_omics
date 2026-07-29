@@ -17,7 +17,7 @@ def blastp_db_uniprot_sprot(params):
     
     fa_file = params['rawdata_uniprot_dir'] / "uniprot_sprot.fasta.gz"
     db_path = pb.build_blastp_db(fa_file)
-    print(db_path)
+    print('Blastp database:', db_path)
    
 if __name__ == "__main__":
     params.update({

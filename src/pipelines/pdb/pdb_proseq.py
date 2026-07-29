@@ -1,6 +1,6 @@
 '''
 example: 
-    - bomics pdb_pro_seq
+    - bomics pdb_proseq
 functions:
     - add new PDB sequences into proseq_* tables
     - parse pdb_chain_seq.chain_id with view_proseq.seq_id
@@ -8,16 +8,15 @@ functions:
 from src.helper import *
 from bioomics import TABLE_COLUMNS
 
-def retrieve(params, pdb_group):
+def retrieve(params, seq_len):
     table_name = params['table_name']
     # column name must be 'seq'
     query = f"""
-        SELECT s.pdb_id, s.chain_id, s.chain_seq AS seq
-        FROM pdb_chain_seq s
-        LEFT JOIN meta_pdb m ON s.pdb_id = m.pdb_id
-        WHERE m.pdb_group = {pdb_group}
-            AND s.chain_seq IS NOT NULL
-            AND s.chain_id NOT IN (
+        SELECT pdb_id, chain_id, chain_seq AS seq
+        FROM pdb_chain_seq
+        WHERE pro_len = {seq_len}
+            AND chain_seq IS NOT NULL
+            AND chain_id NOT IN (
                 SELECT chain_id FROM {table_name}
                 WHERE chain_id IS NOT NULL
             )
@@ -30,15 +29,18 @@ def build(data_iter, params, meta):
     qc = QueryComplex(params['verbose'])
     bc = BuildComplex(params['verbose'])
     
-    for conditions, rows in data_iter:
+    for (table_name, seq_len), rows in data_iter:
         # detect known seqs
-        parsed, unparsed = qc.parse_seqid(conditions, rows)
+        parsed, unparsed = qc.parse_seqid(table_name, seq_len, rows)
+        
         # insert new seqs
-        num_insertion, fail = bc.insert_proseq(unparsed, params['source'])
+        proseq_cols = ['source', 'seq']
+        new_records = [(params['source'], i['seq']) for i in unparsed]
+        num_insertion, fail = bc.insert_batch_records(new_records, table_name, proseq_cols)
         meta['new_insertion'] += num_insertion
         meta['fail_insert'] += len(fail)
         # parse new seqs
-        new_parsed, fail = qc.parse_seqid(conditions, unparsed)
+        new_parsed, fail = qc.parse_seqid(table_name, seq_len, unparsed)
         meta['fail_insert'] += len(fail)
 
         #build record
@@ -49,13 +51,13 @@ def build(data_iter, params, meta):
 if __name__ == "__main__":
     params.update({
         'source': 'PDB',
-        'table_name': 'pdb_pro_seq',
+        'table_name': 'pdb_proseq',
     })
-    
-    qc = QueryComplex(params['verbose'])
-    max_group = qc.max_value('meta_pdb', 'pdb_group')
-    for pdb_group in range(int(max_group)+1):
-        data_iter = retrieve(params, pdb_group)
+
+    pool = QueryComplex(params['verbose']).unique_values('pdb_chain_seq', 'pro_len')
+    for seq_len in pool:
+        meta['seq_len'] = seq_len
+        data_iter = retrieve(params, seq_len)
         record_iter = build(data_iter, params, meta)
         bc = BuildComplex(params['verbose'])
         bc.insert_batch_records(record_iter, params['table_name'])

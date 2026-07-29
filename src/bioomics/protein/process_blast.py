@@ -21,7 +21,7 @@ class ProcessBlast:
     def _blast_db(self, fa_file:Path, db_type:str, bin_dir:Path=None):
         outdir = self.outdir if self.outdir.exists() else fa_file.parent
         outdir.mkdir(parents=True, exist_ok=True)
-        db_path = outdir / fa_file.stem
+        db_path = outdir / fa_file.stem.replace('.fasta', '')
         cmd = [
             str(bin_dir / 'makeblastdb') if bin_dir else 'makeblastdb',
             '-in', str(fa_file),

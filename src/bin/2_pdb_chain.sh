@@ -16,7 +16,7 @@ parallel -j8 ${APP} pdb_faa ::: {0..241}
 parallel -j8 ${APP} chain_faa ::: {0..241}
 
 #parse pdb_chain_seq.chain_seq with pro_seq.seq_id
-${APP} pdb_pro_seq
+${APP} pdb_proseq
 
 # identify chain type
 parallel -j8 ${APP} pdb_chain_type ::: {0..241}

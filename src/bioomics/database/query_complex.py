@@ -284,16 +284,31 @@ class QueryComplex(QueryDb):
             return rows
 
     def pack_proseq(self, query) -> tuple:
+        '''
+        prepare input sequences for insertion and parsing seq_id
+        '''
         pool = {}
         rows = self.list_data(query)
         for row in rows:
             seq = row['seq']
-            seq_head = seq[:10]
             seq_len = len(seq)
-            table_name = 'proseq_400' if seq_len <= 400 else ('proseq_1000' \
-                if seq_len <=1000 else 'proseq_long')
+
+            table_name = 'proseq_long'
+            if seq_len <= 100:
+                table_name = 'proseq_100'
+            elif 100 < seq_len <= 110:
+                table_name = 'proseq_110'
+            elif 110 < seq_len <= 120:
+                table_name = 'proseq_120'
+            elif 120 < seq_len <= 130:
+                table_name = 'proseq_130'
+            elif 130 < seq_len <= 400:
+                table_name = 'proseq_400'
+            elif 400 < seq_len <= 1000:
+                table_name = 'proseq_1000'
             row['proseq_name'] = table_name
-            key = (table_name, seq_head, seq_len)
+
+            key = (table_name, seq_len)
             if key not in pool:
                 pool[key] = []
             pool[key].append(row)
@@ -301,26 +316,25 @@ class QueryComplex(QueryDb):
         #present data
         for key, rows in pool.items():
             if self.verbose:
-                print(f'Present {rows} with the conditions={key}.')
+                print(f'Present {len(rows)} with the conditions={key}.')
             yield key, rows
 
-    def parse_seqid(self, conditions, data:list) -> tuple:
+    def parse_seqid(self, table_name, seq_len, data:list) -> tuple:
         '''
         default key name is 'seq'
         '''
         if not data:
             return ([], [])
         # retrieve seq ~ seq_id
-        table_name, seq_head, seq_len = conditions
         qc = QueryComplex(self.verbose)
         query = f"""
             SELECT seq_id, seq FROM {table_name}
-            WHERE seq_head = '{seq_head}' AND seq_len = {seq_len}
+            WHERE seq_len = {seq_len}
         """
         rows = qc.list_data(query)
         ids = {r['seq']:r['seq_id'] for r in rows}
 
-        #parse, and collect unparsed
+        #parse, and split data into parsed and unknown
         parsed, unknown = [], []
         for item in data:
             seq = item['seq']

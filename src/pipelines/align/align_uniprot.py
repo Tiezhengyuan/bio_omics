@@ -3,8 +3,8 @@ requirements:
     - blastp alignment *.blastp5 files
     - table meta_blastp5
 example: 
-    - parallel -j8 python app.py align_uniprot ::: {0..240}
-    - python app.py align_uniprot 0
+    - parallel -j8 bomics align_uniprot ::: {0..241}
+    - bomics align_uniprot 0
 functions:
     - pust alignment results of blastp into align_uniprot
 '''
@@ -28,8 +28,9 @@ def retrieve_pdb(params, meta):
     rows = QueryComplex(params['verbose']).list_data(query)
     meta['align_uniprot'] = len(rows)
     for row in rows:
-        row['aln_file'] = os.path.join(params['output_pdb_dir'], row['relative_aln'])
-        yield row
+        row['aln_file'] = params['output_pdb_dir'] / row['relative_aln']
+        if row['aln_file'].is_file():
+            yield row
 
 def align_uniprot(row_iter, meta):
     for row in row_iter:

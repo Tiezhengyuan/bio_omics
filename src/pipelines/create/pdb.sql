@@ -144,8 +144,8 @@ CREATE TABLE chain_faa(
         REFERENCES pdb_chainid(chain_id) ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS pdb_pro_seq;
-CREATE TABLE pdb_pro_seq(
+DROP TABLE IF EXISTS pdb_proseq;
+CREATE TABLE pdb_proseq(
     pdb_id      VARCHAR(10),
     chain_id    VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
     proseq_name VARCHAR(20),

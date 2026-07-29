@@ -12,7 +12,6 @@ authors = [
 ]
 requires-python = "==3.12.13"
 dependencies = [
-    "anarci>=2026.2.13.2",
     "bio>=1.8.3",
     "bs4>=0.0.2",
     "freesasa>=2.2.1",
