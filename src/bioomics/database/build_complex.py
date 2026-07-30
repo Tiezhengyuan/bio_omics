@@ -85,7 +85,7 @@ TABLE_COLUMNS = {
     'meta_blastp5': ['pdb_id', 'model_no', 'relative_aln'],
     'align_uniprot': ['pdb_id', 'chain_id', 'uniprot_acc', 
         'evalue', 'bit_score', 'identity',],
-    'meta_vdj': ['pdb_id', 'model_no', 'v_aln', 'd_aln', 'j_aln'],
+    'align_vdj': ['pdb_id', 'model_no', 'v_aln', 'd_aln', 'j_aln'],
     'align_vfrag': ['pdb_id', 'chain_id', 'identity', 'seq',
         'fragment', 'seq_from', 'seq_to'],
     'align_vregion':['pdb_id', 'chain_id', 'allele_name', 'specie',
@@ -251,3 +251,15 @@ class BuildComplex(InsertDb, DeleteDb):
         if self.verbose:
             print(rec)
         self.insert_batch_records([rec,], table_name)
+
+    def insert_proseq(self, source:str, table_name:str, unparsed:list):
+        # insert new seqs
+        proseq_cols = ['source', 'seq']
+        new_records = []
+        for i in unparsed:
+            rec = (source, i['seq'])
+            if rec not in new_records:
+                new_records.append(rec)
+        insertion, fail = self.insert_batch_records(new_records, table_name, proseq_cols)
+        return insertion, fail
+        

@@ -63,7 +63,7 @@ pool = {
     # align
     'meta_blastp5': 'align.meta_blastp5',
     'align_uniprot': 'align.align_uniprot',
-    'meta_vdj': 'align.meta_vdj',
+    'align_vdj': 'align.align_vdj',
     'align_vfrag': 'align.align_vfrag',
     'align_vregion': 'align.align_vregion',
     'align_dregion': 'align.align_dregion',

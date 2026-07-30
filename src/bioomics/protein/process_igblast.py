@@ -1,37 +1,34 @@
 '''
 install blast: sudo apt install ncbi-blast+
+igblast: https://ftp.ncbi.nih.gov/blast/executables/igblast/release/
 '''
-import os
+from pathlib import Path
 import sys
 import subprocess
 
-from ..common.dir import Dir
 
 class ProcessIgblast:
 
-    def __init__(self, bin_dir:str, outdir:str=None, verbose:bool=False):
-        # igblast bin
-        self.bin_dir = bin_dir
-        if self.bin_dir not in sys.path:
-            sys.path.append(self.bin_dir)
-        # outdir
-        self.outdir = outdir
-        if outdir:
-            Dir(outdir).init_dir()
-        # print information
+    def __init__(self, igblast_dir:Path, verbose:bool=False):
+        self.igblast_dir = igblast_dir
         self.verbose = verbose
 
-    def build_prot_db(self, fa_file:str, bin_dir:str=None):
-        exe = 'makeblastdb' if bin_dir is None else \
-            os.path.join(bin_dir, 'makeblastdb')
-        outdir = self.outdir if self.outdir else os.path.dirname(fa_file)
-        prefix = os.path.splitext(os.path.basename(fa_file))[0]
-        outprefix = os.path.join(outdir, prefix)
-        cmd = [exe, '-parse_seqids', '-dbtype', 'prot', \
-            '-in', fa_file, '-out', outprefix,]
+    def build_pro_db(self, fa_file:Path, outdir:Path=None):
+        if outdir is None:
+            outdir = fa_file.parent
+        else:
+            outdir.mkdir(parents=True, exist_ok=True)
+        outprefix = str(outdir / fa_file.stem)
+        
+        cmd = [
+            str(self.igblast_dir / 'bin' / 'makeblastdb'),
+            '-parse_seqids',
+            '-dbtype', 'prot',
+            '-in', str(fa_file),
+            '-out', outprefix,
+        ]
         try:
             if self.verbose:
-                os.system(f"{exe} -version")
                 print('build igblastp database: ', ' '.join(cmd))
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
             if self.verbose:
@@ -43,7 +40,7 @@ class ProcessIgblast:
                 print(f"Stderr: {e.stderr}")
         return None
 
-    def igblastp(self, fa_file:str, db_path:str, outfile:str, outfmt:int=None):
+    def igblastp(self, fa_file:Path, db_path:str, outfile:Path, outfmt:int=None):
         '''
         -outfmt <String> alignment view options:
             3 = Flat query-anchored, show identities,
@@ -53,16 +50,22 @@ class ProcessIgblast:
         '''
         outfmt = 5 if outfmt is None else outfmt
         cmd = [
-            os.path.join(self.bin_dir, 'igblastp'),
-            '-query', fa_file,
+            str(self.igblast_dir / 'bin' / 'igblastp'),
+            '-query', str(fa_file),
             '-outfmt', str(outfmt),
-            '-out', outfile,
+            '-out', str(outfile),
             '-germline_db_V', db_path,
         ]
         try:
             if self.verbose:
                 print('\n##igblastp: ', ' '.join(cmd))
-            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            result = subprocess.run(
+                cmd,
+                cwd=str(self.igblast_dir),
+                capture_output=True,
+                text=True,
+                check=True
+            )
             if self.verbose:
                 print("Command output:", result.stdout.strip())
             return 'succeed'

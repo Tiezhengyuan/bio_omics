@@ -3,7 +3,7 @@ requirements:
     - PDB data
     - table meta_pdb
 example: 
-    - parallel -j4 bomics pdb_faa ::: {0..241}
+    - parallel -j8 bomics pdb_faa ::: {0..241}
     - bomics pdb_faa 0
 functions:
     - retrieve chains from pdb, and export them to fasta
@@ -64,5 +64,6 @@ if __name__ == "__main__":
     bc = BuildComplex(params['verbose'], params['chunk_size'])
     bc.insert_batch_records(record_iter, params['table_name'])
 
+    validate_data('relative_faa', params, meta)
     footer(meta)
 

@@ -6,6 +6,18 @@ view_pdb -> view_pdb_chain -> view_pdb_uniprot
 */
 DROP VIEW IF EXISTS view_proseq;
 CREATE VIEW view_proseq AS
+    SELECT 's100' AS proseq_name, seq_id, source, seq_head, seq_len, seq, relative_faa
+    FROM proseq_400
+    UNION
+    SELECT 's110' AS proseq_name, seq_id, source, seq_head, seq_len, seq, relative_faa
+    FROM proseq_400
+    UNION
+    SELECT 's120' AS proseq_name, seq_id, source, seq_head, seq_len, seq, relative_faa
+    FROM proseq_400
+    UNION
+    SELECT 's130' AS proseq_name, seq_id, source, seq_head, seq_len, seq, relative_faa
+    FROM proseq_400
+    UNION
     SELECT 's400' AS proseq_name, seq_id, source, seq_head, seq_len, seq, relative_faa
     FROM proseq_400
     UNION
@@ -40,7 +52,7 @@ CREATE VIEW view_pdb_chain AS
     LEFT JOIN chain_faa     F ON C.chain_id = F.chain_id
     LEFT JOIN chain_pdb     P ON C.chain_id = P.chain_id
     LEFT JOIN view_pdb      D ON C.pdb_id = D.pdb_id
-    LEFT JOIN pdb_pro_seq   X ON C.chain_id = X.chain_id
+    LEFT JOIN pdb_proseq    X ON C.chain_id = X.chain_id
     LEFT JOIN pdb_bfactor   B ON C.pdb_id = B.pdb_id 
         AND C.model_no = B.model_no AND C.chain_no = B.chain_no
     WHERE S.chain_seq IS NOT NULL

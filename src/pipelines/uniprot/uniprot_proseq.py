@@ -23,7 +23,8 @@ def retrieve(params):
         LIMIT {chunk_size}
     """
     qc = QueryComplex(params['verbose'])
-    return qc.pack_proseq(query)
+    rows = qc.list_data(query)
+    return qc.pack_proseq(rows)
 
 def build(data_iter, params, meta):
     uniprot_cols = TABLE_COLUMNS[params['table_name']]
@@ -37,9 +38,7 @@ def build(data_iter, params, meta):
         parsed, unparsed = qc.parse_seqid(table_name, seq_len, rows)
         
         # insert new seqs into proseq_* tables
-        proseq_cols = ['source', 'seq']
-        new_records = [(params['source'], i['seq']) for i in unparsed]
-        num_insertion, fail = bc.insert_batch_records(new_records, table_name, proseq_cols)
+        num_insertion, fail = bc.insert_proseq(params['source'], table_name, unparsed)
         meta['new_insertion'] += num_insertion
         meta['fail_insert'] += len(fail)
         # parse new seqs with seqid

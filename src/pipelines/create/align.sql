@@ -30,8 +30,8 @@ CREATE TABLE align_uniprot(
     UNIQUE (chain_id)
 );
 
-DROP TABLE IF EXISTS meta_vdj;
-CREATE TABLE meta_vdj(
+DROP TABLE IF EXISTS align_vdj;
+CREATE TABLE align_vdj(
     pdb_id      VARCHAR(10),
     model_no    INT,
     v_aln       VARCHAR(60),

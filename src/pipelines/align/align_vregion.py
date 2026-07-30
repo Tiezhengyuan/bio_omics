@@ -4,8 +4,8 @@ requirements:
     - table meta_faa
     - igblastp ready
 example:
-    - parallel -j8 python app.py align_vregion ::: {0..240}
-    - python app.py align_vregion 0
+    - parallel -j8 bomics align_vregion ::: {0..241}
+    - bomics align_vregion 0
 function:
     - build table pdb and insert data into table align_vregion
 '''
@@ -20,7 +20,7 @@ def retrieve_data(params, meta):
     query = f"""
         WITH tmp AS (
             SELECT F.pdb_id, F.relative_faa, I.v_aln 
-            FROM  pdb_faa F, meta_vdj I
+            FROM  pdb_faa F, align_vdj I
             WHERE F.pdb_id = I.pdb_id
                 AND F.model_no = I.model_no
                 AND F.relative_faa IS NOT NULL
@@ -37,9 +37,10 @@ def retrieve_data(params, meta):
     rows = QueryComplex(params['verbose']).list_data(query)
     meta['rows'] = len(rows)
     for row in rows:
-        row['faa_file'] = os.path.join(params['output_pdb_dir'], row['relative_faa'])
-        row['aln_file'] = os.path.join(params['output_pdb_dir'], row['v_aln'])
-        yield row
+        row['faa_file'] = params['output_pdb_dir'] / row['relative_faa']
+        row['aln_file'] = params['output_protein_dir'] / row['v_aln']
+        if row['faa_file'].is_file() and row['aln_file'].is_file():
+            yield row
 
 
 def align_vregion(row_iter, params, meta):

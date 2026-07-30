@@ -3,8 +3,8 @@
 requirements:
     - view_antibody
 example:
-    - parallel -j8 python app.py label_antibody ::: {0..240}
-    - python app.py label_antibody 0
+    - parallel -j8 bomics label_antibody ::: {0..241}
+    - bomics label_antibody 0
 function:
     - identify protein and insert data into table label_chain
     - identify complex and insert data into table label_complex
