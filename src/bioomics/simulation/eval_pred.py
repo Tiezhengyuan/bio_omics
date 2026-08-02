@@ -1,19 +1,18 @@
 import os
-import re
-import pandas as pd
+from pathlib import Path
 from pyrosetta import pyrosetta, io, rosetta
 import subprocess
 
 class EvalPred:
 
-    def __init__(self, bin_dir=None):
+    def __init__(self, bin_dir:Path=None):
         self.bin_dir = bin_dir
 
-    def rmsd(self, native_pdb, model_pdb):
+    def rmsd(self, native_pdb:str, model_pdb:str):
         try:
             pyrosetta.init()
-            native_pose = io.pose_from_pdb(native_pdb)
-            model_pose = io.pose_from_pdb(model_pdb)        
+            native_pose = io.pose_from_pdb(str(native_pdb))
+            model_pose = io.pose_from_pdb(str(model_pdb))
             rmsd = rosetta.core.scoring.CA_rmsd(
                 native_pose, model_pose
             )
@@ -22,10 +21,29 @@ class EvalPred:
             pass
         return None
 
-    def TMalign(self, pdb1, pdb2):
+    def batch_rmsd(self, pool:list) -> tuple:
+        good, fail = [], []
+        pyrosetta.init()
+        for rec in pool:
+            try:
+                native_pose = io.pose_from_pdb(str(rec['pdb1']))
+                model_pose = io.pose_from_pdb(str(rec['pdb2']))
+                rmsd = rosetta.core.scoring.CA_rmsd(
+                    native_pose, model_pose
+                )
+                if rmsd is not None:
+                    rec['rmsd'] = rmsd
+                    good.append(rec)
+                else:
+                    fail.append(rec)
+            except Exception as e:
+                pass
+        return good, fail
+    
+    def TMalign(self, pdb1:str, pdb2:str):
         try:
-            exe = os.path.join(self.bin_dir, 'MMalign')
-            cmd = [exe, pdb1, pdb2, '-outfmt', '2',]
+            exe = str(self.bin_dir / 'MMalign')
+            cmd = [exe, str(pdb1), str(pdb2), '-outfmt', '2',]
             result = subprocess.run(cmd, capture_output=True,
                 text=True, check=True)
             # print("STDOUT:", result.stdout)
@@ -40,12 +58,11 @@ class EvalPred:
             pass
         return {}
     
-    def prodigy(self, pdb_file, outfile=None):
+    def prodigy(self, pdb_file:Path, outfile:Path=None):
         try:
-            cmd = ['prodigy', pdb_file,]
-            result = subprocess.run(cmd, capture_output=True,
-                text=True, check=True)
-            if outfile:
+            cmd = ['prodigy', str(pdb_file),]
+            result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+            if outfile is not None:
                 with open(outfile, 'w') as f:
                     f.write(result.stdout)
             # parse result

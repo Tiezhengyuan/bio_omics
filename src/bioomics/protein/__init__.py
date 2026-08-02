@@ -1,6 +1,7 @@
 from .encode_aa import *
 from .align_seq import *
 from .cal_phylo import *
+from .protein_meta import *
 
 from .parse_blast_xml import *
 from .parse_igblast import *

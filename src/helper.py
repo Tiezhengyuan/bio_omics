@@ -103,7 +103,9 @@ def header(func):
         return result
     return wrapper
 
-def validate_data(col_name, params, meta):
+def validate_data(col_name, params, meta, outdir:Path=None):
+    if outdir is None:
+        outdir = params['output_pdb_dir']
     pdb_group = params['pdb_group']
     table_name = params['table_name']
     # scan no existing files
@@ -112,13 +114,12 @@ def validate_data(col_name, params, meta):
         SELECT S.pdb_id, S.{col_name}
         FROM {table_name}  S
         LEFT JOIN meta_pdb P ON S.pdb_id = P.pdb_id
-        WHERE P.pdb_group = {pdb_group}
-            AND S.{col_name} IS NOT NULL
+        WHERE P.pdb_group = {pdb_group} AND S.{col_name} IS NOT NULL
     ;"""
     rows = QueryComplex(params['verbose']).list_data(query)
     del_pool = []
     for row in rows:
-        pdb_file = params['output_pdb_dir'] / row[col_name]
+        pdb_file = outdir / row[col_name]
         if not pdb_file.is_file():
             print(pdb_file)
             del_pool.append(row[col_name])
@@ -127,14 +128,15 @@ def validate_data(col_name, params, meta):
     n = len(del_pool)
     if n > 0:
         print(f"Number of {n} out of {len(rows)} are not existing.", end=' ')
-        print(f"Try to delete rows in {table_name}...", end='')
         dc = DeleteComplex(params['verbose'])
         chunk_size = 100
-        for i in range(0, n-chunk_size, chunk_size):
+        end = n - chunk_size if n > chunk_size else n
+        for i in range(0, end, chunk_size):
             values = del_pool[i:i+chunk_size]
-            dc.delete_rows(table_name, col_name, values)
-            meta['delete_rows'] += len(values)
-            print(i, end=' ')
+            res = dc.delete_rows(table_name, col_name, values)
+            if res:
+                meta['delete_rows'] += len(values)
+                print(i, end=' ')
         print(f'{n}\n')
     else:
         print(f"PASS: Validate {table_name}.{col_name}.")

@@ -24,7 +24,7 @@ from ..protein.process_fasta import ProcessFasta
 
 class Pdb(ParseStructure):
 
-    def __init__(self, pdb_file:Path, outdir:str=None, verbose:bool=False):
+    def __init__(self, pdb_file:Path, outdir:Path=None, verbose:bool=False):
         super().__init__()
         # pdb_file
         self.pdb_file = pdb_file
@@ -37,31 +37,32 @@ class Pdb(ParseStructure):
     def load_pdb(self):
         self.parser = PDBParser(PERMISSIVE=1)
         self.structure = self.parser.get_structure(
-            self.pdb_file_name, self.pdb_file
+            self.pdb_file.name, str(self.pdb_file)
         )
 
     def load_pdb_gz(self):
         self.parser = PDBParser(PERMISSIVE=1)
         with gzip.open(self.pdb_file, "rt") as f:
-            self.structure = self.parser.get_structure(self.pdb_file_name, f)
+            self.structure = self.parser.get_structure(self.pdb_file.name, f)
 
     def load_cif(self):
         self.parser = MMCIFParser(QUIET=True, auth_chains=True)
-        self.structure = self.parser.get_structure(self.pdb_file_name, self.pdb_file)
+        self.structure = self.parser.get_structure(
+            self.pdb_file.name, str(self.pdb_file)
+        )
 
     def load_cif_gz(self):
         self.parser = MMCIFParser(QUIET=True, auth_chains=False)
         with gzip.open(self.pdb_file, "rt") as f:
-             self.structure = self.parser.get_structure(self.pdb_file_name, f)
+             self.structure = self.parser.get_structure(self.pdb_file.name, f)
 
     def load_structure(self):
         try:
-            self.pdb_file_name = self.pdb_file.name
-            if self.pdb_file_name.endswith('.cif.gz'):
+            if self.pdb_file.name.endswith('.cif.gz'):
                 self.load_cif_gz()
-            elif self.pdb_file_name.endswith('.cif'):
+            elif self.pdb_file.name.endswith('.cif'):
                 self.load_cif()
-            elif self.pdb_file_name.endswith('.pdb.gz') or self.pdb_file_name.endswith('.ent.gz'):
+            elif self.pdb_file.name.endswith('.pdb.gz') or self.pdb_file.name.endswith('.ent.gz'):
                 self.load_pdb_gz()
             else:
                 self.load_pdb()
@@ -99,7 +100,7 @@ class Pdb(ParseStructure):
 
     def header_lines(self):
         header_lines = []
-        if self.pdb_file_name.endswith('.gz'):
+        if self.pdb_file.suffix =='.gz':
             with gzip.open(self.pdb_file, 'rt') as f:
                 for line in f:
                     if line.startswith(("HEADER", "TITLE", "COMPND", "SOURCE")):

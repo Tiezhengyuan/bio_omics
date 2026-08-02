@@ -68,9 +68,10 @@ if __name__ == "__main__":
         'overwrite': False,
         'table_name': 'meta_bfactor',
     })
-    row_iter = retrieve_rows(params, meta)
-
+    validate_data('relative_pkl', params, meta)
+    
     # calculate B-factor
+    row_iter = retrieve_rows(params, meta)
     record_iter = cal_bfactor(row_iter, params, meta)
 
     # put bfactor into table

@@ -4,7 +4,8 @@ from .parse_text import *
 from .process_file import *
 from .process_pickle import *
 from .process_json import *
-from .bio_dict import BioDict
-from .bio_handler import BioHandler
+from .bio_dict import *
+from .bio_handler import *
 from .concurrency import *
 from .write_tmp import *
+from .integrate_data import *

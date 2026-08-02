@@ -1,13 +1,11 @@
 """
 connect FTP using object methods
 """
-
+from pathlib import Path
 from ftplib import FTP
 import os
 import re
 from sh import gunzip
-
-from ..common import Dir
 
 class ConnFTP:
 
@@ -61,7 +59,7 @@ class ConnFTP:
         download one file from FTP
         one download one connection avoiding timeout
         '''
-        Dir(local_path).init_dir()
+        Path(local_path).mkdir(parents=True, exist_ok=True)
         local_file = os.path.join(local_path, file_name)
         unzip_file = local_file.replace('.gz', '')
         # doesn't download if file exists and overwrite is False
@@ -139,7 +137,7 @@ class ConnFTP:
                 if self._is_dir(ftp, name):
                     sub_endpoint = f"{_endpoint}/{name}"
                     sub_local_path = os.path.join(_local_path, name)
-                    Dir(sub_local_path).init_dir()
+                    Path(sub_local_path).mkdir(parents=True, exist_ok=True)
                     pool.append((sub_endpoint, sub_local_path))
             #download files
             local_files += self.download_files(_endpoint, match, _local_path)

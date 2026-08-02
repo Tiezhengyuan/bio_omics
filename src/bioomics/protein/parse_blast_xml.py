@@ -1,11 +1,13 @@
 '''
 https://biopython.org/docs/dev/api/Bio.Blast.html
 '''
-import pandas as pd
 from Bio.Blast import NCBIXML
+import pandas as pd
+from pathlib import Path
+
 
 class ParseBlastXml:
-    def __init__(self, infile):
+    def __init__(self, infile:Path):
         # infile is BLAST XML output, outfmt=5
         self.infile = infile
 

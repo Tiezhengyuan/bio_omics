@@ -3,8 +3,8 @@
 requirements:
     - table combo2, combo3, combo4, combo5
 example:
-    - parallel -j8 python app.py combo_contacts ::: {0..240}
-    - python app.py combo_contacts 0
+    - parallel -j8 bomics combo_contacts ::: {0..241}
+    - bomics combo_contacts 0
 function:
     - simulate binding dissociation rate
     - insert data into table combo_contacts
@@ -37,15 +37,15 @@ def cal_contacts(rows, params, meta):
     combo_name = params['combo_name']
     for row in rows:
         pdb_id, combo_id = row['pdb_id'], row['combo_id']
-        endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
-        output_dir = os.path.join(params['simulate_dir'], endpoint)
-        Path(output_dir).mkdir(parents=True, exist_ok=True)
+        endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id
+        output_dir = params['simulate_dir'] / endpoint
+        output_dir.mkdir(parents=True, exist_ok=True)
 
         # run prodigy
         file_name = f'{combo_id}.txt'
-        outfile = os.path.join(output_dir, file_name)
+        outfile = output_dir / file_name
         if params['overwrite'] or not os.path.isfile(outfile):
-            input_pdb = os.path.join(params['output_pdb_dir'], row['combo_pdb'])
+            input_pdb = params['output_pdb_dir'] / row['combo_pdb']
             EvalPred().prodigy(input_pdb, outfile)
             meta[f'{combo_name}_run_prodigy'] += 1
 
@@ -62,7 +62,7 @@ def cal_contacts(rows, params, meta):
             result = EvalPred().parse_prodigy(data)
             item['binding_affinity'] = result.get('binding_affinity')
             item['dissociation_constant'] = result.get('dissociation_constant')
-            item['relative_prodigy'] = os.path.join(endpoint, file_name)
+            item['relative_prodigy'] = str(endpoint / file_name)
         else:
             meta[f'{combo_name}_no_output'] += 1
         rec = [item.get(col) for col in TABLE_COLUMNS[params['table_name']]]
@@ -77,9 +77,11 @@ if __name__ == "__main__":
         'chunk_size': 50,
         'table_name': 'combo_contacts',
     })
-
-    pool = ('combo2', 'combo3', 'combo4', 'combo5')
-    for combo_name in pool:
+    # clean null data in the table
+    validate_data('relative_prodigy', params, meta, params['simulate_dir'])
+    
+    # cover all combo complex
+    for combo_name in ('combo2', 'combo3', 'combo4', 'combo5'):
         params['combo_name'] = combo_name
         rows = retrieve_pdb(params, meta)
         record_iter = cal_contacts(rows, params, meta,)

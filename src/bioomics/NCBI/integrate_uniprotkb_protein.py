@@ -4,7 +4,7 @@ from ..common.concurrency import *
 from .ncbi import NCBI
 from .parse_id import ParseID
 from .integrate import Integrate
-from ..integrate_data import IntegrateData
+# from ..integrate_data import IntegrateData
 
 class IntegrateUniProtKBProtein(Integrate):
     entity = 'uniprotkb_protein'

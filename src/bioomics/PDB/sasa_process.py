@@ -4,6 +4,7 @@ SASA solvent accessible surface area
 formular:
     delta SASA = total of unbounded SASA - total of bounded SASA
 '''
+from pathlib import Path
 from ..common import ProcessPickle
 from .sasa_calculate import SasaCalculate
 
@@ -17,7 +18,7 @@ class SasaProcess:
         self.max_span = int(max_span) if max_span else 30
         self.verbose = verbose
     
-    def process(self, pdb_files_pool:list, outfile:str=None) -> list:
+    def process(self, pdb_files_pool:list, outfile:Path=None) -> list:
         data = []
         for bounded_pdb_file, unbounded_pdb_files in pdb_files_pool:
             # result is dict
@@ -42,7 +43,7 @@ class SasaProcess:
                     print(f"Export SASA calculation to {outfile}")
         return data
 
-    def pair_freesasa(self, bounded_pdb_file:str, unbounded_pdb_files:list):
+    def pair_freesasa(self, bounded_pdb_file:Path, unbounded_pdb_files:list):
         '''
         calculate detaSASA = SASA1+ SASA2 - SASA12
         '''
@@ -67,7 +68,7 @@ class SasaProcess:
                     total1 = sum(delta1['value'])
                     delta_total_sasa += total1
                     unbounded.append({
-                        'pdb_file': f1,
+                        'pdb_file': str(f1),
                         'chain_ids': list(delta1['chain_id'].unique()),
                         'delta_total_sasa': total1,
                         'sasa': df1,
@@ -79,7 +80,7 @@ class SasaProcess:
             result = {
                 'delta_total_sasa': delta_total_sasa,
                 'bounded': {
-                    'pdb_file': bounded_pdb_file,
+                    'pdb_file': str(bounded_pdb_file),
                     'chain_ids': list(df.index.get_level_values(0).unique()),
                     'sasa': df,
                 },

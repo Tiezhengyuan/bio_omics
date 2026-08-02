@@ -1,13 +1,14 @@
 import re
 import pandas as pd
 from Bio import SeqIO
+from pathlib import Path
 
 from ..common import Utils, ProcessJson, ParseText
 from .process_seq import ProcessSeq
 
 class ParseIgblast:
 
-    def __init__(self, aln_file:str, fa_file:str=None, verbose:bool=None):
+    def __init__(self, aln_file:Path, fa_file:Path=None, verbose:bool=None):
         self.aln_file = aln_file
         self.fa_file = fa_file
         self.verbose = verbose if verbose else False

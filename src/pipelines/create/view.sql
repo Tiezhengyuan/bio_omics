@@ -46,10 +46,9 @@ CREATE VIEW view_pdb_chain AS
         D.structure_method, D.resolution, B.avg_bfactor,
         D.release_date, D.pdb_group,
         S.chain_seq, S.pro_len,
-        F.relative_path AS relative_faa, P.chain_pdb
+        S.relative_faa, P.chain_pdb
     FROM pdb_chainid        C
     LEFT JOIN pdb_chain_seq S ON C.chain_id = S.chain_id
-    LEFT JOIN chain_faa     F ON C.chain_id = F.chain_id
     LEFT JOIN chain_pdb     P ON C.chain_id = P.chain_id
     LEFT JOIN view_pdb      D ON C.pdb_id = D.pdb_id
     LEFT JOIN pdb_proseq    X ON C.chain_id = X.chain_id

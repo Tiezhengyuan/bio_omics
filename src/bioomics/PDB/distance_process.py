@@ -1,8 +1,8 @@
 '''
 process distance data
 '''
+from pathlib import Path
 import pandas as pd
-import os
 
 from .distance_analyze import DistanceAnalyze
 from ..common import ProcessPickle
@@ -19,7 +19,7 @@ class DistanceProcess:
         print('Number of distance', len(dist_meta))
         res = {i:[] for i in cutoff_pool}
         for row in dist_meta:
-            pfile = os.path.join(self.data_dir, row['relative_pkl'])
+            pfile = self.data_dir / row['relative_pkl']
             try:
                 data = ProcessPickle(pfile).load_pickle()
                 dist1 = data['dist1']
@@ -44,8 +44,8 @@ class DistanceProcess:
     def retrieve_interface_seq(self, dist_meta):
         res = []
         print('Number of distance', len(dist_meta))
-        for i, row in enumerate(dist_meta):
-            pfile = os.path.join(self.data_dir, row['relative_pkl'])
+        for row in dist_meta:
+            pfile = str(self.data_dir / row['relative_pkl'])
             args = {
                 'pickle_file': pfile,
                 'max_span': self.span,

@@ -40,7 +40,7 @@ class QueryComplex(QueryDb):
             SELECT pdb_id, relative_pdb
             FROM meta_pdb
             WHERE pdb_group = {pdb_group}
-                AND relative_pdb IS NOT NULL
+                AND relative_pdb IS NOT NULL 
         """
         if table_name:
             query += f"""
@@ -49,6 +49,7 @@ class QueryComplex(QueryDb):
                     WHERE pdb_id IS NOT NULL
                 )"""
         rows = self.list_data(query)
+        print(f"Retrieve PDB: group={pdb_group}, files= {len(rows)}...")
         return rows
     
     def parse_modelling(self):
@@ -251,23 +252,23 @@ class QueryComplex(QueryDb):
     
     def pdb_chains(self, pdb_group:int) -> dict:
         query = f"""
-            SELECT c.pdb_id, c.model_no, c.chain_id, d.chain_pdb,
-                f.relative_path AS chain_faa, s.chain_seq
+            SELECT c.pdb_id, c.model_no, c.chain_id, d.relative_pdb,
+                s.relative_faa AS chain_faa, s.chain_seq
             FROM pdb_chainid        c
             LEFT JOIN meta_pdb      p ON c.pdb_id=p.pdb_id
             LEFT JOIN pdb_chain_seq s ON c.chain_id=s.chain_id
-            LEFT JOIN chain_faa     f ON c.chain_id=f.chain_id
             LEFT JOIN chain_pdb     d ON c.chain_id=d.chain_id
             WHERE p.pdb_group = {pdb_group}
                 AND c.model_no = 0
-                AND f.relative_path IS NOT NULL
-                AND d.chain_pdb IS NOT NULL
+                AND s.relative_faa IS NOT NULL
+                AND d.relative_pdb IS NOT NULL
         ;"""
         rows = self.list_data(query)
         df = pd.DataFrame(rows)
-        g = df.groupby(['pdb_id', 'model_no'])
-        res = {key: sub for key, sub in g}
-        return res
+        if not df.empty:
+            g = df.groupby(['pdb_id', 'model_no'])
+            return {key: sub for key, sub in g}
+        return {}
 
     def retrieve_combo(self, pdb_group:int, combo:int, dest_table_name:str):
             query = f"""
@@ -281,6 +282,8 @@ class QueryComplex(QueryDb):
                     )
             ;"""
             rows = self.list_data(query)
+            if self.verbose:
+                print(f"{len(rows)} PDB files ready...")
             return rows
 
     def parse_proseq_name(self, seq_len:int) -> str:

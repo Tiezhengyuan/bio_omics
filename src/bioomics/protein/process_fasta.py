@@ -1,9 +1,10 @@
 from Bio import SeqIO
 from Bio.Seq import Seq
 from Bio.SeqRecord import SeqRecord
+from pathlib import Path
 
 class ProcessFasta:
-    def __init__(self, fa_file:str, verbose:bool=False):
+    def __init__(self, fa_file:Path, verbose:bool=False):
         self.fa_file = fa_file
         self.verbose = verbose
 

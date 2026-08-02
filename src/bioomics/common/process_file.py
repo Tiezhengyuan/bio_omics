@@ -1,5 +1,6 @@
 '''
 '''
+from pathlib import Path
 import os
 from .dir import Dir
 
@@ -7,7 +8,7 @@ from .dir import Dir
 class ProcessFile:
 
     @staticmethod
-    def get_meta(outputs_dir):
+    def get_meta(outputs_dir:Path):
         ready = {}
         file_iter = Dir(outputs_dir).recrusive_files()
         for path in file_iter:

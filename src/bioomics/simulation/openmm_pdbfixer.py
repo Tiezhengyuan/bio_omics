@@ -4,19 +4,19 @@ PDBFixer: https://github.com/openmm/pdbfixer
 '''
 from datetime import datetime
 import gzip
+from pathlib import Path
 from pdbfixer import PDBFixer
 from openmm import app
-import os
 
 from .timeout import timeout
-from ..common import Dir, ProcessJson
+from ..common import ProcessJson
 
 class OpenmmPdbfixer:
-    def __init__(self, pdb_file, args:dict):
+    def __init__(self, pdb_file:Path, args:dict):
         self.pdb_file = pdb_file
         self.verbose = args.get('verbose', False)
         self.outdir = args.get('outdir')
-        Dir(self.outdir).init_dir()
+        self.outdir.mkdir(parents=True, exist_ok=True)
         self.info = {
             'status': 'fail',
             'pdb_file': self.pdb_file,
@@ -26,7 +26,7 @@ class OpenmmPdbfixer:
 
     def init_fixer(self):
         try:
-            if self.pdb_file.endswith('.gz'):
+            if self.pdb_file.stem == '.gz':
                 with gzip.open(self.pdb_file, 'rt') as f:
                     self.fixer = PDBFixer(pdbfile=f)
             else:
@@ -133,7 +133,7 @@ class OpenmmPdbfixer:
             self.info['error_add_hydrogens'] = str(e)
 
     def save_fixer(self):
-        outfile = os.path.join(self.outdir, 'fixed.pdb')
+        outfile = self.outdir / 'fixed.pdb'
         # Save the fixed structure
         try:
             if self.fixer:
@@ -145,7 +145,7 @@ class OpenmmPdbfixer:
             self.info['error_save_fixer'] = str(e)
     
     def save_info(self):
-        outfile = os.path.join(self.outdir, 'fixed_info.json')
+        outfile = self.outdir / 'fixed_info.json'
         ProcessJson.save_json(self.info, outfile)
         if self.verbose:
             print(self.info)

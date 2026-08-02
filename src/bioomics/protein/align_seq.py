@@ -1,13 +1,14 @@
+from Bio.Seq import Seq
 from itertools import combinations
 import os
 import subprocess
+from pathlib import Path
 
-from Bio.Seq import Seq
 
 
 class AlignSeq:
 
-    def __init__(self, bin_dir=None, verbose:bool=False):
+    def __init__(self, bin_dir:Path=None, verbose:bool=False):
         self.bin_dir = bin_dir
         self.verbose = verbose
 

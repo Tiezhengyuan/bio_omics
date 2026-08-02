@@ -4,12 +4,12 @@ connect FTP using static methods
 2. FTP login can't be alive long time.
 3. internet connection is low-speed
 """
+from pathlib import Path
 import ftplib
 import os
 import time
 from typing import Callable
 
-from ..common import Dir
 
 class ConnFTPlib:
 
@@ -184,7 +184,7 @@ class ConnFTPlib:
                 current_ftp_path = current_ftp_path[1:]
             dir_names = [local_path,] + current_ftp_path.split('/')
             current_local_path = os.path.join(*dir_names)
-            Dir(current_local_path).init_dir()
+            Path(current_local_path).mkdir(parents=True, exist_ok=True)
             # print(current_ftp_path, current_local_path, file_name)
             # download file
             ConnFTPlib.download_file(

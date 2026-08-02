@@ -4,7 +4,7 @@ import os
 
 from ..common.bio_handler import BioHandler
 from ..common.bio_dict import BioDict
-from ..integrate_data import IntegrateData
+# from ..integrate_data import IntegrateData
 
 class Refseq:
     source = 'NCBI_refseq'

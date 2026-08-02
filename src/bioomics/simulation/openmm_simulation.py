@@ -9,10 +9,11 @@ import openmm as mm
 from openmm import app
 import openmm.unit as unit
 import os
+from pathlib import Path
 from sys import stdout
 
 from .timeout import timeout
-from ..common import Dir, ProcessJson
+from ..common import ProcessJson
 
 FORCE_FIELDS = {
     # a comprehensive set of Amber14 force field files
@@ -50,10 +51,13 @@ COMPLEX_FF = {
 class OpenmmSimulation:
 
     def __init__(self, pdb_file:str, args:dict):
-        self.pdb_file = pdb_file
+        '''
+        note: openmm only accept string path rather than Path object
+        '''
+        self.pdb_file = str(pdb_file)
         self.args = args
-        self.outdir = self.args.get('outdir')
-        Dir(self.outdir).init_dir()
+        self.outdir = str(self.args.get('outdir'))
+        Path(self.outdir).mkdir(parents=True, exist_ok=True)
         self.verbose = self.args.get('verbose', False)
         self.pdb = None
         self.simulation = None 

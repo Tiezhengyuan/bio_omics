@@ -4,8 +4,7 @@ import os
 import json
 import math
 from typing import Iterable
-
-from .common import Dir
+from pathlib import Path
 
 class IntegrateData:
     def __init__(self, meta:dict):
@@ -38,7 +37,6 @@ class IntegrateData:
                 json.dump(self.index_meta, f, indent=4)
             return True
         return False
-
         
     def scan(self) -> Iterable:
         '''
@@ -66,7 +64,7 @@ class IntegrateData:
         id_prefix = str(math.floor(int(new_id)/1000))
         sub_dirs = [id_prefix[i:i+2] for i in range(0, len(id_prefix), 2)]
         path = os.path.join(self.entity_path, *sub_dirs)
-        Dir(path).init_dir()
+        Path(path).mkdir(parents=True, exist_ok=True)
         json_file = os.path.join(path, f'{new_id}.json')
         return json_file
 
@@ -77,7 +75,7 @@ class IntegrateData:
         id_prefix = str(key_value)[:-2]
         sub_dirs = [id_prefix[i:i+3] for i in range(0, len(id_prefix), 3)]
         path = os.path.join(self.entity_path, *sub_dirs)
-        Dir(path).init_dir()
+        Path(path).mkdir(parents=True, exist_ok=True)
         json_file = os.path.join(path, f'{key_value}.json')
         return json_file
     
@@ -117,13 +115,14 @@ class IntegrateData:
         try:
             key_value = data['key']
             if source and source not in self.index_meta[key_value]['source']:
-                    self.index_meta[key_value]['source'].append(source)
+                self.index_meta[key_value]['source'].append(source)
+            
             json_file = self.index_meta[key_value]['json_file']
             if os.path.isfile(json_file):
                 with open(json_file, 'w') as f:
                     json.dump(data, f, indent=4)
                 return json_file
-        except exception as e:
+        except Exception as e:
             print(f"Error: can't update json file. error={e}")
         # add data
         return self.add_data(data)

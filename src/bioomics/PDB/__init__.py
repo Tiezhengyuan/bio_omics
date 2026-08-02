@@ -7,7 +7,6 @@ from .atom_select import *
 
 from .calculate_plddt import *
 from .calculate_pae import *
-from .eval_pred import *
 from .analyze_dssp import *
 
 

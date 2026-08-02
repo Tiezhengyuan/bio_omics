@@ -11,6 +11,7 @@ import freesasa
 import os
 import pandas as pd
 import subprocess
+from pathlib import Path
 
 from ..constants.amino_acids import EXTRA_LONGER_NAMES
 from .pdb import Pdb
@@ -18,7 +19,7 @@ from .analyze_complex import AnalyzeComplex
 
 class SasaCalculate:
 
-    def __init__(self, pdb_file, prob_radious:float=None):
+    def __init__(self, pdb_file:Path, prob_radious:float=None):
         self.pdb_file = pdb_file
         self.prob_radious = prob_radious if prob_radious else 1.4
     
@@ -31,8 +32,9 @@ class SasaCalculate:
         hydrogen = False if not hydrogen else True
 
         try:
+            print('####', self.pdb_file)
             structure = freesasa.Structure(
-                self.pdb_file,
+                str(self.pdb_file),
                 options = {
                     'hetatm' : hetatm,
                     'hydrogen' : hydrogen,
@@ -144,7 +146,7 @@ class SasaCalculate:
         '''
         calculate SASA using freesasa python module
         '''
-        structure = freesasa.Structure(self.pdb_file)
+        structure = freesasa.Structure(str(self.pdb_file))
         result = freesasa.calc(structure)
         res = freesasa.classifyResults(result, structure)
         res['total'] = result.totalArea()
@@ -196,19 +198,18 @@ class SasaCalculate:
                     df = pd.DataFrame(sasa, columns=['res_id', 'sasa'])
                     return df
     
-    def run_freesasa_cmd(self, outdir, method=None):
+    def run_freesasa_cmd(self, outdir:Path, method=None):
         '''
         Calculate SASA using command line
         freesasa should be installed
         '''
+        outfile = outdir / f"{self.pdb_file.name}.txt"
         method = '-S' if method == 'S&R' else '-L'
-        pdb_name = os.path.splitext(os.path.basename(self.pdb_file))[0]
-        outfile = os.path.join(outdir, pdb_name + '.txt')
         # run command
         cmd = [
             'freesasa',
-            self.pdb_file,
-            '--output=', outfile,
+            str(self.pdb_file),
+            '--output=', str(outfile),
             '--format=seq',
             '-p', 'self.prob_radious',
             method,

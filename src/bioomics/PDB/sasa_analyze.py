@@ -1,19 +1,17 @@
 '''
 '''
-import os
 import pickle
-
+from pathlib import Path
 from .analyze_complex import AnalyzeComplex
 
 class SasaAnalyze:
-    def __init__(self, data, delta_threshold:float=None, \
-            max_span:int=None, verbose:bool=None):
+    def __init__(self, data, delta_threshold:float=None, max_span:int=None, verbose:bool=None):
         self.data = data
         self.delta_threshold = float(delta_threshold) if delta_threshold else 0
         self.max_span = int(max_span) if max_span else 30
         self.verbose = True if verbose else False
     
-    def retrieve_seq(self):
+    def retrieve_seq(self, outdir:Path):
         pairs = []
         for _data in self.data:
             k1, k2 = _data['type'].split('-')
@@ -26,7 +24,7 @@ class SasaAnalyze:
             pairs.append((k1, motif1, k2, motif2))
         # export
         cond = f"delta-{self.delta_threshold}_span-{self.max_span}"
-        outfile = os.path.join(self.outdir, f'seq_sasa_{cond}.p')
+        outfile = outdir / f'seq_sasa_{cond}.p'
         if self.verbose:
             print(f"Sequence-SASA data: {outfile}.")
         with open(outfile, 'wb') as f:

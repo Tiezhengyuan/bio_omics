@@ -1,17 +1,18 @@
 '''
 binary file
 '''
+from pathlib import Path
 import os
 import pickle
 
 class ProcessPickle:
 
-    def __init__(self, pickle_file:str, verbose:bool=False):
+    def __init__(self, pickle_file:Path, verbose:bool=False):
         self.pickle_file = pickle_file
         self.verbose = verbose
     
     def save_data(self, data:dict):
-        if os.path.isfile(self.pickle_file):
+        if self.pickle_file.is_file():
             old_data = self.load_pickle()
             old_data.update(data)
             return self.save_pickle(old_data)

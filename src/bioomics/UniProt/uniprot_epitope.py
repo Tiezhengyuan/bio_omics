@@ -2,8 +2,8 @@
 '''
 '''
 from ..common.bio_dict import BioDict
-from ..integrate_data import IntegrateData
-from ..protein_meta import ProteinMeta
+# from ..integrate_data import IntegrateData
+# from ..protein_meta import ProteinMeta
 from .uniprot import Uniprot
 from .download_uniprot import DownloadUniprot
 

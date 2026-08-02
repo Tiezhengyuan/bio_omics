@@ -119,6 +119,7 @@ CREATE TABLE pdb_chain_seq(
     first_chain_id  VARCHAR(20),
     pro_len         INT GENERATED ALWAYS AS (LENGTH(chain_seq)) STORED,
     chain_seq       TEXT,
+    relative_faa    VARCHAR(60),
     UNIQUE(chain_id),
     CONSTRAINT fk_chainseq_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
@@ -132,16 +133,6 @@ CREATE TABLE pdb_faa(
     UNIQUE (pdb_id, model_no),
     CONSTRAINT fk_pdb_faa FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
-
-DROP TABLE IF EXISTS chain_faa;
-CREATE TABLE chain_faa(
-    pdb_id          VARCHAR(10),
-    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
-    relative_path   VARCHAR(60),
-    UNIQUE (pdb_id, chain_id),
-    CONSTRAINT fk_faa_chain FOREIGN KEY (chain_id)
-        REFERENCES pdb_chainid(chain_id) ON DELETE CASCADE
 );
 
 DROP TABLE IF EXISTS pdb_proseq;
@@ -178,7 +169,7 @@ DROP TABLE IF EXISTS chain_pdb;
 CREATE TABLE chain_pdb(
     pdb_id          VARCHAR(10),
     chain_id        VARCHAR(20),
-    chain_pdb       VARCHAR(60),
+    relative_pdb    VARCHAR(60),
     UNIQUE (chain_id),
     CONSTRAINT fk_chain_pdb_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE,

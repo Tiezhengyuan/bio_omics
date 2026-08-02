@@ -48,7 +48,9 @@ install other packages
 
 #rebuild
 cd ~/bio/bio_omics
-uv sync --group dev --inexact
+uv sync --group dev
+
+uv pip install pyrosetta --find-links https://west.rosettacommons.org/pyrosetta/quarterly/release
 
 #test
 uv run test-env

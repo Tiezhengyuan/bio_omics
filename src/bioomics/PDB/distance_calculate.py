@@ -2,7 +2,7 @@
 distance between two atoms
 '''
 import itertools
-
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import MDAnalysis as mda
@@ -14,7 +14,7 @@ from .pdb import Pdb
 
 class DistanceCalculate:
 
-    def __init__(self, pdb_file:str, args:dict):
+    def __init__(self, pdb_file:Path, args:dict):
         '''
         pdb_file: pdb should contain exact two chains
         dist_cutoff: 10A
@@ -29,7 +29,7 @@ class DistanceCalculate:
     def cal_dist(self, chain1_id:str, chain2_id:str):
         try:
             # load MDA for simulation
-            mdau = mda.Universe(self.pdb_file)
+            mdau = mda.Universe(str(self.pdb_file))
 
             # Select chains
             cond1 = "record_type hetatm" if chain1_id[-1] == '-' \

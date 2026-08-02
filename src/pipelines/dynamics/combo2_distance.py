@@ -3,8 +3,8 @@ requirments:
     - PDB raw data
     - table combo2, only calculate distance of two chains 
 example: 
-    - parallel -j8 python app.py combo2_distance ::: {0..240}
-    - python app.py combo2_distance 0
+    - parallel -j8 bomics combo2_distance ::: {0..241}
+    - bomics combo2_distance 0
 functions:
     - calculate distance and analyze PPI
     - put meta data to table combo2_distance
@@ -38,14 +38,15 @@ def retrieve_query(params, meta):
 def cal_dist(rows, params, meta):
     for row in rows:
         pdb_id = row['pdb_id']
-        endpoint = os.path.join(params['table_name'], pdb_id[:2], pdb_id)
-        outdir = os.path.join(params['simulate_dir'], endpoint)
-        Path(outdir).mkdir(parents=True, exist_ok=True)
-
+        # define output
+        endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id
+        outdir = params['simulate_dir'] / endpoint
+        outdir.mkdir(parents=True, exist_ok=True)
         file_name =  f"{row['combo_id']}.pkl"
-        pfile = os.path.join(outdir, file_name)
-        if params['overwrite'] or (not os.path.isfile(pfile)):
-            input_pdb = os.path.join(params['output_pdb_dir'], row['combo_pdb'])
+        pfile = outdir / file_name
+
+        if params['overwrite'] or not pfile.is_file():
+            input_pdb = params['output_pdb_dir'] / row['combo_pdb']
             result = DistanceCalculate(input_pdb, params).process(row['chain_combo'])
             if result:
                 result.update(row)
@@ -61,8 +62,8 @@ def cal_dist(rows, params, meta):
             'pdb_id': pdb_id,
             'combo_id': row['combo_id'],
         }
-        if os.path.isfile(pfile):
-            item['relative_pkl'] = os.path.join(endpoint, file_name)
+        if pfile.is_file():
+            item['relative_pkl'] = str(endpoint / file_name)
             data = ProcessPickle(pfile).load_pickle([])
             dist_value, res1, res2 = DistanceAnalyze.get_distance(data, False, 0)
             item.update({
@@ -83,9 +84,10 @@ if __name__ == "__main__":
         'dist_cutoff': 10,
         'span': 10,
     })
+    validate_data('relative_pkl', params, meta, params['simulate_dir'])
 
-    pdb_iter = retrieve_query(params, meta)
     # calculate atom distance
+    pdb_iter = retrieve_query(params, meta)
     record_iter = cal_dist(pdb_iter, params, meta)
 
     # put meta data to table

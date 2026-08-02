@@ -6,14 +6,11 @@ APP="uv --directory /home/yuan/bio/bio_omics run bomics"
 parallel -j8 ${APP} pdb_chainid ::: {0..241}
 
 # retrieve sequences by chain
-# require pdb_chain
-parallel -j8 ${APP} chain_seq ::: {0..241}
-# update pdb_chain_seq
+parallel -j8 ${APP} pdb_chain_seq ::: {0..241}
 ${APP} unique_chain_seq
 
 #export sequences in faa
 parallel -j8 ${APP} pdb_faa ::: {0..241}
-parallel -j8 ${APP} chain_faa ::: {0..241}
 
 #parse pdb_chain_seq.chain_seq with pro_seq.seq_id
 ${APP} pdb_proseq

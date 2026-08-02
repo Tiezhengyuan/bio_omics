@@ -1,35 +1,34 @@
 from datetime import datetime
 import json
 import os
-
-from .common import Dir
+from pathlib import Path
 
 class ProteinMeta:
     
-    def __init__(self, result_dir:str, entity:str, source:str):
+    def __init__(self, result_dir:Path, entity:str, source:str):
         self.result_dir = result_dir
         self.entity = entity
         self.source = source
 
-    def entity_path(self):
-        entity_path = os.path.join(self.result_dir, self.entity, self.source)
-        Dir(entity_path).init_dir()
+    def entity_path(self) -> Path:
+        entity_path = self.result_dir / self.entity / self.source
+        entity_path.mkdir(parents=True, exist_ok=True)
         return entity_path
 
-    def meta_path(self):
-        meta_path = os.path.join(self.result_dir, self.entity, 'meta')
-        Dir(meta_path).init_dir()
+    def meta_path(self) -> Path:
+        meta_path = self.result_dir / self.entity / 'meta'
+        meta_path.mkdir(parents=True, exist_ok=True)
         return meta_path
 
-    def meta_file(self):
+    def meta_file(self) -> Path:
         meta_path = self.meta_path()
         name = f'{self.source}_meta.json'
-        return os.path.join(meta_path, name)
+        return meta_path / name
 
-    def index_file(self):
+    def index_file(self) -> Path:
         meta_path = self.meta_path()
         name = f'{self.source}_index.json'
-        return os.path.join(meta_path, name)
+        return meta_path / name
 
     def get_meta(self, default_meta:dict=None):
         '''
@@ -37,7 +36,7 @@ class ProteinMeta:
         '''
         # override default meta if IEDB_meta.json exists
         meta_file = self.meta_file()
-        if os.path.isfile(meta_file):
+        if meta_file.is_file():
             with open(meta_file, 'r') as f:
                 meta = json.load(f)
         else:
@@ -67,7 +66,7 @@ class ProteinMeta:
 
     def get_index_meta(self, index_meta_file:str=None):
         index_file = self.index_file()
-        if os.path.isfile(index_file):
+        if index_file.is_file():
             with open(index_file, 'r') as f:
                 return json.load(f)
         return {}

@@ -3,8 +3,8 @@ build data mapping of epitopes from IEDB
 entity is proteins with epitopes
 '''
 from .iedb import IEDB
-from ..integrate_data import IntegrateData
-from ..protein_meta import ProteinMeta
+# from ..integrate_data import IntegrateData
+# from ..protein_meta import ProteinMeta
 
 class IEDBEpitope(IEDB):
     key = 'accession'

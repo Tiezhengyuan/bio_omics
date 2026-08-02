@@ -13,6 +13,9 @@ from bioomics import Pdb, ProcessFasta
 
 @header
 def retrieve_pdb(params, meta):
+    query = f"""
+        
+    """
     qc = QueryComplex(params['verbose'])
     rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
     print(f"{len(rows)} PDB files ready...")
@@ -49,11 +52,12 @@ def export_chain_faa(rows, params, meta):
                 else:
                     meta['skip_faa'] += 1
                 # build record
+                relative_path = None
                 if outfile.is_file():
                     relative_path = str(endpoint / file_name)
-                    yield pdb_id, chain_id, relative_path
-                else:
-                    yield pdb_id, chain_id, None
+                rec = (pdb_id, chain_id, relative_path)
+                print(rec)
+                yield rec
         else:
             meta['no_chain_seq'] += 1
             yield pdb_id, None, None
@@ -64,10 +68,10 @@ if __name__ == "__main__":
         'chunk_size': 50,
         'table_name': 'chain_faa',
     })
-    
-    rows = retrieve_pdb(params, meta)
+    validate_data('relative_path', params, meta)    
 
     # export chain sequences in fasta to data/ in default
+    rows = retrieve_pdb(params, meta)
     record_iter = export_chain_faa(rows, params, meta)
 
     # insert

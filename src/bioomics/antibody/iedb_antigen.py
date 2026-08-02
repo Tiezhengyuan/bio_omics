@@ -7,7 +7,7 @@ import os
 
 from ..common import Dir
 from .iedb import IEDB
-from ..integrate_data import IntegrateData
+# from ..integrate_data import IntegrateData
 
 class IEDBAntigen(IEDB):
     key = 'accession'

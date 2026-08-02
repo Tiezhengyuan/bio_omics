@@ -14,15 +14,29 @@ from bioomics import Pdb
 @header
 def retrieve_pdb(params, meta):
     qc = QueryComplex(params['verbose'])
-    rows = qc.meta_pdb(params['pdb_group'], params['table_name'])
-    print(f"New PDB: {len(rows)}")
+    rows = qc.meta_pdb(params['pdb_group'])
     meta['rows'] = len(rows)
     for row in rows:
         row['pdb_file'] = params['rawdata_dir'] / row['relative_pdb']
         if row['pdb_file'].is_file():
             yield row
 
+# check missing chains
+def chain_ids(params, meta):
+    table_name = params['table_name']
+    pdb_group = params['pdb_group']
+    query = f"""
+        SELECT c.chain_id
+        FROM {table_name}  c
+        LEFT JOIN meta_pdb m ON c.pdb_id = m.pdb_id
+        WHERE m.pdb_group = {pdb_group}
+    """
+    rows = QueryComplex(params['verbose']).list_data(query)
+    meta['current_chain_ids'] = len(rows)
+    return [i['chain_id'] for i in rows]
+
 def build(row_iter, params, meta):
+    id_pool = chain_ids(params, meta)
     for row in row_iter:
         '''
         chain_id is unique and could be null
@@ -32,10 +46,13 @@ def build(row_iter, params, meta):
 
         tag = 0
         for item in p.parse_chains():
-            rec = [item[i] for i in params['table_cols']]
-            yield tuple(rec)
             tag = 1
-            meta['records'] += 1
+            if item['chain_id'] not in id_pool:
+                rec = [item[i] for i in params['table_cols']]
+                yield tuple(rec)
+                meta['records'] += 1
+            else:
+                meta['skip_chains'] += 1
         if tag == 0:
             if params['verbose']:
                 print(f"Warning: no chains detected in {row['pdb_file']}.")
