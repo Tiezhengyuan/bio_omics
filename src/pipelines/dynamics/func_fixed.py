@@ -16,12 +16,12 @@ def retrieve_pdb(params, meta):
 
     q = QueryComplex(params['verbose'])
     rows = q.retrieve_combo(params['pdb_group'], params['combo'], params['table_name'])
+    print(f"pdb_group={params['pdb_group']}, pdb_files={len(rows)}")
     meta['rows'] += len(rows)
     return rows
 
 def fix(rows, params, meta):
     for row in rows:
-        time0 = datetime.now()
         pdb_id, combo_id = row['pdb_id'], row['combo_id']
         endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id / combo_id
         outdir = params['output_pdb_dir'] / endpoint
@@ -46,14 +46,8 @@ def fix(rows, params, meta):
         info = ProcessJson.load_json(info_json, {})
 
         # update record
-        rec = (
-            pdb_id,
-            combo_id,
-            time0,
-            str(endpoint / file_name) if fixed_pdb.is_file() else None,
-            info.get('original_energy'),
-            info.get('relaxed_energy'),
-        )
+        relative_path = str(endpoint / file_name) if fixed_pdb.is_file() else None
+        rec = (pdb_id, combo_id, relative_path)
         if params['verbose']:
             print('Record: ', rec)
         meta['insertion'] += 1

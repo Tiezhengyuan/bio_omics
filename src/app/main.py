@@ -93,6 +93,7 @@ pool = {
     'collect_ab_distance': 'collect.collect_ab_distance',
 
     #other
+    'clean_empty': 'clean.clean_empty',
     'clean_predict': 'clean.clean_predict',
     'move': 'clean.move',
     'test': 'test',

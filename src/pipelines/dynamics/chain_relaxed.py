@@ -30,8 +30,8 @@ def retrieve_pdb(params, meta):
     print(f"{len(rows)} PDB files ready...")
     meta['rows'] += len(rows)
     for row in rows:
-        row['fix_pdb_file'] = params['output_pdb_dir'] / row['fixed_pdb']
-        if row['fix_pdb_file'].is_file():
+        row['fixed_pdb_file'] = params['output_pdb_dir'] / row['fixed_pdb']
+        if row['fixed_pdb_file'].is_file():
             yield row
 
 def relax(row, params, meta):
@@ -60,16 +60,17 @@ def relax(row, params, meta):
     info = ProcessJson.load_json(info_json, {})
 
     # build record
+    relative_path = str(endpoint / file_name) if relaxed_pdb.is_file() else None
     rec = (
         pdb_id,
         chain_id,
         time0,
-        str(endpoint / file_name) if relaxed_pdb.is_file() else None,
+        relative_path,
         info.get('original_energy'),
         info.get('relaxed_energy'),
     )
     if params['verbose']:
-        print('Record: ', rec)
+        print('Output of relaxation: ', relative_path)
     return rec
 
 

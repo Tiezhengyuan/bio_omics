@@ -81,7 +81,6 @@ DROP TABLE IF EXISTS chain_relaxed;
 CREATE TABLE chain_relaxed (
     pdb_id              VARCHAR(10),
     chain_id            VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
-    time0               DATETIME,
     relaxed_pdb         VARCHAR(80),
     original_energy     VARCHAR(60),
     relaxed_energy      VARCHAR(60),
@@ -115,7 +114,6 @@ DROP TABLE IF EXISTS combo2_relaxed;
 CREATE TABLE combo2_relaxed (
     pdb_id              VARCHAR(10),
     combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
-    time0               DATETIME,
     relaxed_pdb         VARCHAR(80),
     original_energy     VARCHAR(60),
     relaxed_energy      VARCHAR(60),
@@ -139,7 +137,6 @@ DROP TABLE IF EXISTS combo3_relaxed;
 CREATE TABLE combo3_relaxed (
     pdb_id              VARCHAR(10),
     combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
-    time0               DATETIME,
     relaxed_pdb         VARCHAR(80),
     original_energy     VARCHAR(60),
     relaxed_energy      VARCHAR(60),
@@ -163,7 +160,6 @@ DROP TABLE IF EXISTS combo4_relaxed;
 CREATE TABLE combo4_relaxed (
     pdb_id              VARCHAR(10),
     combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
-    time0               DATETIME,
     relaxed_pdb         VARCHAR(80),
     original_energy     VARCHAR(60),
     relaxed_energy      VARCHAR(60),
@@ -187,7 +183,6 @@ DROP TABLE IF EXISTS combo5_relaxed;
 CREATE TABLE combo5_relaxed (
     pdb_id              VARCHAR(10),
     combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
-    time0               DATETIME,
     relaxed_pdb         VARCHAR(80),
     original_energy     VARCHAR(60),
     relaxed_energy      VARCHAR(60),

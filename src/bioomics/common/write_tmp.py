@@ -13,8 +13,6 @@ import subprocess
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-from .dir import Dir
-
 class WriteTmp:
     def __init__(self, temporary_dir:str, destination_dir:str, name:str=None):
         """
@@ -58,8 +56,12 @@ class WriteTmp:
     
     def copy_temp(self):
         # move files rather than copy
-        cmd = ['rsync', '-av', '--progress', '--remove-source-files',
-            f'{self.temp_dir_path}/', f'{self.destinaton_dir}/', ]
+        cmd = [
+            'rsync', '-av', '--progress', '--remove-source-files',
+            str(self.temp_dir_path) + '/',
+            str(self.destinaton_dir) + '/',
+        ]
+        print('Move results from tempory to destination:', cmd)
         result = subprocess.run(cmd, capture_output=True, text=True)
         if result.returncode != 0:
             logger.error(f"rsync failed: {result.stderr}")

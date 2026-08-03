@@ -1,10 +1,7 @@
 #!/usr/bin/bash
 
-echo "Try to clean GPU memory..."
-nvidia-smi | grep python | awk '{print $5}' | xargs kill -9 || true
+output_pdb_dir="/home/yuan/omics/pdb"
 
-echo "Try to stop processes..."
-ps -a | grep python | awk '{print $1}' | xargs kill -9 || true
-ps -a | grep parallel | awk '{print $1}' | xargs kill -9 || true
-ps -a | grep colabfold | awk '{print $1}' | xargs kill -9 || true
+# Check for any files (including hidden ones)
 
+find /home/yuan/omics/output/pdb/combo5 -type d -empty -print -exec rm -d {} +

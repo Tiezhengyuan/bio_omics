@@ -7,7 +7,7 @@ example:
     - bomics combo3_fixed 0
 function:
     - fix pdb files
-    - insert data into table combo_fixed
+    - insert data into table combo3_fixed
 '''
 from src.helper import *
 from .func_fixed import *
