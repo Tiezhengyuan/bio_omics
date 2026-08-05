@@ -36,6 +36,7 @@ params = {
     'verbose': True if os.getenv('verbose') == 'true' else False,
     'rawdata_dir': Path(os.getenv('rawdata_dir')),
     'output_dir': Path(os.getenv('output_dir')),
+    'tools_dir': Path(os.getenv('tools_dir')),
 }
 params['rawdata_pdb_dir'] = params['rawdata_dir'] / 'pdb'
 params['rawdata_uniprot_dir'] = params['rawdata_dir'] / 'UniProt'

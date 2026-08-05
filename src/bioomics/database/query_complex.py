@@ -286,6 +286,25 @@ class QueryComplex(QueryDb):
                 print(f"{len(rows)} PDB files ready...")
             return rows
 
+    def retrieve_combo_fasta(self, pdb_group:int, combo:int, table_name:str):
+        '''
+        used by predict pipelines
+        '''
+        query = f"""
+            SELECT DISTINCT c.pdb_id, c.combo_id, c.combo_fasta
+            FROM label_complex     l
+            LEFT JOIN combo{combo} c ON l.combo_id = c.combo_id
+            LEFT JOIN meta_pdb     p ON c.pdb_id = p.pdb_id
+            WHERE p.pdb_group = {pdb_group}
+                AND NOT EXISTS (
+                    SELECT 1 FROM {table_name} b
+                    WHERE b.combo_id = c.combo_id
+                )
+        """
+        rows = self.list_data(query)
+        print(f"Retrieve {len(rows)} input files from {table_name}...")
+        return rows
+        
     def parse_proseq_name(self, seq_len:int) -> str:
         if seq_len <= 100:
             return 'proseq_100'

@@ -1,10 +1,11 @@
 /*
-meta_pdb -> view_pdb_chain -> chain_af -> chain_af_summary -> chain_af_plddt
-                                                           -> chain_af_rmsd
-                                                           -> chain_tmalign
-         -> combo2 -> combo2_af
-         -> combo3 -> combo3_af
-
+label_chain -> chain_af -> chain_af_summary -> chain_af_plddt
+                                            -> chain_af_rmsd
+                                            -> chain_tmalign
+label_complex -> combo2 -> combo2_af
+              -> combo3 -> combo3_af
+              -> combo4 -> combo4_af
+              -> combo5 -> combo5_af
 */
 
 DROP TABLE IF EXISTS chain_af;
