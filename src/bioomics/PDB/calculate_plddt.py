@@ -1,7 +1,7 @@
 '''
 pLDDT per residue local distance testing
 '''
-
+from pathlib import Path
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,7 +10,7 @@ import seaborn as sns
 from .pdb import Pdb
 
 class CalculatePlddt(Pdb):
-    def __init__(self, pdb_file:str=None, outdir:str=None):
+    def __init__(self, pdb_file:Path=None, outdir:Path=None):
         super().__init__(pdb_file, outdir)
 
     def complex_ca_bfactor(self) -> dict:
@@ -19,7 +19,7 @@ class CalculatePlddt(Pdb):
         '''
         data = {
             'pdb_id': self.structure_id,
-            'pdb_file': self.pdb_file,
+            'pdb_file': str(self.pdb_file),
             'bfactor': [],
         }
         ca_iter = self.c_atom_iter()
@@ -71,7 +71,7 @@ class CalculatePlddt(Pdb):
         '''
         data = {
             'structure_id': self.structure_id,
-            'pdb_file': self.pdb_file,
+            'pdb_file': str(self.pdb_file),
             'pLDDT': [],
         }
         ca_iter = self.c_atom_iter()

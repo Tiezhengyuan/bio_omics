@@ -190,7 +190,10 @@ class QueryComplex(QueryDb):
         '''
         parse chain_id if their sequences are identical
         '''
-        query = "select chain_id, first_chain_id from pdb_chain_seq;"
+        query = f"""
+            select chain_id, first_chain_id from pdb_chain_seq
+            WHERE pro_len >= 3
+        ;"""
         rows = self.list_data(query)
         df = pd.DataFrame(rows)
 
@@ -260,6 +263,7 @@ class QueryComplex(QueryDb):
             LEFT JOIN chain_pdb     d ON c.chain_id=d.chain_id
             WHERE p.pdb_group = {pdb_group}
                 AND c.model_no = 0
+                AND s.pro_len >= 3
                 AND s.relative_faa IS NOT NULL
                 AND d.relative_pdb IS NOT NULL
         ;"""

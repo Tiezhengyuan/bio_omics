@@ -26,12 +26,13 @@ def retrieve_data(params, meta):
     query = f"""
         SELECT c.pdb_id, c.model_no, c.combo_id, c.chain_combo,
             c.chain_label, c.chain_ids, p.relative_pdb
-        FROM label_complex   c
+        FROM label_complex c
         LEFT JOIN meta_pdb p on c.pdb_id = p.pdb_id
         WHERE p.pdb_group = {pdb_group}
             AND combo = {chains_num}
-            AND c.combo_id NOT IN (
-                SELECT combo_id from {table_name}
+            AND NOT EXISTS (
+                SELECT 1 from {table_name} a
+                WHERE a.combo_id = c.combo_id
             )
     ;"""
     rows = qc.list_data(query)

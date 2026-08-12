@@ -115,7 +115,7 @@ CREATE TABLE pdb_chainid(
 DROP TABLE IF EXISTS pdb_chain_seq;
 CREATE TABLE pdb_chain_seq(
     pdb_id          VARCHAR(10),
-    chain_id        VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
+    chain_id        VARCHAR(20) COLLATE utf8mb4_bin,
     first_chain_id  VARCHAR(20),
     pro_len         INT GENERATED ALWAYS AS (LENGTH(chain_seq)) STORED,
     chain_seq       TEXT,

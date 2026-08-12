@@ -21,12 +21,14 @@ def retrieve(params, meta):
         FROM pdb_chainid   c
         LEFT JOIN meta_pdb m ON c.pdb_id = m.pdb_id
         WHERE m.pdb_group = {pdb_group}
-            AND c.chain_id NOT IN (
-                SELECT chain_id FROM {table_name}
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} a
+                WHERE c.chain_id = a.chain_id
             )
     """
     rows = QueryComplex(params['verbose']).list_data(query)
     meta['rows'] = len(rows)
+    print(f"Detect chain ids: {len(rows)}")
     if len(rows) > 0:
         df = pd.DataFrame(rows)
         g = df.groupby(['pdb_id', 'relative_pdb'])
@@ -35,7 +37,6 @@ def retrieve(params, meta):
             if pdb_file.is_file():
                 endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id
                 outdir = params['output_pdb_dir'] / endpoint
-                outdir.mkdir(parents=True, exist_ok=True)
                 chain_ids = sub['chain_id'].to_list()
                 yield pdb_id, pdb_file, chain_ids, endpoint, outdir
 
@@ -51,17 +52,21 @@ def build(row_iter, params, meta):
                 meta['records'] += 1
                 # the column pro_seq is not null
                 chain_seq = p._chain_seq(item['chain'])
-                # save seq as fasta
-                file_name = f"{chain_id}.faa"
-                fa_file = outdir / file_name
-                if params['overwrite'] or not fa_file.is_file():
-                    ProcessFasta(fa_file).one_seq(chain_seq, chain_id)
-                # build record
-                relative_faa = str(endpoint / file_name) if fa_file.is_file() else None
-                yield (pdb_id, chain_id, chain_seq, relative_faa)
+                if chain_id and len(chain_seq) > 0:
+                    tag = 1
+                    # save seq as fasta
+                    outdir.mkdir(parents=True, exist_ok=True)
+                    file_name = f"{chain_id}.faa"
+                    fa_file = outdir / file_name
+                    if params['overwrite'] or not fa_file.is_file():
+                        ProcessFasta(fa_file).one_seq(chain_seq, chain_id)
+                    # build record
+                    relative_faa = str(endpoint / file_name) if fa_file.is_file() else None
+                    yield (pdb_id, chain_id, chain_seq, relative_faa)
+                else:
+                    yield (pdb_id, chain_id, None, None)
             else:
                 meta['omit_chains'] += 1
-            tag = 1
         if tag == 0:
             if params['verbose']:
                 print(f"Warning: no chains {pdb_id} are detectin in {pdb_file}")

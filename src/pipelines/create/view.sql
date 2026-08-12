@@ -46,7 +46,7 @@ CREATE VIEW view_pdb_chain AS
         D.structure_method, D.resolution, B.avg_bfactor,
         D.release_date, D.pdb_group,
         S.chain_seq, S.pro_len,
-        S.relative_faa, P.chain_pdb
+        S.relative_faa, P.relative_pdb
     FROM pdb_chainid        C
     LEFT JOIN pdb_chain_seq S ON C.chain_id = S.chain_id
     LEFT JOIN chain_pdb     P ON C.chain_id = P.chain_id
@@ -73,7 +73,7 @@ CREATE VIEW view_antibody AS
         I.chain_type, C.pdb_id, C.chain_id, C.first_chain_id,
         C.model_no, C.chain_no, C.proseq_name, C.seq_id, C.chain_seq,
         C.pro_len, C.release_date, C.structure_method, C.resolution,
-        C.avg_bfactor, C.relative_faa, C.chain_pdb, C.pdb_group
+        C.avg_bfactor, C.relative_faa, C.relative_pdb, C.pdb_group
     FROM view_pdb_chain     C
     LEFT JOIN align_vregion I ON C.chain_id = I.chain_id
     WHERE C.model_no = 0
@@ -84,27 +84,27 @@ CREATE VIEW view_antibody AS
 ;
 
 -- T-cell receptor
-DROP VIEW IF EXISTS view_tcr;
-CREATE VIEW view_tcr AS
-    SELECT I.allele_name, I.gene_name, I.gene_family,
-        I.chain_type, C.pdb_id, C.chain_id, C.model_no,
-        C.chain_no, C.seq_id, C.chain_seq, C.structure_method,
-        C.resolution, C.relative_faa, C.chain_pdb, C.pdb_group
-    FROM view_pdb_chain C, align_vregion I
-    WHERE C.chain_id = I.chain_id
-        AND I.evalue <= 1e-10
-        AND I.bit_score >= 50
-        AND I.isotype = 'TR'
-;   
+-- DROP VIEW IF EXISTS view_tcr;
+-- CREATE VIEW view_tcr AS
+--     SELECT I.allele_name, I.gene_name, I.gene_family,
+--         I.chain_type, C.pdb_id, C.chain_id, C.model_no,
+--         C.chain_no, C.seq_id, C.chain_seq, C.structure_method,
+--         C.resolution, C.relative_faa, C.relative_pdb, C.pdb_group
+--     FROM view_pdb_chain C, align_vregion I
+--     WHERE C.chain_id = I.chain_id
+--         AND I.evalue <= 1e-10
+--         AND I.bit_score >= 50
+--         AND I.isotype = 'TR'
+-- ;   
 
 /* uniprot */
 DROP VIEW IF EXISTS view_pdb_uniprot;
 CREATE VIEW view_pdb_uniprot AS
-    SELECT A.chain_id, A.pdb_id, A.uniprot_acc, U.name,
+    SELECT A.chain_id, A.pdb_id, A.uniprot_acc, U.pro_name,
         C.chain_no, C.chain_seq,
         A.identity, U.pro_seq,
         C.structure_method, C.resolution,
-        C.relative_faa, C.chain_pdb
+        C.relative_faa, C.relative_pdb
     FROM align_uniprot       A
     LEFT JOIN uniprot        U ON A.uniprot_acc = U.uniprot_acc
     LEFT JOIN view_pdb_chain C ON A.chain_id = C.chain_id
@@ -115,30 +115,30 @@ CREATE VIEW view_pdb_uniprot AS
 ;
 
 /* human transmembrane proteins */
-DROP VIEW IF EXISTS view_htrm;
-CREATE VIEW view_htrm AS
-    SELECT C.chain_id, C.pdb_id,  C.uniprot_acc,
-        C.chain_no, C.name, C.chain_seq, C.pro_seq
-    FROM view_pdb_uniprot C
-    LEFT JOIN uniprot U
-    ON C.uniprot_acc = U.uniprot_acc
-    WHERE U.organism LIKE '%Homo sapiens%'
-        AND C.uniprot_acc IN (
-            SELECT distinct uniprot_acc
-            FROM uniprot_keyword
-            WHERE keyword LIKE 'Transmembrane'
-        )
-;
+-- DROP VIEW IF EXISTS view_htrm;
+-- CREATE VIEW view_htrm AS
+--     SELECT C.chain_id, C.pdb_id,  C.uniprot_acc,
+--         C.chain_no, C.pro_name, C.chain_seq, C.pro_seq
+--     FROM view_pdb_uniprot C
+--     LEFT JOIN uniprot U
+--     ON C.uniprot_acc = U.uniprot_acc
+--     WHERE U.organism LIKE '%Homo sapiens%'
+--         AND C.uniprot_acc IN (
+--             SELECT distinct uniprot_acc
+--             FROM uniprot_keyword
+--             WHERE keyword LIKE 'Transmembrane'
+--         )
+-- ;
 
 /* allergen */
-DROP VIEW IF EXISTS view_allergen;
-CREATE VIEW view_allergen AS
-    SELECT C.chain_id, C.pdb_id,  C.uniprot_acc,
-        C.chain_no, C.name, D.db_acc AS allergen_acc,
-        C.chain_seq, C.pro_seq, C.relative_faa , C.chain_pdb
-    FROM view_pdb_uniprot     C
-    LEFT JOIN uniprot         U ON C.uniprot_acc = U.uniprot_acc
-    LEFT JOIN uniprot_dbxrefs D ON C.uniprot_acc = D.uniprot_acc
-    WHERE D.db_name = 'allergome'
-        AND U.organism LIKE '%Homo sapiens%'
-;
+-- DROP VIEW IF EXISTS view_allergen;
+-- CREATE VIEW view_allergen AS
+--     SELECT C.chain_id, C.pdb_id,  C.uniprot_acc,
+--         C.chain_no, C.pro_name, D.db_acc AS allergen_acc,
+--         C.chain_seq, C.pro_seq, C.relative_faa , C.relative_pdb
+--     FROM view_pdb_uniprot     C
+--     LEFT JOIN uniprot         U ON C.uniprot_acc = U.uniprot_acc
+--     LEFT JOIN uniprot_dbxrefs D ON C.uniprot_acc = D.uniprot_acc
+--     WHERE D.db_name = 'allergome'
+--         AND U.organism LIKE '%Homo sapiens%'
+-- ;

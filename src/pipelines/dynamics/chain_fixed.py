@@ -10,7 +10,7 @@ function:
     - insert data into table chain_fixed
 '''
 from src.helper import *
-from bioomics import OpenmmPdbfixer, OpenmmSimulation, ProcessJson
+from bioomics import OpenmmPdbfixer
 
 @header
 def retrieve_pdb(params, meta):
@@ -24,7 +24,7 @@ def retrieve_pdb(params, meta):
         LEFT JOIN meta_pdb      P ON C.pdb_id = P.pdb_id
         WHERE P.pdb_group = {pdb_group}
             AND I.model_no = 0
-            AND S.chain_seq IS NOT NULL
+            AND LENGTH(S.chain_seq) > 3
             AND P.relative_pdb IS NOT NULL
             AND C.chain_id IN (
                 SELECT chain_id from label_chain

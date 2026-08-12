@@ -141,19 +141,21 @@ TABLE_COLUMNS = {
     'combo_contacts': ['pdb_id', 'combo_id', 'binding_affinity',
         'dissociation_constant', 'relative_prodigy'],
 
-    #predict
-    'chain_af': ['pdb_id', 'chain_id', 'endpoint', 'host', 'predicted_at',],
-    'chain_af_summary': ['chain_id', 'ranking', 'avg_plddt', 'avg_ptm',
-        'max_pae', 'relative_json', 'relaxed_pdb', 'unrelaxed_pdb'],
-    'chain_af_plddt': ['chain_id', 'relative_pdb', 'ranking',
-        'avg_plddt', 'relative_pkl'],
-    'chain_rmsd': ['pdb_id','chain_id', 'rmsd', 'chain_status', 
-        'native_pdb', 'model_pdb'],
-    'chain_tmalign': ['pdb_id','chain_id', 'tm1', 'tm2', 'rmsd',
-        'chain_status', 'native_pdb', 'model_pdb'],
-    'combo2_af': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
-    'combo3_af': ['pdb_id', 'combo_id', 'endpoint', 'host', 'predicted_at',],
+    #predict Abs in PDB
+    'pdb_pred_params': ['pdb_id', 'input_id', 'input_table_name', 'input_col_name',
+        'category', 'predictor', 'query_faa', 'outdir',],
+    'af_msa': ['input_id', 'a3m_name', 'host',],
+    'af_pred': ['input_id', 'ranking', 'avg_plddt', 'avg_ptm', 'max_pae',
+        'json_name', 'relaxed_pdb_name', 'unrelaxed_pdb_name'],
 
+    
+    'af_plddt': ['pdb_id', 'input_id', 'relative_pdb', 'relative_pkl',
+        'model_no', 'chain_no', 'avg_plddt',],
+    'af_rmsd': ['pdb_id', 'category', 'input_id', 'pdb_status', 'rmsd',
+        'native_pdb', 'model_pdb'],
+    'af_tmalign': ['pdb_id', 'category', 'input_id', 'pdb_status', 'rmsd',
+        'tm1', 'tm2', 'native_pdb', 'model_pdb'],
+    
     # meta
     'meta': ['pdb_group', 'host', 'ip_addr', 'script'],
     'meta_execute': ['table_name', 'pdb_group', 'host', 'ip_addr', 'script'],

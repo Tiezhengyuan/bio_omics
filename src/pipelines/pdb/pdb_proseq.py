@@ -12,13 +12,13 @@ def retrieve(params, seq_len):
     table_name = params['table_name']
     # column name must be 'seq'
     query = f"""
-        SELECT pdb_id, chain_id, chain_seq AS seq
-        FROM pdb_chain_seq
-        WHERE pro_len = {seq_len}
-            AND chain_seq IS NOT NULL
-            AND chain_id NOT IN (
-                SELECT chain_id FROM {table_name}
-                WHERE chain_id IS NOT NULL
+        SELECT a.pdb_id, a.chain_id, a.chain_seq AS seq
+        FROM pdb_chain_seq a
+        WHERE a.pro_len = {seq_len}
+            AND a.chain_seq IS NOT NULL
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} b
+                WHERE a.chain_id = b.chain_id
             )
     """
     qc = QueryComplex(params['verbose'])

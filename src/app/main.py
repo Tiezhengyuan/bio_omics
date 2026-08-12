@@ -72,13 +72,14 @@ pool = {
     # 'anarci': 'immune.anarci',
 
     # predict
-    'chain_af': 'predict.chain_af',
-    'chain_af_plddt': 'predict.chain_af_plddt',
-    'chain_af_summary': 'predict.chain_af_summary',
-    'chain_rmsd': 'predict.chain_rmsd',
-    'chain_tmalign': 'predict.chain_tmalign',
-    'combo2_af': 'predict.combo2_af',
-    'combo3_af': 'predict.combo3_af',
+    'pdb_pred_params': 'predict.pdb_pred_params',
+    'af_msa': 'predict.af_msa',
+    'af_pred': 'predict.af_pred',
+    
+    'af_plddt': 'predict.af_plddt',
+    'af_rmsd': 'predict.af_rmsd',
+    'af_tmalign': 'predict.af_tmalign',
+
     
     # design
     'predict_summary': 'design.predict_summary',

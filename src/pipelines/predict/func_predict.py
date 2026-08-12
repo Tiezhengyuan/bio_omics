@@ -1,143 +1,251 @@
 '''
 fuctions for structure prediction
 '''
-
+import asyncio
 from src.helper import *
-from bioomics import Predictor, TABLE_COLUMNS, ProcessFasta, WriteTmp
+from bioomics import Predictor, WriteTmp
 
-def validate_predict_data(params, meta):
-    col_name = 'endpoint'
-    pdb_group = params['pdb_group']
+# def validate_predict_data(params, meta):
+#     col_name = 'endpoint'
+#     pdb_group = params['pdb_group']
+#     table_name = params['table_name']
+#     # scan no existing files
+#     print(f"Scan {table_name}.{col_name}, group={pdb_group}...")
+#     query = f"""
+#         SELECT S.pdb_id, S.{col_name}
+#         FROM {table_name}  S
+#         LEFT JOIN meta_pdb P ON S.pdb_id = P.pdb_id
+#         WHERE P.pdb_group = {pdb_group}
+#             AND S.{col_name} IS NOT NULL
+#     ;"""
+#     rows = QueryComplex(params['verbose']).list_data(query)
+#     del_pool = []
+#     for row in rows:
+#         outdir = params['predict_dir'] / row[col_name]
+#         if not outdir.is_dir():
+#             print(f"NOT EXISTING: {outdir}.")
+#             del_pool.append(row[col_name])
+#     # delete rows
+#     dc = DeleteComplex(params['verbose'])
+#     num_del = dc.remove_null_rows(table_name, col_name, del_pool)
+#     meta['delete_rows'] = num_del
+
+def validate_file_rows(col_name, params, meta):
+    params_table = params['params_table_name']
     table_name = params['table_name']
-    # scan no existing files
-    print(f"Scan {table_name}.{col_name}, group={pdb_group}...")
-    query = f"""
-        SELECT S.pdb_id, S.{col_name}
-        FROM {table_name}  S
-        LEFT JOIN meta_pdb P ON S.pdb_id = P.pdb_id
-        WHERE P.pdb_group = {pdb_group}
-            AND S.{col_name} IS NOT NULL
-    ;"""
-    rows = QueryComplex(params['verbose']).list_data(query)
-    del_pool = []
-    for row in rows:
-        outdir = params['predict_dir'] / row[col_name]
-        if not outdir.is_dir():
-            print(f"NOT EXISTING: {outdir}.")
-            del_pool.append(row[col_name])
-    # delete rows
-    dc = DeleteComplex(params['verbose'])
-    num_del = dc.remove_null_rows(table_name, col_name, del_pool)
-    meta['delete_rows'] = num_del
-        
-@header
-def retrieve_chain(params, meta):
     pdb_group = params['pdb_group']
-    table_name = params['table_name']
     query = f"""
-        SELECT DISTINCT F.pdb_id, F.chain_id, F.relative_faa
-        FROM label_chain        S
-        LEFT JOIN pdb_chain_seq F ON S.first_chain_id = F.chain_id
-        LEFT JOIN meta_pdb      P ON S.pdb_id = P.pdb_id
-        WHERE P.pdb_group = {pdb_group}
-            AND F.relative_faa IS NOT NULL
-            AND S.first_chain_id IS NOT NULL
-            AND S.first_chain_id NOT IN (
-                SELECT chain_id FROM {table_name}
-                WHERE chain_id IS NOT NULL
-            )
+        SELECT a.input_id, b.outdir, a.{col_name}
+        FROM {table_name}        a
+        LEFT JOIN {params_table} b ON a.input_id = b.input_id
+        LEFT JOIN meta_pdb       m ON b.pdb_id = m.pdb_id
+        WHERE m.pdb_group = {pdb_group}
     """
     rows = QueryComplex(params['verbose']).list_data(query)
-    print(f"{len(rows)} PDB files ready...")
-    meta['rows'] += len(rows)
-    return rows
-
-def chain_params(row, params):
-    pdb_id, chain_id = row['pdb_id'], row['chain_id']
-    endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id / chain_id
-    # update output_predict_dir for exporting outputs
-    outdir = params['predict_dir'] / endpoint
-    outdir.mkdir(parents=True, exist_ok=True)
-    params.update({
-        'predicted_at': datetime.now(),
-        'host': params['host'],
-        'pdb_id': pdb_id,
-        'chain_id': chain_id,
-        'endpoint': str(endpoint),
-        'faa_file': params['output_pdb_dir'] / row['relative_faa'],
-        'outdir': outdir,
-    })
-    params['input_id'] = params['chain_id']
-    if params['verbose']:
-        print('Arguments for prediction: ', params)
-
-@header
-def retrieve_combo(params, meta):
-    qc = QueryComplex(params['verbose'])
-    rows = qc.retrieve_combo_fasta(params['pdb_group'], params['combo'], params['table_name'])
-    meta['rows'] += len(rows)
-
-    # antibody chain should be included in combo
-    ab_rows = []
+    del_rows = []
     for row in rows:
-        row['faa_file'] = os.path.join(params['output_pdb_dir'], row['combo_fasta'])
-        # predict short sequence for saving time
-        records = ProcessFasta(row['faa_file']).load_fasta()
-        if isinstance(records, list):
-            total_aa = np.sum([len(rec.seq) for rec in records])
-            if total_aa < 1000:
-                print(row['combo_id'], total_aa, end='\t')
-                ab_rows.append(row)
-    meta['predict_rows'] += len(ab_rows)
-    print(f"Get {len(ab_rows)} PDB files for prediction.")
-    return ab_rows
+        path = Path(row['outdir']) / row[col_name]
+        if not path.is_file():
+            del_rows.append(row['input_id'])
+            
+    # delete null rows
+    if del_rows:
+        print(f"Delete {len(del_rows)} *.asm...")
+        dc = DeleteComplex(params['verbose'])
+        dc.remove_null_rows(table_name, 'input_id', del_rows)
+        meta['delete_rows'] = len(del_rows)
 
-def combo_params(row, params):
-    pdb_id, combo_id = row['pdb_id'], row['combo_id']
-    endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id / combo_id
-    outdir = params['predict_dir'] / endpoint
-    outdir.mkdir(parents=True, exist_ok=True)
-    params.update({
+        
+def retrieve_chain(params, outdir_name:str):
+    input_table_name = 'label_chain'
+    input_col_name = 'chain_id'
+    pdb_group = params['pdb_group']
+    table_name = params['table_name']
+    query = f"""
+        WITH tmp AS(
+            SELECT DISTINCT a.first_chain_id AS input_id
+            FROM {input_table_name} a
+            LEFT JOIN meta_pdb      m ON a.pdb_id = m.pdb_id
+            WHERE m.pdb_group = {pdb_group}
+                AND NOT EXISTS (
+                    SELECT 1 FROM {table_name} c
+                    WHERE c.input_id = a.first_chain_id
+                )
+        )
+        SELECT t.input_id, f.pdb_id, f.relative_faa
+        FROM tmp t, pdb_chain_seq f
+        WHERE t.input_id = f.chain_id
+    """
+    cat_params = dict(params)
+    cat_params.update({
+        'input_table_name': input_table_name,
+        'input_col_name': input_col_name,
+        'input_dir': params['output_pdb_dir'],
+        'category': 'chain',
+        'outdir_name': outdir_name,
+        'outdir': params['predict_dir'] / outdir_name,
+    })
+    return cat_params, query
+
+def retrieve_combo(params, outdir_name:str, combo:str):
+    pdb_group = params['pdb_group']
+    table_name = params['table_name']
+    input_table_name = 'label_complex'
+    input_col_name = 'combo_id'
+    query = f"""
+        SELECT DISTINCT a.combo_id AS input_id, a.pdb_id,
+            c.combo_fasta AS relative_faa
+        FROM label_complex a
+        LEFT JOIN {combo}  c ON a.combo_id = c.combo_id
+        LEFT JOIN meta_pdb p ON a.pdb_id = p.pdb_id
+        WHERE p.pdb_group = {pdb_group}
+            AND c.combo_fasta IS NOT NULL
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} b
+                WHERE a.combo_id = b.input_id
+            )
+    """
+    cat_params = dict(params)
+    cat_params.update({
+        'input_table_name': input_table_name,
+        'input_col_name': input_col_name,
+        'input_dir': params['output_pdb_dir'],
+        'outdir_name': outdir_name,
+        'category': combo,
+        'outdir_name': outdir_name,
+        'outdir': params['predict_dir'] /outdir_name,
+    })
+    return cat_params, query
+
+def build_curr_params(row, params):
+    # update output_predict_dir for exporting outputs
+    pdb_id, input_id = row['pdb_id'], row['input_id']
+    endpoint = Path(params['outdir_name']) / pdb_id[:2] / pdb_id / input_id
+    
+    curr_params = dict(params)
+    curr_params.update({
         'predicted_at': datetime.now(),
         'host': params['host'],
         'pdb_id': pdb_id,
-        'combo_id': combo_id,
-        'endpoint': str(endpoint), # string type for insertion
-        'faa_file': params['output_pdb_dir'] / row['combo_fasta'],
-        'outdir':outdir,
+        'input_id': input_id,
+        'endpoint': endpoint,
+        'faa_file': params['input_dir'] / row['relative_faa'],
+        'outdir': params['predict_dir'] / endpoint,
     })
-    params['input_id'] = params['combo_id']
     if params['verbose']:
-        print('Arguments for prediction: ', params)
+        print('Arguments for prediction: ', curr_params)
+    return curr_params
 
-def run_colabfold_batch(params, meta):
-    # store data in RAM
-    outdir = params['outdir']
-    with WriteTmp(params['tmp_dir'], outdir, params['table_name']) as writer:
-        # run predictor
-        params['outdir'] = writer.temp_dir_path
-        res = Predictor(params).colabfold_batch()
+async def run_colabfold_search(input):
+    row, params, meta = input
+    # check if MSA is available
+    if params['overwrite'] or not row['a3m_file'].is_file():
+        outdir = row['outdir']
+        tmp_name = f"colabfold_search_{row['input_id']}"
+        with WriteTmp(params['tmp_dir'], outdir, tmp_name) as writer:
+            # run MSA    
+            search_params = {
+                'tools_dir': params['tools_dir'],
+                'query_faa': row['query_faa'],
+                'outdir': writer.temp_dir_path,
+                'colabfold_db': params['colabfold_db'],
+            }
+            res = await asyncio.to_thread(
+                Predictor.colabfold_search,
+                search_params,
+            )
+            if res:
+                meta['msa_good'] += 1
+            else:
+                meta['msa_fail'] += 1
+    else:
+        meta['no_a3m'] += 1
+    return row, params, meta
+    
 
-        if res:
-            # check if prediction is done
-            done_file = params['outdir'] / f"{params['input_id']}.done.txt"
-            if done_file.is_file():
+async def run_colabfold_msa(input):
+    row, params, meta = input
+    # check if MSA is available
+    if params['overwrite'] or not row['a3m_file'].is_file():
+        outdir = row['outdir']
+        tmp_name = f"colabfold_msa_{row['input_id']}"
+        with WriteTmp(params['tmp_dir'], outdir, tmp_name) as writer:
+            # run MSA 
+            api_params = {
+                'tools_dir': params['tools_dir'],
+                'query_faa': row['query_faa'],
+                'outdir': writer.temp_dir_path,
+            }
+            res = await asyncio.to_thread(
+                Predictor.colabfold_batch_msa,
+                api_params
+            )
+            if res:
+                meta['msa_good'] += 1
+            else:
+                meta['msa_fail'] += 1
+    
+        # delete some directories for saving space
+        for dir_suffix in ('env', 'pairgreedy', '_unpaired'):
+            _dir = Path(row['outdir'])  / f"{row['input_id']}_{dir_suffix}"
+            if _dir.is_dir():
+                shutil.rmtree(_dir)
+    else:
+        meta['no_a3m'] += 1
+    return row, params, meta
+
+def retrieve_msa(params, meta):
+    params_table = params['params_table_name']
+    msa_table = params['msa_table_name']
+    pdb_group = params['pdb_group']
+    predictor = params['predictor']
+    query = f"""
+        SELECT b.pdb_id, b.input_id, b.outdir, a.a3m_name
+        FROM {params_table}   b 
+        LEFT JOIn {msa_table} a ON b.input_id = a.input_id
+        LEFT JOIN meta_pdb    p ON b.pdb_id = p.pdb_id
+        WHERE p.pdb_group = {pdb_group}
+            AND a.a3m_name IS NOT NULL
+            AND b.predictor = '{predictor}'
+        ORDER BY b.category
+    ;"""
+    rows = QueryComplex(params['verbose']).list_data(query)
+    meta['msa_rows'] = len(rows)
+    
+    frows = []
+    for row in rows:
+        row['outdir'] = Path(row['outdir'])
+        row['input_file'] = row['outdir'] / row['a3m_name']
+        if row['input_file'].is_file():
+            frows.append(row)
+    print(f"Detect {len(frows)} *.asm...")
+
+    return frows
+
+
+def run_colabfold_batch(row, params, meta):
+    # check if prediction is done
+    done_name = f"{row['input_id']}.done.txt"
+    done_file = row['outdir'] / done_name
+    if not done_file.is_file():
+        outdir = row['outdir']
+        with WriteTmp(params['tmp_dir'], outdir, 'colabfold_batch') as writer:
+            #keys: tools_dir, input_file, outdir
+            tmp_outdir = writer.temp_dir_path
+            p = Predictor(
+                row['input_file'],
+                tmp_outdir,
+                params['tools_dir'],
+                params['verbose']
+            )
+            res =  p.colabfold_batch(params)
+            if res:
                 meta['succeed'] += 1
             else:
-                params['endpoint'] = None
                 meta['fail'] += 1
 
-            # insertion
-            rec = [params.get(col) for col in TABLE_COLUMNS[params['table_name']]]
-            if params['verbose']:
-                print('### Try to insert ', rec)
-            bc = BuildComplex(params['verbose'])
-            bc.insert_batch_records([tuple(rec),], params['table_name'])
-
             # delete *_env for saving space
-            if 'endpoint' in params:
-                _env_dir = params['outdir']  / f"{params['input_id']}_env"
-                if _env_dir.is_dir():
-                    shutil.rmtree(_env_dir)
-        else:
-            print(f"WARNING: {params['tool_name']} failed!")
+            _dir = tmp_outdir  / f"{row['input_id']}_all"
+            if _dir.is_dir():
+                shutil.rmtree(_dir)
+            

@@ -1,15 +1,14 @@
 #!/usr/bin/python
 '''
 requirements:
-    - table label_chain
+    - table af_msa
 example:
-    - parallel -j8 bomics chain_af ::: {0..241}
-    - bomics chain_af 0
+    - parallel -j8 bomics af_pred ::: {0..241}
+    - bomics af_pred 0
 function:
     - prefix monomer
-    - insert data into table chain_af
+    - insert data into table af_pred
 '''
-from bioomics import Predictor, TABLE_COLUMNS
 from .func_predict import *
 
 
