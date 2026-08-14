@@ -13,9 +13,6 @@ from src.helper import *
 from bioomics import ProcessJson, Predictor
 from .func_predict import *
 from .func_summary import *
-
-
-
             
 def parse_data(row):
     res = {}
@@ -61,8 +58,8 @@ def build(row, pdb_names, meta):
 if __name__ == "__main__":
     params.update({
         'tmp_dir': os.getenv('tmp_dir'),
+        'colabfold_bin_dir': os.getenv('colabfold_bin_dir'),
         'predictor': 'AF2',
-        'num_recycle': '3',
         'relax': True,
         'params_table_name': 'pdb_pred_params',
         'msa_table_name': 'af_msa',
@@ -84,5 +81,6 @@ if __name__ == "__main__":
         if records:
             print(f"Try to insert {row['input_id']} into {params['table_name']}")
             bc.insert_batch_records(records, params['table_name'])
+
     footer(meta)
     

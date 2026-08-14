@@ -2,6 +2,7 @@
 Execute third-party tools
 default path ~/bio/tools/*
 '''
+import os
 import asyncio
 from pathlib import Path
 import subprocess
@@ -30,39 +31,43 @@ class Predictor:
             return False
         print(stdout.decode())
         return True
+    
+    @staticmethod
+    def colabfold_subprocess(params:dict, cmd:list) -> bool:
+        '''
+        params = {
+            colabfold_bin_dir: ...,
+            
+        }
+        '''
+        # conda env colabfold is needed
+        env = os.environ.copy()
+        env["PATH"] = (
+            f"{params['colabfold_bin_dir']}:"
+            + env["PATH"]
+        )
 
-    @staticmethod
-    def run_subprocess(cmd:list, tool_name:str=None, shell:bool=False) -> bool:
-        try:
-            print(f"\n\nLoad {tool_name}: {' '.join(cmd)}")
-            if shell:
-                cmd = ' '.join(cmd)
-            res = subprocess.run(cmd, shell=shell, capture_output=True, text=True)
-            print('status: ', res.returncode)
-            print('stdout: ', res.stdout)
-            print('stderr: ', res.stderr)
-            return res
-        except Exception as e:
-            print(f"ERROR: failed in {tool_name} execution, error={e}")
-        return None
-    
+        cwd = str(params['tools_dir'] / 'ColabFold')
+        # cmd = ['conda', 'run', '-n', 'colabfold', '--cwd', cwd,] + cmd
+        print(f"\n\nLoad {cmd[0]} command: {' '.join(cmd)}")
+
+        res = subprocess.run(cmd, env=env, cwd=cwd, capture_output=True, text=True)
+        print('status: ', res.returncode)
+        print('stdout: ', res.stdout)
+        print('stderr: ', res.stderr)
+        return res
     
     @staticmethod
-    def colabfold_search(params:dict):
+    def colabfold_search(row:dict, params:dict):
         '''
         AlphaFold2: local MSA
-        params = {
-            tools_dir:Path,
+        row = {
             query_faa:Path,
             outdir:Path,
-            colabfold_db:Path
         }
         '''
         tool_name = 'colabfold_search'
         cmd = [
-            'conda', 'run', 
-            '-n', 'colabfold',
-            '--cwd', str(params['tools_dir'] / 'ColabFold'),
             tool_name,
             '--gpu', '1',
             '--threads', '8',
@@ -71,55 +76,48 @@ class Predictor:
             '--db1', 'uniref30_2302_db',
             '--db2', 'pdb100_230517',
             '--db3', 'colabfold_envdb_202108_db',
-            str(params['query_faa']),
-            str(params['colabfold_db']),
-            str(params['outdir']),
+            str(row['query_faa']),
+            params['colabfold_db'],
+            str(row['outdir']),
         ]
-        return Predictor.run_subprocess(cmd, tool_name)
+        return Predictor.colabfold_subprocess(params, cmd)
 
     @staticmethod
-    def colabfold_batch_msa(params:dict):
+    def colabfold_batch_msa(row:dict, params:dict):
         '''
         AlphaFold2: access public MSA server
-        params = {
-            tools_dir: Path,
+        row = {
             query_faa: Path,
             outdir: Path,
         }
         '''
         tool_name = 'colabfold_batch'
         cmd = [
-            'conda', 'run', '-n', 'colabfold',
-            '--cwd', str(params['tools_dir'] / 'ColabFold'),
             tool_name,
             '--msa-only',
             '--templates',
-            str(params['query_faa']),
-            str(params['outdir']),
+            str(row['query_faa']),
+            str(row['outdir']),
         ]
-        return Predictor.run_subprocess(cmd, tool_name)
+        return Predictor.colabfold_subprocess(params, cmd)
 
     @staticmethod
-    async def colabfold_batch(params:dict):
+    def colabfold_batch(row:dict, params:dict):
         '''
         AlphaFold2: predict protein structure given sequences
-        params = {
-            tools_dir: Path,
+        row = {
             input: Path,
             outdir: Path,
-            ...
         }
         '''
         tool_name = 'colabfold_batch'
         cmd = [
-            'conda', 'run',
-            '-n', 'colabfold',
-            '--cwd', str(params['tools_dir'] / 'ColabFold'),
             tool_name,
-            '--num-models', '5', \
-            '--model-order', '1,2,3,4,5', \
+            '--num-models', '5',
+            '--model-order', '1,2,3,4,5',
             '--random-seed', '42',
         ]
+        # for MSA if input is fasta
         if params.get('use_templates'):
             cmd.append('--templates')
         if params.get('save_all'):
@@ -133,14 +131,29 @@ class Predictor:
         cmd += [
             '--model-type', str(params.get('model_type', 'auto')),
             '--num-recycle', str(params.get('num_recycle', 3)),
-            str(params['input']), #fasta or a3m
-            str(params['outdir']),
+            str(row['input_file']), #fasta or a3m
+            str(row['outdir']),
         ]
-        return Predictor.run_subprocess(cmd, tool_name)
+        return Predictor.colabfold_subprocess(params, cmd)
 
 
 ################################################################################3
 
+    @staticmethod
+    def run_subprocess(cmd:list, cwd=None, tool_name:str=None, shell:bool=False) -> bool:
+        try:
+            print(f"\n\nLoad {tool_name}: {' '.join(cmd)}")
+            if shell:
+                cmd = ' '.join(cmd)
+            res = subprocess.run(cmd, cwd=cwd, shell=shell, capture_output=True, text=True)
+            print('status: ', res.returncode)
+            print('stdout: ', res.stdout)
+            print('stderr: ', res.stderr)
+            return res
+        except Exception as e:
+            print(f"ERROR: failed in {tool_name} execution, error={e}")
+        return None
+    
     @staticmethod
     def haddock3(params:dict):
         '''

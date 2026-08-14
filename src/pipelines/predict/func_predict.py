@@ -143,16 +143,13 @@ async def run_colabfold_search(input):
         outdir = row['outdir']
         tmp_name = f"colabfold_search_{row['input_id']}"
         with WriteTmp(params['tmp_dir'], outdir, tmp_name) as writer:
+            tmp_row = dict(row)
+            tmp_row['outdir'] = writer.temp_dir_path
             # run MSA    
-            search_params = {
-                'tools_dir': params['tools_dir'],
-                'query_faa': row['query_faa'],
-                'outdir': writer.temp_dir_path,
-                'colabfold_db': params['colabfold_db'],
-            }
             res = await asyncio.to_thread(
                 Predictor.colabfold_search,
-                search_params,
+                tmp_row,
+                params,
             )
             if res:
                 meta['msa_good'] += 1
@@ -170,26 +167,24 @@ async def run_colabfold_msa(input):
         outdir = row['outdir']
         tmp_name = f"colabfold_msa_{row['input_id']}"
         with WriteTmp(params['tmp_dir'], outdir, tmp_name) as writer:
+            tmp_row = dict(row)
+            tmp_row['outdir'] = writer.temp_dir_path
             # run MSA 
-            api_params = {
-                'tools_dir': params['tools_dir'],
-                'query_faa': row['query_faa'],
-                'outdir': writer.temp_dir_path,
-            }
             res = await asyncio.to_thread(
                 Predictor.colabfold_batch_msa,
-                api_params
+                tmp_row,
+                params
             )
             if res:
                 meta['msa_good'] += 1
             else:
                 meta['msa_fail'] += 1
     
-        # delete some directories for saving space
-        for dir_suffix in ('env', 'pairgreedy', '_unpaired'):
-            _dir = Path(row['outdir'])  / f"{row['input_id']}_{dir_suffix}"
-            if _dir.is_dir():
-                shutil.rmtree(_dir)
+            # delete some directories for saving space
+            for dir_suffix in ('env', 'pairgreedy', '_unpaired'):
+                _dir = Path(outdir) / f"{row['input_id']}_{dir_suffix}"
+                if _dir.is_dir():
+                    shutil.rmtree(_dir)
     else:
         meta['no_a3m'] += 1
     return row, params, meta
@@ -218,7 +213,7 @@ def retrieve_msa(params, meta):
         row['input_file'] = row['outdir'] / row['a3m_name']
         if row['input_file'].is_file():
             frows.append(row)
-    print(f"Detect {len(frows)} *.asm...")
+    print(f"Detect {len(frows)} *.asm, group={pdb_group}...")
 
     return frows
 
@@ -229,23 +224,20 @@ def run_colabfold_batch(row, params, meta):
     done_file = row['outdir'] / done_name
     if not done_file.is_file():
         outdir = row['outdir']
-        with WriteTmp(params['tmp_dir'], outdir, 'colabfold_batch') as writer:
+        tmp_name = f"colabfold_batch_{row['input_id']}"
+        with WriteTmp(params['tmp_dir'], outdir, tmp_name) as writer:
             #keys: tools_dir, input_file, outdir
-            tmp_outdir = writer.temp_dir_path
-            p = Predictor(
-                row['input_file'],
-                tmp_outdir,
-                params['tools_dir'],
-                params['verbose']
-            )
-            res =  p.colabfold_batch(params)
+            tmp_row = dict(row)
+            tmp_row['outdir'] = writer.temp_dir_path
+            res =  Predictor.colabfold_batch(tmp_row, params)
             if res:
                 meta['succeed'] += 1
             else:
                 meta['fail'] += 1
 
             # delete *_env for saving space
-            _dir = tmp_outdir  / f"{row['input_id']}_all"
+            _dir = tmp_row['outdir']  / f"{row['input_id']}_all"
             if _dir.is_dir():
                 shutil.rmtree(_dir)
-            
+    else:
+        meta['skip'] += 1            

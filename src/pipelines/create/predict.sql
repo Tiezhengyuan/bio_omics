@@ -1,11 +1,7 @@
 /*
-label_chain -> chain_af -> chain_af_summary -> chain_af_plddt
-                                            -> chain_af_rmsd
-                                            -> chain_tmalign
-label_complex -> combo2 -> combo2_af
-              -> combo3 -> combo3_af
-              -> combo4 -> combo4_af
-              -> combo5 -> combo5_af
+label_chain, label_complex ->pdb_pred_params
+    -> af_msa -> af_pref -> chain_af_plddt, chain_af_rmsd, chain_tmalign
+
 */
 
 DROP TABLE IF EXISTS pdb_pred_params;

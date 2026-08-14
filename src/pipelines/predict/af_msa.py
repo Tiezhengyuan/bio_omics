@@ -57,6 +57,7 @@ def post_func(input):
 if __name__ == "__main__":
     params.update({
         'tmp_dir': os.getenv('tmp_dir'),
+        'colabfold_bin_dir': os.getenv('colabfold_bin_dir'),
         'colabfold_db': os.getenv('colabfold_db'),
         'overwrite':False,
         'params_table_name': 'pdb_pred_params',
