@@ -9,7 +9,7 @@ class QueryDb(Db):
     def __init__(self, verbose:bool=False):
         super().__init__(verbose)
 
-    def list_data(self, query:str) -> list:
+    def list_data(self, query:str, is_df:bool=False):
         # try not more than 3 times
         for _ in range(3):
             res = self.execute_fetch(query)
@@ -17,6 +17,8 @@ class QueryDb(Db):
                 gc.collect()
                 time.sleep(5)
             else:
+                if is_df:
+                    return pd.DataFrame(res)
                 return res
         return []
 
@@ -35,17 +37,17 @@ class QueryDb(Db):
     
     def table_exists(self, table_name:str) -> bool:
         res = self.execute_fetch("SHOW TABLES")
+        if not isinstance(res, list) or len(res) == 0:
+            return False
         tables = pd.DataFrame(res).iloc[:,0].to_list()
-        if table_name in tables:
-            return True
-        return False
+        return table_name in tables
 
     def num_rows(self, table_name:str) -> int:
         query = f"""
             SELECT COUNT(*) AS count FROM {table_name}
         """
         rows = self.execute_fetch(query)
-        if rows:
+        if rows and rows != -1:
             return rows[0]['count']
         return -1
 
@@ -79,5 +81,7 @@ class QueryDb(Db):
     def table_names(self):
         query = "SHOW TABLES;"
         res = self.list_data(query)
+        if not isinstance(res, list) or len(res) == 0:
+            return ()
         res = pd.DataFrame(res).iloc[:,0]
         return tuple(res)

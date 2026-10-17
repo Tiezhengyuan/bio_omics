@@ -41,9 +41,9 @@ class InsertDb(Db):
                 succeed += counts
             else:
                 for record in chunk_records:
-                    counts = self.execute_many(query, [record,])
-                    if counts:
-                        succeed += counts
+                    n = self.execute_many(query, [record,])
+                    if n:
+                        succeed += n
                     else:
                         fail.append(record)
         return succeed, fail
@@ -70,7 +70,7 @@ class InsertDb(Db):
                     succeed += len(pool)
                 else:
                     recycle_pool += pool
-                pool, recycle_pool = [], []
+                pool = []
         if pool:
             m = self.execute_many(insert_query, pool)
             if m:

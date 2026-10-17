@@ -13,6 +13,11 @@ cols = ['name', 'value']
 class TestInsert(TestCase):
 
     def setUp(self):
+        # drop the leftover table from a previous failed run
+        d = DeleteDb(True)
+        d.config['database'] = DB
+        d.drop_table(table_name)
+
         c = CreateDb(True)
         c.config['database'] = DB
         cols_str = """
@@ -39,20 +44,20 @@ class TestInsert(TestCase):
         assert res
 
     def test_insert(self):
-        b = InsertDb(['b', 20], True)
+        b = InsertDb(True)
         b.config['database'] = DB
 
         #insert one reord
-        res = b.insert(table_name, cols)
+        res = b.insert(['b', 20], table_name, cols)
         assert res
 
         q = QueryComplex(True)
-        res = q.rows(table_name)
+        res = q.num_rows(table_name)
         assert res == 1
 
     def test_db_func_insert(self):
         records = [('a', 1), ('b', 2),]
-        b = InsertDb(records, True)
+        b = InsertDb(True)
         b.config['database'] = DB
 
         query = f"""
@@ -60,8 +65,8 @@ class TestInsert(TestCase):
             values (%s, %s)
         """
         func = lambda rec: [rec,]
-        res = b.func_insert(query, func)
-        assert res == []
+        res = b.func_insert(records, query, func)
+        assert res == (2, [])
         res = QueryComplex(True).num_rows(table_name)
         assert res == 2
 
@@ -74,10 +79,10 @@ class TestInsert(TestCase):
     )
     @unpack
     def test_insert_records(self, records, expect_succeed, expect_fail):
-        b = InsertDb(records, True)
+        b = InsertDb(True)
         b.config['database'] = DB
 
-        good, fail = b.insert_records(table_name, cols)
+        good, fail = b.insert_records(records, table_name, cols)
         assert good == expect_succeed
         assert fail == expect_fail
         res = QueryComplex().num_rows(table_name)
@@ -85,8 +90,8 @@ class TestInsert(TestCase):
     
     def test_insert_batch_records(self):
         records = [('a', 1), ('b', 2),]
-        b = BuildComplex(records, True)
-        res = b.insert_batch_records(table_name, cols)
-        assert res == []
+        b = BuildComplex(True)
+        res = b.insert_batch_records(records, table_name, cols)
+        assert res == (2, [])
         res = QueryComplex().num_rows(table_name)
         assert res == 2

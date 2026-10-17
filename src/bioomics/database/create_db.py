@@ -20,3 +20,4 @@ class CreateDb(Db):
         if self.verbose:
             if result:
                 print(f"Database {db_name} is created.")
+        return result

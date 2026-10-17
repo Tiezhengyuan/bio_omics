@@ -12,6 +12,11 @@ cols = ['name', 'value']
 class TestQuery(TestCase):
 
     def setUp(self):
+        # drop the leftover table from a previous failed run
+        d = DeleteDb(True)
+        d.config['database'] = DB
+        d.drop_table(table_name)
+
         c = CreateDb(True)
         c.config['database'] = DB
         cols_str = """

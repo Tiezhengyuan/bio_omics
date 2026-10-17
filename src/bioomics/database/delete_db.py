@@ -10,7 +10,7 @@ class DeleteDb(Db):
 
     def drop_table(self, table_name):
         if self.verbose:
-            print("Try to drop table {table_name}")
+            print(f"Try to drop table {table_name}")
         query = f"DROP TABLE {table_name};"
         return self.execute(query)
 
