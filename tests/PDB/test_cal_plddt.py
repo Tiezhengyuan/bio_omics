@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from ..helper import *
 from src.bioomics import CalculatePlddt
 
@@ -9,7 +11,7 @@ class TestCalculatePlddt(TestCase):
     )
     @unpack
     def test_monomer_ca_plddt(self, input, expect_first, expect_last):
-        pdb_file = os.path.join(DATA_DIR, 'PDB', input)
+        pdb_file = Path(DATA_DIR, 'PDB', input)
         result = CalculatePlddt(pdb_file).monomer_ca_plddt()
         assert tuple(result.iloc[0]) == expect_first
         assert tuple(result.iloc[-1]) == expect_last
@@ -23,7 +25,7 @@ class TestCalculatePlddt(TestCase):
     )
     @unpack
     def test_plddt_statistics(self, input, expect_avg_plddt):
-        pdb_file = os.path.join(DATA_DIR, 'PDB', input)
+        pdb_file = Path(DATA_DIR, 'PDB', input)
         cp = CalculatePlddt(pdb_file)
         plddt = cp.monomer_ca_plddt()
         result = cp.plddt_statistics(plddt)

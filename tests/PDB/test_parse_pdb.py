@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from ..helper import *
 from src.bioomics import Pdb
 
@@ -15,7 +17,7 @@ class TestParsePdb(TestCase):
             ('6BSX_0_A_0', '6BSX_0_A_0.pdb'),
         ]
         for key, file_name in pool:
-            pdb_file = os.path.join(DATA_DIR, 'PDB', file_name)
+            pdb_file = Path(DATA_DIR, 'PDB', file_name)
             obj = Pdb(pdb_file, RESULTS_DIR, False)
             obj.load_structure()
             self.c[key] = obj
@@ -75,7 +77,8 @@ class TestParsePdb(TestCase):
 
     @data(
         ['7S8L', ['gpcr', 'signaling protein']],
-        ['2OX8_A', None],
+        # 2OX8_A.pdb has no KEYWDS record, keywords is an empty list
+        ['2OX8_A', []],
         ['1HG8', ['hydrolase', 'pectin degradation']],
     )
     @unpack

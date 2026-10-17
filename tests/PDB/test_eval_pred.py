@@ -1,23 +1,33 @@
 '''
 - pytest -s tests/PDB/test_eval_pred.py
 '''
+import os
+import sys
+
 from ..helper import *
 from src.bioomics import EvalPred
 
 @ddt
 class TestEvalPred(TestCase):
 
+    def setUp(self):
+        # ensure the console scripts of the active python environment
+        # (e.g. .venv/bin/prodigy) are reachable without shell activation
+        bin_dir = os.path.dirname(sys.executable)
+        if bin_dir not in os.environ.get('PATH', ''):
+            os.environ['PATH'] = os.pathsep.join([bin_dir, os.environ.get('PATH', '')])
+
     @skip
     @data(
         # identical chain seq but different experimental data
-        ['103M_0_A_0.pdb', '8F9I_0_A_0.pdb', True],
+        ['103M_0_A_0.pdb', '8F9I_0_A_0.pdb'],
     )
     @unpack
     def test_tmalign(self, pdb1, pdb2):
         bin_dir = '/home/yuan/bio/TMalign-20180426/'
         pdb1 = os.path.join(DATA_DIR, 'PDB',  pdb1)
         pdb2 = os.path.join(DATA_DIR, 'PDB',  pdb2)
-        res = EvalPred().tmalign(bin_dir, pdb1, pdb2)
+        res = EvalPred().TMalign(bin_dir, pdb1, pdb2)
         assert res['TM1'] == res['TM2']
 
     @data(

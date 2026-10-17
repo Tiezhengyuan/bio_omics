@@ -18,17 +18,17 @@ warnings.simplefilter("ignore", PDBConstructionWarning)
 
 from .atom_select import *
 from .parse_structure import ParseStructure
+from .pull_pdb import PullPdb
 from ..protein.process_fasta import ProcessFasta
-# from .download import Download
 
 
 class Pdb(ParseStructure):
 
     def __init__(self, pdb_file:Path, outdir:Path=None, verbose:bool=False):
         super().__init__()
-        # pdb_file
-        self.pdb_file = pdb_file
-        self.outdir = outdir if outdir else pdb_file.parent
+        # pdb_file, accept both str and Path
+        self.pdb_file = Path(pdb_file)
+        self.outdir = Path(outdir) if outdir else self.pdb_file.parent
         self.verbose = verbose
         # default objects should be updated
         self.annot = {}
@@ -129,7 +129,7 @@ class Pdb(ParseStructure):
             self.annot['chains'] = self.chains
 
         # integrate uniprot 
-        uniprot = Download.pdb_to_uniprot(self.structure_id)
+        uniprot = PullPdb(verbose=self.verbose).pdb_to_uniprot(self.structure_id)
         if uniprot:
             self.annot.update(uniprot)
 
@@ -183,9 +183,10 @@ class Pdb(ParseStructure):
 
         # prepare records
         unique_seq = []
-        if overwrite or not outfile.isfile():
+        if overwrite or not outfile.is_file():
             records = []
-            for chain_id, _pdb_id, model_no, chain_no, chain in self.parse_chains():
+            for item in self.parse_chains():
+                chain_id, chain = item['chain_id'], item['chain']
                 chain_seq = self._chain_seq(chain)
                 # only export unique sequences to chain_sequences.faa
                 if chain_seq and chain_seq not in unique_seq:
@@ -203,7 +204,7 @@ class Pdb(ParseStructure):
             else:
                 meta['null'] += 1
 
-        if outfile.isfile():
+        if outfile.is_file():
             return (pdb_id, outfile)
         return (pdb_id, None)
 
@@ -219,7 +220,8 @@ class Pdb(ParseStructure):
         cascade_dir = self.init_chains_outdir(pdb_id)
         # retrieve chains
         chains = self.parse_chains()
-        for chain_id, _pdb_id, model_no, chain_no, chain in chains:
+        for item in chains:
+            chain_id, chain = item['chain_id'], item['chain']
             outfile = cascade_dir / f"{chain_id}.faa"
             if overwrite or not outfile.exists():
                 chain_seq = self._chain_seq(chain)
@@ -235,7 +237,7 @@ class Pdb(ParseStructure):
                     meta['null'] += 1
             else:
                 meta['skip'] += 1
-            if outfile.isfile():
+            if outfile.is_file():
                 rec = (chain_id, outfile)
                 db_records.append(rec)
         return db_records
@@ -257,19 +259,22 @@ class Pdb(ParseStructure):
         cascade_dir.mkdir(parents=True, exist_ok=True)
         # retrieve chains
         chains = self.parse_chains()
-        for chain_id, _pdb_id, model_no, chain_no, chain in chains:
+        for item in chains:
+            chain_id = item['chain_id']
+            model_no = item['model_no']
+            chain = item['chain']
             chain_seq = self._chain_seq(chain)
             # only consider limited models
             if len(chain_seq) > 0 and int(model_no) <= 10:
                 file_name = f"{chain_id}.pdb"
                 outfile = cascade_dir / file_name
-                if overwrite or not outfile.isfile():
-                    status = self.to_chain_pdb([chain_no,], outfile)
+                if overwrite or not outfile.is_file():
+                    status = self.to_chain_pdb(model_no, [item['chain_no'],], outfile)
                     meta[status] += 1
                 else:
                     meta['skip'] += 1
                 relative_path = dir_endpoint / file_name
-                rec = (chain_id, relative_path) if outfile.isfile() else (chain_id, None)
+                rec = (chain_id, relative_path) if outfile.is_file() else (chain_id, None)
                 db_records.append(rec)
         return db_records
     
@@ -300,8 +305,8 @@ class Pdb(ParseStructure):
             for _ids in combinations(_pool, combo):
                 chain_combo = '-'.join(list(_ids))
                 outfile = cascade_dir / f"{pdb_id}_{model_no}_{chain_combo}.pdb"
-                if overwrite is True or not outfile.isfile():
-                    status = self.to_chain_pdb(list(_ids), outfile)
+                if overwrite is True or not outfile.is_file():
+                    status = self.to_chain_pdb(model_no, list(_ids), outfile)
                     if status:
                         outfiles.append(outfile)
                     else:

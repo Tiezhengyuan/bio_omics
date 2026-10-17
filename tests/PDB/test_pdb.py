@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from ..helper import *
 from src.bioomics import Pdb
 
@@ -8,13 +10,13 @@ class TestParsePdb(TestCase):
     def setUp(self):
         self.c = {}
         for pdb_id, file_name in [('7S8L', '7S8L.pdb'),]:
-            pdb_file = os.path.join(DATA_DIR, 'PDB', file_name)
+            pdb_file = Path(DATA_DIR, 'PDB', file_name)
             obj = Pdb(pdb_file, RESULTS_DIR, True)
             obj.load_structure()
             self.c[pdb_id] = obj
     
     @data(
-        ['7S8L', os.path.join(RESULTS_DIR, '7S', '7S8L', 'chain_sequences.faa')],
+        ['7S8L', Path(RESULTS_DIR, '7S', '7S8L', 'chain_sequences.faa')],
     )
     @unpack
     def test_export_fasta(self, pdb_id, expect):
