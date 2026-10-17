@@ -192,41 +192,6 @@ CREATE TABLE combo5_relaxed (
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS combo2_distance;
-CREATE TABLE combo2_distance(
-    pdb_id          VARCHAR(10),
-    combo_id        VARCHAR(40),
-    relative_pkl    VARCHAR(60),
-    min_dist        FLOAT,
-    min_res1        VARCHAR(10),
-    min_res2        VARCHAR(10),
-    created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_combo2_distance_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
-
-DROP TABLE IF EXISTS combo_sasa;
-CREATE TABLE combo_sasa(
-    pdb_id            VARCHAR(10),
-    combo_id          VARCHAR(40),
-    delta_total_sasa  FLOAT,
-    relative_pkl      VARCHAR(60),
-    created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_combo_sasa_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
-
-DROP TABLE IF EXISTS combo_contacts;
-CREATE TABLE combo_contacts(
-    pdb_id                  VARCHAR(10),
-    combo_id                VARCHAR(40),
-    binding_affinity        FLOAT,
-    dissociation_constant   FLOAT,
-    relative_prodigy        VARCHAR(100),
-    created_at              TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_combo_contacts_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
 
 DROP TABLE IF EXISTS pdb_qc;
 CREATE TABLE pdb_qc(

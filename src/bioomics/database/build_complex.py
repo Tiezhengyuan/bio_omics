@@ -135,11 +135,6 @@ TABLE_COLUMNS = {
     # contacts
     'equal_seq_rmsd': ['chain_id', 'equal_chain_id', 'rmsd',
         'chain_pdb', 'equal_chain_pdb',],
-    'combo2_distance': ['pdb_id', 'combo_id', 'relative_pkl',\
-        'min_dist', 'min_res1', 'min_res2'],
-    'combo_sasa': ['pdb_id', 'combo_id', 'delta_total_sasa', 'relative_pkl'],
-    'combo_contacts': ['pdb_id', 'combo_id', 'binding_affinity',
-        'dissociation_constant', 'relative_prodigy'],
     #qc
     'pdb_qc': ['pdb_id', 'chain_id', 'angle_rmsz', 'bond_rmsz',
         'ca_max_dist', 'cb_outlier_frac', 'clash_score',

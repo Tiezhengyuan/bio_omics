@@ -46,7 +46,6 @@ pool = {
     'combo2': 'dynamics.combo2',
     'combo2_fixed': 'dynamics.combo2_fixed',
     'combo2_relaxed': 'dynamics.combo2_relaxed',
-    'combo2_distance': 'dynamics.combo2_distance',
     'combo3': 'dynamics.combo3',
     'combo3_fixed': 'dynamics.combo3_fixed',
     'combo3_relaxed': 'dynamics.combo3_relaxed',
@@ -57,8 +56,6 @@ pool = {
     'combo5_fixed': 'dynamics.combo5_fixed',
     'combo5_relaxed': 'dynamics.combo5_relaxed',
 
-    'combo_sasa': 'dynamics.combo_sasa',
-    'combo_contacts': 'dynamics.combo_contacts',
     'pdb_qc': 'dynamics.pdb_qc',
     'pdb_relaxed_qc': 'dynamics.pdb_relaxed_qc',
     

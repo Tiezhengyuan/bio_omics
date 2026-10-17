@@ -32,16 +32,6 @@ parallel -j8 ${APP} combo5 ::: {0..241}
 parallel -j8 ${APP} combo5_fixed ::: {0..241}
 parallel -j8 ${APP} combo5_relaxed ::: {0..241}
 
-
-# atom distance
-parallel -j8 ${APP} combo2_distance ::: {0..241}
-
-# SASA
-parallel -j8 ${APP} combo_sasa ::: {0..241}
-
-# simulate binding affinity
-parallel -j8 ${APP} combo_contacts ::: {0..241}
-
 #geometry 
 parallel -j8 ${APP} pdb_qc ::: {0..241}
 parallel -j8 ${APP} pdb_relaxed_qc ::: {0..241}
