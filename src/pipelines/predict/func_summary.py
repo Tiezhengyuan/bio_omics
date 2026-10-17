@@ -7,30 +7,19 @@ from src.helper import *
 from bioomics import EvalPred
 
 def retrieve_pred(params, meta):
-    '''
-    pdb_id, chain_id, endpoint
-    '''
-    table_name = params['predict_table_name']
-    col_name = params['input_col_name']
+    params_table_name = params['params_table_name']
+    table_name = params['pred_table_name']
     pdb_group = params['pdb_group']
     query = f"""
-        SELECT a.pdb_id, a.{col_name}, a.endpoint
-        FROM {table_name}  a
-        LEFT JOIN meta_pdb p ON a.pdb_id = p.pdb_id
-        WHERE p.pdb_group = {pdb_group}
-            AND a.endpoint IS NOT NULL
+        SELECT a.input_id, a.pred_outdir
+        FROM {table_name}             a
+        LEFT JOIN {params_table_name} p ON a.input_id = p.input_id
+        WHERE p.group_no = {pdb_group}
+            AND a.pred_outdir IS NOT NULL
     ;"""
-    _rows = QueryComplex(params['verbose']).list_data(query)
-    rows, del_rows = [], []
-    for row in _rows:
-        outdir = params['predict_dir'] / row['endpoint']
-        if outdir.is_dir():
-            row['outdir'] = outdir
-            rows.append(row)
-        else:
-            del_rows.append(row)
-    meta[params['category']] = len(rows)
-    print(f"Detect {len(rows)} predictions by {params['category']}...")
+    rows = QueryComplex(params['verbose']).list_data(query)
+    meta['predictions'] = len(rows)
+    print(f"Detect {len(rows)} predictions in {table_name}...")
     return rows
 
 def pred_summary(params):
@@ -38,35 +27,39 @@ def pred_summary(params):
     table_name = params['table_name']
     pdb_group = params['pdb_group']
     query = f"""
-        SELECT a.relaxed_pdb_name
+        SELECT a.relaxed_pdb_name AS pdb_name
         FROM {table_name}        a
-        LEFT JOIN {params_table} b ON a.input_id = b.input_id
-        LEFT JOIN meta_pdb       p ON b.pdb_id = p.pdb_id
-        WHERE p.pdb_group = {pdb_group}
+        LEFT JOIN {params_table} p ON a.input_id = p.input_id
+        LEFT JOIN meta_pdb       m ON p.pdb_id = m.pdb_id
+        WHERE m.pdb_group = {pdb_group}
             AND a.relaxed_pdb_name IS NOT NULL
     ;"""
-    curr_rows = QueryComplex(params['verbose']).list_data(query)
-    relaxed_pdb_names = [i['relaxed_pdb_name'] for i in curr_rows]
+    rows = QueryComplex(params['verbose']).list_data(query)
+    relaxed_pdb_names = [i['pdb_name'] for i in rows]
+    print(f"Detect {len(rows)} predicted pdb files in {table_name}...")
     return relaxed_pdb_names
 
 
 def chain_raw_model_pdb(params):
     pdb_status = 'raw'
     pdb_group = params['pdb_group']
-    summary = params['summary_table_name']
+    params_table_name = params['params_table_name']
+    summary_table_name = params['summary_table_name']
     table_name = params['table_name']
+    native_outdir = params['output_pdb_dir']
     query = f"""
-        SELECT c.pdb_id, '{pdb_status}' AS pdb_status, 
-            c.chain_id AS input_id, s.category,
-            c.relative_pdb AS native_pdb, s.relaxed_pdb AS model_pdb
-        FROM chain_pdb       c 
-        LEFT JOIN meta_pdb   p ON c.pdb_id = p.pdb_id
-        LEFT JOIN {summary} s ON c.chain_id = s.input_id
-        WHERE p.pdb_group = {pdb_group}
-            AND s.ranking = 1
+        SELECT p.input_id, '{pdb_status}' AS pdb_status, p.pdb_id, p.category, 
+            p.outdir AS pred_outdir, a.relaxed_pdb_name AS pred_pdb_name,
+            '{native_outdir}' AS native_outdir, c.relative_pdb AS native_pdb
+        FROM {summary_table_name}     a
+        LEFT JOIN {params_table_name} p ON a.input_id = p.input_id
+        LEFT JOIN chain_pdb           c ON a.input_id = c.chain_id
+        WHERE p.group_no = {pdb_group}
+            AND a.ranking = 1
             AND c.relative_pdb IS NOT NULL
-            AND c.relative_pdb NOT IN (
-                SELECT native_pdb FROM {table_name}
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} b
+                WHERE c.relative_pdb = b.native_pdb
             )
     ;"""
     return pdb_status, 'chain', query
@@ -74,20 +67,23 @@ def chain_raw_model_pdb(params):
 def chain_fixed_model_pdb(params):
     pdb_status = 'fixed'
     pdb_group = params['pdb_group']
-    summary = params['summary_table_name']
+    params_table_name = params['params_table_name']
+    summary_table_name = params['summary_table_name']
     table_name = params['table_name']
+    native_outdir = params['output_pdb_dir']
     query = f"""
-        SELECT c.pdb_id, '{pdb_status}' AS pdb_status, 
-            c.chain_id AS input_id, s.category,
-            c.fixed_pdb AS native_pdb, s.relaxed_pdb AS model_pdb
-        FROM chain_fixed    c 
-        LEFT JOIN meta_pdb  p ON c.pdb_id = p.pdb_id
-        LEFT JOIN {summary} s ON c.chain_id = s.input_id
-        WHERE p.pdb_group = {pdb_group}
-            AND s.ranking = 1
+        SELECT p.input_id, '{pdb_status}' AS pdb_status, p.pdb_id, p.category, 
+            p.outdir AS pred_outdir, a.relaxed_pdb_name AS pred_pdb_name,
+            '{native_outdir}' AS native_outdir, c.fixed_pdb AS native_pdb
+        FROM {summary_table_name}     a
+        LEFT JOIN {params_table_name} p ON a.input_id = p.input_id
+        LEFT JOIN chain_fixed         c ON a.input_id = c.chain_id
+        WHERE p.group_no = {pdb_group}
+            AND a.ranking = 1
             AND c.fixed_pdb IS NOT NULL
-            AND c.fixed_pdb NOT IN (
-                SELECT native_pdb FROM {table_name}
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} b
+                WHERE c.fixed_pdb = b.native_pdb
             )
     ;"""
     return pdb_status, 'chain', query
@@ -95,20 +91,23 @@ def chain_fixed_model_pdb(params):
 def chain_relaxed_model_pdb(params):
     pdb_status = 'relaxed'
     pdb_group = params['pdb_group']
-    summary = params['summary_table_name']
+    params_table_name = params['params_table_name']
+    summary_table_name = params['summary_table_name']
     table_name = params['table_name']
+    native_outdir = params['simulate_dir']
     query = f"""
-        SELECT c.pdb_id, '{pdb_status}' AS pdb_status, 
-            c.chain_id AS input_id, s.category,
-            c.relaxed_pdb AS native_pdb, s.relaxed_pdb AS model_pdb
-        FROM chain_relaxed  c 
-        LEFT JOIN meta_pdb  p ON c.pdb_id = p.pdb_id
-        LEFT JOIN {summary} s ON c.chain_id = s.input_id
-        WHERE p.pdb_group = {pdb_group}
-            AND s.ranking = 1
+        SELECT p.input_id, '{pdb_status}' AS pdb_status, p.pdb_id, p.category, 
+            p.outdir AS pred_outdir, a.relaxed_pdb_name AS pred_pdb_name,
+            '{native_outdir}' AS native_outdir, c.relaxed_pdb AS native_pdb
+        FROM {summary_table_name}     a
+        LEFT JOIN {params_table_name} p ON a.input_id = p.input_id
+        LEFT JOIN chain_relaxed       c ON a.input_id = c.chain_id
+        WHERE p.group_no = {pdb_group}
+            AND a.ranking = 1
             AND c.relaxed_pdb IS NOT NULL
-            AND c.relaxed_pdb NOT IN (
-                SELECT native_pdb FROM {table_name}
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} b
+                WHERE c.relaxed_pdb = b.native_pdb
             )
     ;"""
     return pdb_status, 'chain', query
@@ -116,20 +115,23 @@ def chain_relaxed_model_pdb(params):
 def combo_raw_model_pdb(params, combo):
     pdb_status = 'raw'
     pdb_group = params['pdb_group']
-    summary = params['summary_table_name']
+    params_table_name = params['params_table_name']
+    summary_table_name = params['summary_table_name']
     table_name = params['table_name']
+    native_outdir = params['output_pdb_dir']
     query = f"""
-        SELECT c.pdb_id, '{pdb_status}' AS pdb_status,
-            c.combo_id AS input_id, s.category,
-            c.combo_pdb AS native_pdb, s.relaxed_pdb AS model_pdb
-        FROM {combo}       c 
-        LEFT JOIN meta_pdb   p ON c.pdb_id = p.pdb_id
-        LEFT JOIN {summary} s ON c.combo_id = s.input_id
-        WHERE p.pdb_group = {pdb_group}
-            AND s.ranking = 1
+        SELECT p.input_id, '{pdb_status}' AS pdb_status, p.pdb_id, p.category, 
+            p.outdir AS pred_outdir, a.relaxed_pdb_name AS pred_pdb_name,
+            '{native_outdir}' AS native_outdir, c.combo_pdb AS native_pdb
+        FROM {summary_table_name}        a
+        LEFT JOIN {params_table_name} p ON a.input_id = p.input_id
+        LEFT JOIN {combo}             c ON a.input_id = c.combo_id
+        WHERE p.group_no = {pdb_group}
+            AND a.ranking = 1
             AND c.combo_pdb IS NOT NULL
-            AND c.combo_pdb NOT IN (
-                SELECT native_pdb FROM {table_name}
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} b
+                WHERE c.combo_pdb = b.native_pdb
             )
     ;"""
     return pdb_status, combo, query
@@ -137,20 +139,23 @@ def combo_raw_model_pdb(params, combo):
 def combo_fixed_model_pdb(params, combo):
     pdb_status = 'fixed'
     pdb_group = params['pdb_group']
-    summary = params['summary_table_name']
+    params_table_name = params['params_table_name']
+    summary_table_name = params['summary_table_name']
     table_name = params['table_name']
+    native_outdir = params['output_pdb_dir']
     query = f"""
-        SELECT c.pdb_id, '{pdb_status}' AS pdb_status,
-            c.combo_id AS input_id, s.category,
-            c.fixed_pdb AS native_pdb, s.relaxed_pdb AS model_pdb
-        FROM {combo}_fixed  c 
-        LEFT JOIN meta_pdb  p ON c.pdb_id = p.pdb_id
-        LEFT JOIN {summary} s ON c.combo_id = s.input_id
-        WHERE p.pdb_group = {pdb_group}
-            AND s.ranking = 1
+        SELECT p.input_id, '{pdb_status}' AS pdb_status, p.pdb_id, p.category, 
+            p.outdir AS pred_outdir, a.relaxed_pdb_name AS pred_pdb_name,
+            '{native_outdir}' AS native_outdir, c.fixed_pdb AS native_pdb
+        FROM {summary_table_name}     a
+        LEFT JOIN {params_table_name} p ON a.input_id = p.input_id
+        LEFT JOIN {combo}_fixed       c ON a.input_id = c.combo_id
+        WHERE p.group_no = {pdb_group}
+            AND a.ranking = 1
             AND c.fixed_pdb IS NOT NULL
-            AND c.fixed_pdb NOT IN (
-                SELECT native_pdb FROM {table_name}
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} b
+                WHERE c.fixed_pdb = b.native_pdb
             )
     ;"""
     return pdb_status, combo, query
@@ -158,64 +163,55 @@ def combo_fixed_model_pdb(params, combo):
 def combo_relaxed_model_pdb(params, combo):
     pdb_status = 'relaxed'
     pdb_group = params['pdb_group']
-    summary = params['summary_table_name']
+    params_table_name = params['params_table_name']
+    summary_table_name = params['summary_table_name']
     table_name = params['table_name']
+    native_outdir = params['simulate_dir']
     query = f"""
-        SELECT c.pdb_id, '{pdb_status}' AS pdb_status,
-            c.combo_id AS input_id, s.category,
-            c.relaxed_pdb AS native_pdb, s.relaxed_pdb AS model_pdb
-        FROM {combo}_relaxed c 
-        LEFT JOIN meta_pdb   p ON c.pdb_id = p.pdb_id
-        LEFT JOIN {summary}  s ON c.combo_id = s.input_id
-        WHERE p.pdb_group = {pdb_group}
-            AND s.ranking = 1
+        SELECT p.input_id, '{pdb_status}' AS pdb_status, p.pdb_id, p.category, 
+            p.outdir AS pred_outdir, a.relaxed_pdb_name AS pred_pdb_name,
+            '{native_outdir}' AS native_outdir, c.relaxed_pdb AS native_pdb
+        FROM {summary_table_name}     a
+        LEFT JOIN {params_table_name} p ON a.input_id = p.input_id
+        LEFT JOIN {combo}_relaxed     c ON a.input_id = c.combo_id
+        WHERE p.group_no = {pdb_group}
+            AND a.ranking = 1
             AND c.relaxed_pdb IS NOT NULL
-            AND c.relaxed_pdb NOT IN (
-                SELECT native_pdb FROM {table_name}
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} b
+                WHERE c.relaxed_pdb = b.native_pdb
             )
     ;"""
     return pdb_status, combo, query
 
-def calculate_rmsd(rows:list, params, meta):
-    prefix = f"{params['pdb_status']}_{params['category']}"
-    am = EvalPred()
-    
+def calculate_rmsd(rows:list, meta):
+    input_rows = []
     for row in rows:
-        native_pdb = params['simulate_dir'] / row['native_pdb'] \
-            if params['pdb_status']=='relaxed' \
-            else params['output_pdb_dir'] / row['native_pdb']
-        model_pdb = params['predict_dir'] / row['model_pdb']
-        if native_pdb.is_file() and model_pdb.is_file():
-            try:
-                rmsd = am.rmsd(native_pdb, model_pdb)
-                if rmsd:
-                    meta[f'{prefix}_succeed'] += 1
-                else:
-                    meta[f'{prefix}_null'] += 1
-                # build record
-                rec = (
-                    row['pdb_id'],
-                    row['category'],
-                    row['input_id'],
-                    row['pdb_status'],
-                    rmsd,
-                    row['native_pdb'],
-                    row['model_pdb'],
-                )
-                yield rec
-            except Exception as e:
-                meta[f'{prefix}_fail'] += 1
-                pass
-
+        row['pdb1'] = Path(row['native_outdir']) / row['native_pdb']
+        row['pdb2'] = Path(row['pred_outdir']) / row['pred_pdb_name']
+        if row['pdb1'].is_file() and row['pdb2'].is_file():
+            input_rows.append(row)
+    meta['pred_pdb_files'] = len(input_rows)
+    
+    rmsd_row_iter = EvalPred().batch_rmsd(input_rows)
+    for row in rmsd_row_iter:
+        rec = (
+            row['input_id'],
+            row['pdb_status'],
+            row['rmsd'],
+            row['native_pdb'],
+            row['pred_pdb_name'],
+        )
+        print(rec)
+        yield rec
+        
 def calculate_tmalign(rows:list, params, meta):
     prefix = f"{params['pdb_status']}_{params['category']}"
     ep = EvalPred(params['mmalign_dir'])
     
     for row in rows:
-        native_pdb = params['simulate_dir'] / row['native_pdb'] \
-            if params['pdb_status']=='relaxed' \
-            else params['output_pdb_dir'] / row['native_pdb']
-        model_pdb = params['predict_dir'] / row['model_pdb']
+        native_pdb = Path(row['native_outdir']) / row['native_pdb']
+        model_pdb = Path(row['pred_outdir']) / row['pred_pdb_name']
         if native_pdb.is_file() and model_pdb.is_file():
             try:
                 res = ep.TMalign(native_pdb, model_pdb)
@@ -224,16 +220,15 @@ def calculate_tmalign(rows:list, params, meta):
                 else:
                     meta[f'{[prefix]}_fail'] += 1
                 rec = (
-                    row['pdb_id'],
-                    row['category'],
                     row['input_id'],
                     row['pdb_status'],
                     res.get('RMSD'),
                     res.get('TM1'),
                     res.get('TM2'),
                     row['native_pdb'],
-                    row['model_pdb'],
+                    row['pred_pdb_name'],
                 )
+                print(rec)
                 yield rec
             except Exception as e:
                 meta[f'{prefix}_fail'] += 1

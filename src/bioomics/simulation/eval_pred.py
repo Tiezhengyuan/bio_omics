@@ -21,24 +21,19 @@ class EvalPred:
             pass
         return None
 
-    def batch_rmsd(self, pool:list) -> tuple:
-        good, fail = [], []
+    def batch_rmsd(self, pool:list):
         pyrosetta.init()
-        for rec in pool:
+        for row in pool:
             try:
-                native_pose = io.pose_from_pdb(str(rec['pdb1']))
-                model_pose = io.pose_from_pdb(str(rec['pdb2']))
-                rmsd = rosetta.core.scoring.CA_rmsd(
+                native_pose = io.pose_from_pdb(str(row['pdb1']))
+                model_pose = io.pose_from_pdb(str(row['pdb2']))
+                row['rmsd'] = rosetta.core.scoring.CA_rmsd(
                     native_pose, model_pose
                 )
-                if rmsd is not None:
-                    rec['rmsd'] = rmsd
-                    good.append(rec)
-                else:
-                    fail.append(rec)
+                yield row
             except Exception as e:
                 pass
-        return good, fail
+
     
     def TMalign(self, pdb1:str, pdb2:str):
         try:

@@ -12,9 +12,10 @@ from .func_summary import *
 if __name__ == "__main__":
     params.update({
         'chunk_size': 50,
+        'mmalign_dir': Path(os.getenv('mmalign_dir')),
+        'params_table_name': 'af_params',
         'summary_table_name': 'af_summary',
         'table_name': 'af_tmalign',
-        'mmalign_dir': Path(os.getenv('mmalign_dir')),
     })
 
     pool = (

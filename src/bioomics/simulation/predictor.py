@@ -7,6 +7,7 @@ import asyncio
 from pathlib import Path
 import subprocess
 
+
 class Predictor:
     def __init__(self, input, outdir:Path, tools_dir:Path=None, verbose:bool=False):
         self.input = input
@@ -33,12 +34,13 @@ class Predictor:
         return True
     
     @staticmethod
-    def colabfold_subprocess(params:dict, cmd:list) -> bool:
+    def colabfold_subprocess(params:dict, cmd:list) -> int:
         '''
         params = {
             colabfold_bin_dir: ...,
             
         }
+        return statuscode: 0 succeed, 1-255 failed
         '''
         # conda env colabfold is needed
         env = os.environ.copy()
@@ -46,16 +48,26 @@ class Predictor:
             f"{params['colabfold_bin_dir']}:"
             + env["PATH"]
         )
-
+        # working directory
         cwd = str(params['tools_dir'] / 'ColabFold')
-        # cmd = ['conda', 'run', '-n', 'colabfold', '--cwd', cwd,] + cmd
-        print(f"\n\nLoad {cmd[0]} command: {' '.join(cmd)}")
 
-        res = subprocess.run(cmd, env=env, cwd=cwd, capture_output=True, text=True)
-        print('status: ', res.returncode)
-        print('stdout: ', res.stdout)
-        print('stderr: ', res.stderr)
-        return res
+        print(f"\n\nLoad {cmd[0]} command: {' '.join(cmd)}")
+        try:
+            res = subprocess.run(
+                cmd,
+                env=env,
+                cwd=cwd,
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            print('status: ', res.returncode)
+            print('stdout: ', res.stdout)
+            print('stderr: ', res.stderr)
+            return res.returncode
+        except Exception as e:
+            print(f"Execution colafold failed. ERROR={e}")
+        return 1
     
     @staticmethod
     def colabfold_search(row:dict, params:dict):
@@ -66,20 +78,22 @@ class Predictor:
             outdir:Path,
         }
         '''
-        tool_name = 'colabfold_search'
         cmd = [
-            tool_name,
-            '--gpu', '1',
+            'colabfold_search',
             '--threads', '8',
             '--use-env', '0',
             '--use-templates', '1',
             '--db1', 'uniref30_2302_db',
             '--db2', 'pdb100_230517',
             '--db3', 'colabfold_envdb_202108_db',
-            str(row['query_faa']),
-            params['colabfold_db'],
-            str(row['outdir']),
         ]
+        if params.get('gpu'):
+            cmd += ['--gpu', '1',]
+        cmd += [
+            str(row['query_faa']),
+            str(params['colabfold_db']),
+            str(row['outdir']),
+        ]        
         return Predictor.colabfold_subprocess(params, cmd)
 
     @staticmethod
@@ -91,9 +105,8 @@ class Predictor:
             outdir: Path,
         }
         '''
-        tool_name = 'colabfold_batch'
         cmd = [
-            tool_name,
+            'colabfold_batch',
             '--msa-only',
             '--templates',
             str(row['query_faa']),
@@ -110,9 +123,8 @@ class Predictor:
             outdir: Path,
         }
         '''
-        tool_name = 'colabfold_batch'
         cmd = [
-            tool_name,
+            'colabfold_batch',
             '--num-models', '5',
             '--model-order', '1,2,3,4,5',
             '--random-seed', '42',

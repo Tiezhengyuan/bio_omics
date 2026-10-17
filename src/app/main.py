@@ -59,7 +59,9 @@ pool = {
 
     'combo_sasa': 'dynamics.combo_sasa',
     'combo_contacts': 'dynamics.combo_contacts',
-
+    'pdb_qc': 'dynamics.pdb_qc',
+    'pdb_relaxed_qc': 'dynamics.pdb_relaxed_qc',
+    
     # align
     'meta_blastp5': 'align.meta_blastp5',
     'align_uniprot': 'align.align_uniprot',
@@ -72,10 +74,10 @@ pool = {
     # 'anarci': 'immune.anarci',
 
     # predict
-    'pdb_pred_params': 'predict.pdb_pred_params',
+    'af_params': 'predict.af_params',
     'af_msa': 'predict.af_msa',
     'af_pred': 'predict.af_pred',
-    
+    'af_summary': 'predict.af_summary',
     'af_plddt': 'predict.af_plddt',
     'af_rmsd': 'predict.af_rmsd',
     'af_tmalign': 'predict.af_tmalign',

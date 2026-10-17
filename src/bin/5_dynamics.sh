@@ -41,3 +41,7 @@ parallel -j8 ${APP} combo_sasa ::: {0..241}
 
 # simulate binding affinity
 parallel -j8 ${APP} combo_contacts ::: {0..241}
+
+#geometry 
+parallel -j8 ${APP} pdb_qc ::: {0..241}
+parallel -j8 ${APP} pdb_relaxed_qc ::: {0..241}

@@ -140,21 +140,34 @@ TABLE_COLUMNS = {
     'combo_sasa': ['pdb_id', 'combo_id', 'delta_total_sasa', 'relative_pkl'],
     'combo_contacts': ['pdb_id', 'combo_id', 'binding_affinity',
         'dissociation_constant', 'relative_prodigy'],
-
-    #predict Abs in PDB
-    'pdb_pred_params': ['pdb_id', 'input_id', 'input_table_name', 'input_col_name',
-        'category', 'predictor', 'query_faa', 'outdir',],
-    'af_msa': ['input_id', 'a3m_name', 'host',],
-    'af_pred': ['input_id', 'ranking', 'avg_plddt', 'avg_ptm', 'max_pae',
-        'json_name', 'relaxed_pdb_name', 'unrelaxed_pdb_name'],
-
+    #qc
+    'pdb_qc': ['pdb_id', 'chain_id', 'angle_rmsz', 'bond_rmsz',
+        'ca_max_dist', 'cb_outlier_frac', 'clash_score',
+        'mainchain_outlier_frac', 'n_chirality_outliers',
+        'n_z_outliers', 'num_breaks', 'num_clashes', 'num_fragments',
+        'num_missing', 'num_strained', 'num_servere_clashes',
+        'pep_max_dist', 'peptide_outlier_frac', 'rama_outlier_frac',
+        'vdw_clash_score', 'z_outlier_frac',],
+    'pdb_relaxed_qc': ['pdb_id', 'chain_id', 'angle_rmsz', 'bond_rmsz',
+        'ca_max_dist', 'cb_outlier_frac', 'clash_score',
+        'mainchain_outlier_frac', 'n_chirality_outliers',
+        'n_z_outliers', 'num_breaks', 'num_clashes', 'num_fragments',
+        'num_missing', 'num_strained', 'num_servere_clashes',
+        'pep_max_dist', 'peptide_outlier_frac', 'rama_outlier_frac',
+        'vdw_clash_score', 'z_outlier_frac',],
     
-    'af_plddt': ['pdb_id', 'input_id', 'relative_pdb', 'relative_pkl',
+    #predict Abs in PDB
+    'af_params': ['pdb_id', 'input_id', 'input_table_name', 'input_col_name',
+        'input_size', 'group_no', 'combo', 'categories', 'query_faa', 'outdir',],
+    'af_msa': ['input_id', 'a3m_name', 'host',],
+    'af_pred': ['input_id', 'pred_outdir', 'host',],
+    'af_summary': ['input_id', 'ranking', 'avg_plddt', 'avg_ptm', 'max_pae',
+        'json_name', 'relaxed_pdb_name', 'unrelaxed_pdb_name'],
+    'af_plddt': ['input_id', 'pred_pdb_name', 'relative_pkl',
         'model_no', 'chain_no', 'avg_plddt',],
-    'af_rmsd': ['pdb_id', 'category', 'input_id', 'pdb_status', 'rmsd',
-        'native_pdb', 'model_pdb'],
-    'af_tmalign': ['pdb_id', 'category', 'input_id', 'pdb_status', 'rmsd',
-        'tm1', 'tm2', 'native_pdb', 'model_pdb'],
+    'af_rmsd': ['input_id', 'pdb_status', 'rmsd', 'native_pdb', 'pred_pdb_name'],
+    'af_tmalign': ['input_id', 'pdb_status', 'rmsd', 'tm1', 'tm2',
+        'native_pdb', 'pred_pdb_name'],
     
     # meta
     'meta': ['pdb_group', 'host', 'ip_addr', 'script'],

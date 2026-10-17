@@ -13,6 +13,7 @@ from .func_summary import *
 if __name__ == "__main__":
     params.update({
         'chunk_size': 50,
+        'params_table_name': 'af_params',
         'summary_table_name': 'af_summary',
         'table_name': 'af_rmsd',
     })
@@ -45,7 +46,7 @@ if __name__ == "__main__":
         prefix = f"{pdb_status}_{category}"
         meta[f'{prefix}_rows'] = len(rows)
 
-        record_iter = calculate_rmsd(rows, params, meta)
+        record_iter = calculate_rmsd(rows, meta)
         bc = BuildComplex(params['verbose'], params['chunk_size'])
         bc.insert_batch_records(record_iter, params['table_name'])
     footer(meta)

@@ -15,6 +15,7 @@ import shutil
 import socket
 import sys
 import subprocess
+import torch
 
 # load env
 src_dir = os.path.dirname(__file__)
@@ -37,6 +38,7 @@ params = {
     'rawdata_dir': Path(os.getenv('rawdata_dir')),
     'output_dir': Path(os.getenv('output_dir')),
     'tools_dir': Path(os.getenv('tools_dir')),
+    'gpu': torch.cuda.is_available(),
 }
 params['rawdata_pdb_dir'] = params['rawdata_dir'] / 'pdb'
 params['rawdata_uniprot_dir'] = params['rawdata_dir'] / 'UniProt'
@@ -104,6 +106,9 @@ def header(func):
         return result
     return wrapper
 
+
+
+#TODO: deprecated in the future
 def validate_data(col_name, params, meta, outdir:Path=None):
     if outdir is None:
         outdir = params['output_pdb_dir']

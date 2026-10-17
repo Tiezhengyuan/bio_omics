@@ -12,6 +12,7 @@ class DeleteComplex(DeleteDb):
     
     def remove_null_rows(self, table_name:str, col_name:str, del_pool:list):
         n = len(del_pool)
+        print(f"Try to delete {n} rows from {table_name}...")
         num_del = 0
         if n > 0:
             print(f"Number of {n} rows are invalid.", end=' ')

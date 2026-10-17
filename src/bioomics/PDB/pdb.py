@@ -33,6 +33,8 @@ class Pdb(ParseStructure):
         # default objects should be updated
         self.annot = {}
         self.info = []
+        # load structure
+        self.load_structure()
 
     def load_pdb(self):
         self.parser = PDBParser(PERMISSIVE=1)
@@ -57,6 +59,8 @@ class Pdb(ParseStructure):
              self.structure = self.parser.get_structure(self.pdb_file.name, f)
 
     def load_structure(self):
+        if not self.pdb_file.is_file():
+            return None
         try:
             if self.pdb_file.name.endswith('.cif.gz'):
                 self.load_cif_gz()

@@ -3,7 +3,7 @@
 requirements:
     - table label_chain
 example:
-    - parallel -j8 bomics af_msa ::: {0..241}
+    - parallel -j2 bomics af_msa ::: {20..241}
     - bomics af_msa 0
 function:
     - MSA and build *.a3m for structure prediction
@@ -14,18 +14,17 @@ from .func_predict import *
 
 def retrieve(params, meta):
     pdb_group = params['pdb_group']
+    params_table_name = params['params_table_name']
     table_name = params['table_name']
     query = f"""
-        SELECT p.pdb_id, p.input_id, p.query_faa, p.outdir
-        FROM pdb_pred_params p
-        LEFT JOIN meta_pdb   m ON p.pdb_id=m.pdb_id
-        WHERE m.pdb_group={pdb_group}
-            AND p.predictor = 'AF2'
+        SELECT a.pdb_id, a.input_id, a.query_faa, a.outdir
+        FROM {params_table_name} a
+        WHERE a.group_no={pdb_group}
             AND NOT EXISTS (
                 SELECT 1 FROM {table_name} b
-                WHERE p.input_id = b.input_id
+                WHERE a.input_id = b.input_id
             )
-        ORDER BY p.category
+            AND a.input_size <= 900
     """
     rows = QueryComplex(params['verbose']).list_data(query)
     print(f"{len(rows)} query files ready...")
@@ -60,7 +59,7 @@ if __name__ == "__main__":
         'colabfold_bin_dir': os.getenv('colabfold_bin_dir'),
         'colabfold_db': os.getenv('colabfold_db'),
         'overwrite':False,
-        'params_table_name': 'pdb_pred_params',
+        'params_table_name': 'af_params',
         'table_name': 'af_msa',
     })
     add_params(params)
@@ -68,8 +67,8 @@ if __name__ == "__main__":
     
     # asynchronous functions
     funcs = [
-        run_colabfold_search,
-        run_colabfold_msa,
+        run_colabfold_msa, # MSA API
+        run_colabfold_search, # local
     ]
     rows = retrieve(params, meta)
     input = [(row, params, meta) for row in rows]

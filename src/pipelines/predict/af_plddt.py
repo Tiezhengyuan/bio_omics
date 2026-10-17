@@ -10,25 +10,52 @@ functions:
 from src.helper import *
 from bioomics import ProcessPickle, CalculatePlddt
 
-
-@header
+def validate_data(params):
+    pdb_group = params['pdb_group']
+    table_name = params['table_name']
+    query = f"""
+        SELECT a.input_id, p.outdir, a.pred_pdb_name, a.relative_pkl
+        FROM {table_name}         a
+        LEFT JOIn pdb_pred_params p ON a.input_id = p.input_id
+        LEFT JOIN meta_pdb        m ON p.pdb_id = m.pdb_id
+        WHERE m.pdb_group = {pdb_group}
+    ;"""
+    rows = QueryComplex(params['verbose']).list_data(query)
+    del_pool = set()
+    for row in rows:
+        pdb_file = Path(row['outdir']) / row['pred_pdb_name']
+        if not pdb_file.is_file():
+            del_pool.add(row['input_id'])
+        pkl_file = params['predict_dir'] / row['relative_pkl']
+        if not pkl_file.is_file():
+            del_pool.add(row['input_id'])
+            
+    #
+    dc = DeleteComplex(params['verbose'])
+    dc.remove_null_rows(table_name, 'input_id', list(del_pool))
+    
+# @header
 def retrieve_rows(params, meta):
     pdb_group = params['pdb_group']
     table_name = params['table_name']
     query = f"""
-        SELECT a.pdb_id, a.category, a.input_id, a.ranking, a.relaxed_pdb
-        FROM af_summary    a
-        LEFT JOIN meta_pdb p ON a.pdb_id = p.pdb_id
-        WHERE p.pdb_group = {pdb_group}
-            AND a.relaxed_pdb IS NOT NULL
-            AND a.relaxed_pdb NOT IN (
-                SELECT relative_pdb FROM {table_name}
+        SELECT p.pdb_id, p.outdir, a.input_id, a.relaxed_pdb_name AS pred_pdb_name
+        FROM af_summary           a
+        LEFT JOIN pdb_pred_params p ON a.input_id = p.input_id
+        LEFT JOIN meta_pdb        m ON p.pdb_id = m.pdb_id
+        WHERE m.pdb_group = {pdb_group}
+            AND a.relaxed_pdb_name IS NOT NULL
+            AND NOT EXISTS (
+                SELECT 1 FROM {table_name} c
+                WHERE a.relaxed_pdb_name = c.pred_pdb_name
             )
     ;"""
-    rows = QueryComplex().list_data(query)
+    rows = QueryComplex(params['verbose']).list_data(query)
     meta['raws'] = len(rows)
+    print(f"Detect {len(rows)} ready for pLDDT...")
+    
     for row in rows:
-        pdb_file = params['predict_dir'] / row['relaxed_pdb']
+        pdb_file = Path(row['outdir']) / row['pred_pdb_name']
         if pdb_file.is_file():
             row['pdb_file'] = pdb_file
             row['pkl_file_name'] = pdb_file.stem + '.pkl'
@@ -40,10 +67,10 @@ def cal_plddt(rows, params, meta):
         pdb_id = row['pdb_id']
         endpoint = Path(params['table_name']) / pdb_id[:2] / pdb_id / row['input_id']
         outdir = params['predict_dir'] / endpoint
-        outdir.mkdir(parents=True, exist_ok=True)
 
         pfile = outdir / row['pkl_file_name']
         if params['overwrite'] or not pfile.is_file():
+            outdir.mkdir(parents=True, exist_ok=True)
             # load structure before calculation
             cp = CalculatePlddt(row['pdb_file'], outdir)
             cp.load_structure()
@@ -67,9 +94,8 @@ def cal_plddt(rows, params, meta):
             for item in data['pLDDT']:
                 meta['insert_records'] += 1
                 rec = (
-                    row['pdb_id'],
                     row['input_id'],
-                    row['relaxed_pdb'],
+                    row['pred_pdb_name'],
                     str(endpoint / row['pkl_file_name']),
                     item['model'].id,
                     item['chain'].id,
@@ -83,6 +109,7 @@ if __name__ == "__main__":
         'overwrite': False,
         'table_name': 'af_plddt',
     })
+    validate_data(params)
         
     # retrieve pdb_ids
     rows = retrieve_rows(params, meta)

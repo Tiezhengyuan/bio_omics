@@ -59,6 +59,18 @@ uv pip install pyrosetta --find-links https://west.rosettacommons.org/pyrosetta/
 #test
 uv run test-env
 
+
+# synchronize tools
+sync-tools
+
+# install env colabfold
+conda create -n colabfold -c conda-forge -c bioconda python=3.13 kalign2=2.04 hhsuite=3.3.0 mmseqs2=18.8cc5c
+conda activate colabfold
+
+# With CUDA GPU support
+pip install colabfold[alphafold,openmm] jax[cuda12] openmm[cuda12]
+
+
 ########################
 ### uv: newly built
 

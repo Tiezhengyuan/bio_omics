@@ -74,6 +74,20 @@ class ParseStructure:
         }
         return header
 
+    def iter_chain(self):
+        for model in self.structure:
+            for chain in model:
+                yield model, chain
+
+    def get_chain(self, chain_no:str=None, model_no:int=0):
+        if chain_no is None:
+            _, chain = next(self.iter_chain())
+            return chain
+        for model, chain in self.iter_chain():
+            if model.id == model_no and chain.id == chain_no:
+                return chain
+        return None
+    
     def iter_res(self):
         '''
         iterate residues
