@@ -13,6 +13,8 @@ from unittest import TestCase, mock, skip
 TESTS_DIR = os.path.dirname(__file__)
 DATA_DIR = os.path.join(TESTS_DIR, 'data')
 RESULTS_DIR = os.path.join(TESTS_DIR, 'results')
+# legacy alias still referenced by several test modules
+DIR_DATA = DATA_DIR
 
 #
 omics_dir = os.path.dirname(TESTS_DIR)

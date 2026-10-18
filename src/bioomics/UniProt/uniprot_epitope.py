@@ -1,6 +1,8 @@
 
 '''
 '''
+from pathlib import Path
+
 from ..common.bio_dict import BioDict
 # from ..integrate_data import IntegrateData
 # from ..protein_meta import ProteinMeta
@@ -9,14 +11,19 @@ from .download_uniprot import DownloadUniprot
 
 class UniprotEpitope:
     entity = 'epitope'
+    source = 'UniProt'
 
-    def __init__(self, local_dir:str, result_dir:str, overwrite:bool=None):
+    def __init__(self, local_dir:str, result_dir:str, overwrite:bool=False):
         self.local_dir = local_dir
         self.result_dir = result_dir
+        self.overwrite = overwrite
+        self.meta = {}
 
     def __call__(self, entity_path:str=None) -> bool:
         '''
         entity: epitope
+        NB: ProteinMeta and IntegrateData modules are not restored yet
+        (see commented imports in src/bioomics/__init__.py)
         '''
         iebd_meta = ProteinMeta(self.result_dir, self.entity, 'IEDB')
         iebd_index_meta = iebd_meta.get_index_meta()
@@ -28,17 +35,17 @@ class UniprotEpitope:
         self.integrate = IntegrateData(self.meta)
 
         # detect proteins annotated with epitopes
-        client = DownloadUniprot(self.local_dir, overwrite)
+        client = DownloadUniprot(self.local_dir, self.overwrite)
         # uniprot_sprot.dat
         # download data to the local
         print(len(iebd_index_meta))
-        dat_gz = client.download_uniprot_sprot()
+        dat_gz = client.uniprot_sprot()
         entity_data = self.parse_epitope(dat_gz, iebd_index_meta)
         print(len(iebd_index_meta))
         data_source = (self.source, 'uniprot_sprot', self.entity)
         self.meta['uniprot_sprot'] = self.integrate_epitope(entity_data, data_source)
 
-        dat_gz = client.download_uniprot_trembl()
+        dat_gz = client.uniprot_trembl()
         entity_data = self.parse_epitope(dat_gz, iebd_index_meta)
         print(len(iebd_index_meta))
         data_source = (self.source, 'uniprot_trembl', self.entity)
@@ -65,7 +72,11 @@ class UniprotEpitope:
         for record in parser:
             tag = 0
             for ft in record.features:
+                # NB: qualifier values are plain strings in Biopython >= 1.85
+                # and lists before: normalize before the substring test
                 note = ft.qualifiers.get('note', '')
+                if isinstance(note, (list, tuple)):
+                    note = ' '.join(note)
                 if 'epitope' in note:
                     tag = 1
                     if record.id not in entity_data:
@@ -90,7 +101,9 @@ class UniprotEpitope:
                 del iebd_index_meta[record.id]
 
         print(f"proteins={m}, epitopes={n}, proteins in IEDB={p}")
-        self.meta[self.source] = {
+        # key by data file so that the counts of sprot/trembl are both kept
+        file_key = Path(dat_gz).name.split('.')[0]
+        self.meta[file_key] = {
             'proteins_with_epitopes': m,
             'epitopes': n,
             'proteins_in_IEDB': p,
@@ -145,14 +158,15 @@ class UniprotEpitope:
         # get protein accessions defined in IEDB
         # iedb_index_file = os.path.join(self.meta['meta_path'], 'IEDB_index.json')
         # if os.path.isfile(iedb_index_file):
-        #     with open(iedb_index_file, 'r') as f:
+        #     with open(iedb_index_file) as f:
         #         index_meta = json.load(f)
         #         pro_acc = list(index_meta)
         # print(pro_acc)
 
-        fa_gz = self.download_uniref50()
+        client = DownloadUniprot(self.local_dir, self.overwrite)
+        fa_gz = client.uniref50()
         print(fa_gz)
-        parser = self.parse_fasta(fa_gz, 'UniRef50_')
+        parser = Uniprot(fa_gz).scan_uniref50()
         for rec in parser:
             print(rec)
             break

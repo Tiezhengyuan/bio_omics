@@ -56,16 +56,17 @@ class ParseUniprot:
 
     def filter_uniref50(self, index_meta:dict):
         '''
+        retrieve UniRef50 sequences for the accessions defined in index_meta
+        input: uniref50.fasta.gz inside self.outdir
         '''
-        fa_gz = self.download_uniref50()
-        parser = self.parse_fasta(fa_gz, 'UniRef50_')
-        
-        entity_data, m, n = {}, 0, 0
+        parser = Uniprot(self.outdir).scan_uniref50()
+
+        entity_data = {}
         for rec in parser:
             acc = rec['id']
             if acc in index_meta:
                 entity_data[acc] = {
-                    'protein': rec.seq,
+                    'protein': rec['sequence'],
                 }
 
         return entity_data

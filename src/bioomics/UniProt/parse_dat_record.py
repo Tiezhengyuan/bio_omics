@@ -97,6 +97,9 @@ class ParseDatRecord:
             except Exception as e:
                 pass
             if ft.qualifiers:
-                rec.update(ft.qualifiers)
+                # qualifiers are lists in Biopython: flatten single-element
+                # ones to scalars so that the exported json stays simple
+                for q_key, q_val in ft.qualifiers.items():
+                    rec[q_key] = q_val[0] if isinstance(q_val, list) and len(q_val) == 1 else q_val
             res.append(rec)
         return res
