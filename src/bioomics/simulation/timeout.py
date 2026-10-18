@@ -1,7 +1,11 @@
+import builtins
 import signal
 import functools
 
-class TimeoutError(Exception):
+# subclass the built-in TimeoutError so that a caller can catch a timeout
+# with either this class or the built-in one ('except TimeoutError' in
+# openmm_pdbfixer.py / openmm_simulation.py must keep working)
+class TimeoutError(builtins.TimeoutError):
     pass
 
 def timeout(minutes):

@@ -10,9 +10,9 @@ import numpy as np
 from pathlib import Path
 import scipy
 
-from bioomics import three_to_one_map
-
-
+# three-letter -> one-letter amino-acid code; 'three_to_one_map' does not
+# exist in the bioomics namespace, use the constants mapping instead
+from ..constants.amino_acids import longer_names as three_to_one_map
 class Trajectory:
     parser = PDB.PDBParser(QUIET=True)
 
@@ -85,11 +85,15 @@ class Trajectory:
         structure = self.parser.get_structure("complex", self.trajectory_pdb)
 
         # Get the specified chain
-        binder_atoms = PDB.Selection.unfold_entities(structure[0][binder_chain], traj_chain)
+        # unfold to the ATOM level ('A'); the entity level must not be the
+        # chain id (unfold_entities(chain, chain_id) raises for e.g. 'B')
+        binder_atoms = PDB.Selection.unfold_entities(
+            structure[0][binder_chain], 'A')
         binder_coords = np.array([atom.coord for atom in binder_atoms])
 
         # Get atoms and coords for the target chain
-        target_atoms = PDB.Selection.unfold_entities(structure[0][traj_chain], traj_chain)
+        target_atoms = PDB.Selection.unfold_entities(
+            structure[0][traj_chain], 'A')
         target_coords = np.array([atom.coord for atom in target_atoms])
 
         # Build KD trees for both chains

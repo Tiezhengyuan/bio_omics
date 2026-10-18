@@ -26,7 +26,9 @@ class OpenmmPdbfixer:
 
     def init_fixer(self):
         try:
-            if self.pdb_file.stem == '.gz':
+            # gzipped PDB: Path.stem of 'x.pdb.gz' is 'x.pdb', so test the
+            # suffix instead
+            if str(self.pdb_file).endswith('.gz'):
                 with gzip.open(self.pdb_file, 'rt') as f:
                     self.fixer = PDBFixer(pdbfile=f)
             else:

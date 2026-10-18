@@ -85,10 +85,12 @@ class EvalPred:
                     res['charged-polar_contacts'] = val
                 elif 'charged-apolar' in line:
                     res['charged-apolar_contacts'] = val
-                elif 'polar-polar' in line:
-                    res['polar-polar_contacts'] = val
+                # NB: 'apolar-polar' must be tested before 'polar-polar':
+                # 'apolar-polar' contains 'polar-polar' as a substring
                 elif 'apolar-polar' in line:
                     res['apolar-polar_contacts'] = val
+                elif 'polar-polar' in line:
+                    res['polar-polar_contacts'] = val
                 elif 'apolar-apolar' in line:
                     res['apolar-apolar_contacts'] = val
                 elif 'apolar NIS' in line:

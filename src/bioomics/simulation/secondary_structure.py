@@ -47,6 +47,9 @@ class SecondaryStructure:
                         atoms.append(atom.coord)
                         atom_info.append((chain.id, residue.id[1], atom.get_name(), atom.coord))
 
+        # no atoms selected (empty structure): no clashes
+        if not atoms:
+            return 0
         tree = cKDTree(atoms)
         pairs = tree.query_pairs(threshold)
 

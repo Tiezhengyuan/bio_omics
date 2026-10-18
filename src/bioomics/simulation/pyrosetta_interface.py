@@ -29,7 +29,7 @@ try:
 except ImportError:
     DockingPartners = None
 
-from denovo.filter import Trajectory
+from .trajectory import Trajectory
 
 
 class PyRosettaInterface:

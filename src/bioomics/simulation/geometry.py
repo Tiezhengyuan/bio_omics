@@ -210,14 +210,17 @@ class Geometry(Pdb):
 
         Cutoffs (fail -> reason):
           num_missing > 0 -> 'missing_residues' (no tolerance);
+          chain_continuity num_breaks > 0 -> 'chain_breaks'
+            (BACKBONE_GATES num_breaks = 0);
           ca max > 5 A -> 'ca_distance' (ideal CA-CA ~3.8 A);
           peptide max > 5 A or mean > 3 A -> 'peptide_distance'
             (ideal C-N = 1.329 A);
           torsion null fraction > 0.05 -> 'torsion_angles'
             (backbone-only models skip this gate);
-          clash_score > clash_score_cutoff (30.0/1000 atoms) -> 'clashes';
-          severe contacts counted at distance < 2.0 A
-            (severe_clash_distance).
+          num_severe_clashes > 0 -> 'severe_clashes'
+            (contacts < severe_clash_distance = 2.0 A;
+            BACKBONE_GATES num_servere_clashes = 0);
+          clash_score > clash_score_cutoff (30.0/1000 atoms) -> 'clashes'.
       
         '''
         if not geo_info:
@@ -226,6 +229,12 @@ class Geometry(Pdb):
         # no missing atoms in any residues
         if geo_info.get('num_missing', 0):
             return False, 'missing_residues'
+        # chain continuity: any real break (broken / numbering-gap peptide)
+        # splits the chain; num_fragments == num_breaks + 1 (see run()),
+        # consistent with BACKBONE_GATES num_breaks = 0
+        cont = geo_info.get('chain_continuity') or {}
+        if cont.get('num_breaks', 0) > 0:
+            return False, 'chain_breaks'
         # good cutoff 3.8A, allowed 5A
         ca = geo_info.get('ca_distance')
         if ca is not None and pd.notna(ca.get('max')) and ca['max'] > 5:
@@ -241,6 +250,11 @@ class Geometry(Pdb):
             torsion = geo_info.get('torsion_angles') or {}
             if torsion.get('null', 0) > 0.05:
                 return False, 'torsion_angles'
+        # severe steric clashes: non-bonded heavy-atom contacts below
+        # severe_clash_distance (2.0 A); consistent with BACKBONE_GATES
+        # num_servere_clashes = 0
+        if geo_info.get('num_severe_clashes', 0) > 0:
+            return False, 'severe_clashes'
         # steric clashes: clash score = clashes per 1000 heavy atoms,
         # see Geometry.clash_score_cutoff
         if geo_info.get('clash_score', 0) > self.clash_score_cutoff:

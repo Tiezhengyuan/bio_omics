@@ -61,6 +61,12 @@ class OpenmmSimulation:
         self.verbose = self.args.get('verbose', False)
         self.pdb = None
         self.simulation = None 
+        # load_pdb() records the periodic-box provenance here, so the
+        # dict must exist even when load_pdb() is called on its own
+        self.info = {
+            'pdb_file': self.pdb_file,
+            'pdb_id': self.args.get('pdb_id'),
+        }
 
     @timeout(30)
     def relax_pdb(self):
@@ -109,21 +115,27 @@ class OpenmmSimulation:
         '''
         if self.pdb_file.endswith('.gz'):
             with gzip.open(self.pdb_file, 'rt') as f:
-                self.pdb = app.PDBFile(pdbfile=f)
+                # app.PDBFile(file, ...) has no 'pdbfile' keyword
+                self.pdb = app.PDBFile(f)
         else:
             self.pdb = app.PDBFile(self.pdb_file)
         self.info['periodic_box'] = 'input_pdb'
         
-        # Add box dimensions (if they don't exist)
-        if self.pdb.topology.getPeriodicBoxVectors() is None:
+        # Add box dimensions (if they don't exist or are a dummy):
+        # OpenMM's PDBFile puts a dummy 0.1 nm box on PDB files without a
+        # CRYST1 record; PME with a 1 nm cutoff needs at least a 2 nm box,
+        # else create_system() raises "cutoff distance cannot be greater
+        # than half the periodic box size"
+        box = self.pdb.topology.getPeriodicBoxVectors()
+        if box is None or (
+                box[0][0] + box[1][1] + box[2][2]) < 1.5 * unit.nanometer:
             if self.verbose:
                 print(f"Add periodic box vector for data from {self.pdb_file}")
-            # default box: x,y,z 3-dimension
             self.pdb.topology.setPeriodicBoxVectors([
-                [10.0, 0.0, 0.0],
-                [0.0, 10.0, 0.0],
-                [0.0, 0.0, 10.0],
-            ])
+                mm.Vec3(2.0, 0.0, 0.0),
+                mm.Vec3(0.0, 2.0, 0.0),
+                mm.Vec3(0.0, 0.0, 2.0),
+            ] * unit.nanometer)
             self.info['periodic_box'] = 'default'
 
     def create_system(self):

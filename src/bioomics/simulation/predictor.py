@@ -173,4 +173,4 @@ class Predictor:
         '''
         tool_name = 'HadDock3'
         cmd = ['haddock3', str(params['cgi_file']),]
-        return Predictor._subprocess(cmd, False, tool_name)
+        return Predictor.run_subprocess(cmd, tool_name=tool_name)
