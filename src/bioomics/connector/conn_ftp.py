@@ -83,7 +83,9 @@ class ConnFTP:
                 print(f"Download {ftp_file}")
         except Exception as e:
             print('Failure: download data from FTP, error=', e)
-            os.remove(local_file)
+            # the local file may not have been opened yet
+            if os.path.isfile(local_file):
+                os.remove(local_file)
             local_file = None
         # unzip .gz file
         if self.run_gunzip and local_file and local_file.endswith('gz'):

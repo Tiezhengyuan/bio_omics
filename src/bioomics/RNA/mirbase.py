@@ -20,13 +20,13 @@ class Mirbase:
     def download_hairpin(self):
         local_file = os.path.join(self.local_dir, 'hairpin.fa')
         if self.overwrite or not os.path.isfile(local_file):
-            self.parse_fasta(f"{self.url}/hairpin.fa", local_file)
+            self.parse_fasta(f"{self.url.rstrip('/')}/hairpin.fa", local_file)
         return self.local_dir, local_file
 
     def download_mature(self):
         local_file = os.path.join(self.local_dir, 'mature.fa')
         if self.overwrite or not os.path.isfile(local_file):
-            self.parse_fasta(f"{self.url}/mature.fa", local_file)
+            self.parse_fasta(f"{self.url.rstrip('/')}/mature.fa", local_file)
         return self.local_dir, local_file
 
     def parse_fasta(self, url_path, local_file):
