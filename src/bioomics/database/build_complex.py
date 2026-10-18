@@ -83,8 +83,7 @@ TABLE_COLUMNS = {
     'meta_blastp5': ['pdb_id', 'model_no', 'relative_aln'],
     'align_uniprot': ['pdb_id', 'chain_id', 'uniprot_acc', 
         'evalue', 'bit_score', 'identity',],
-    'align_vdj': ['pdb_id', 'model_no', 'v_aln', 'd_aln', 'j_aln'],
-    # label: align_vfrag/vregion/dregion/jregion, label_chain/label_complex
+    # label: align_vdj/vfrag/vregion/dregion/jregion, label_chain/label_complex
     # moved to antibody_omics
 
     # dynamics.sh

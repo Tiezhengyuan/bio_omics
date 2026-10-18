@@ -48,8 +48,7 @@ pool = {
     # align
     'meta_blastp5': 'align.meta_blastp5',
     'align_uniprot': 'align.align_uniprot',
-    'align_vdj': 'align.align_vdj',
-    # vfrag/vregion/dregion/jregion, label_antibody moved to antibody_omics
+    # align_vdj/vfrag/vregion/dregion/jregion, label_antibody moved to antibody_omics
     # 'anarci': 'immune.anarci',
 
     # predict
