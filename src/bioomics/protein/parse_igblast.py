@@ -83,7 +83,7 @@ class ParseIgblast:
                     print(block[0], e)
         
         # save data to .json
-        prefix = self.aln_file.replace('.aln', '')
+        prefix = str(self.aln_file).replace('.aln', '')
         ProcessJson.save_json(data, f'{prefix}.json')
         info['json'] = len(data)
         if self.verbose:
@@ -92,7 +92,7 @@ class ParseIgblast:
     
     def build_label_text(self):
         # save sequence to csv
-        prefix = self.aln_file.replace('.aln', '')
+        prefix = str(self.aln_file).replace('.aln', '')
         input_data = ProcessJson.load_json(f'{prefix}.json')
 
         data = []
@@ -304,15 +304,16 @@ class ParseIgblast:
         # gapped_seq_cdr
         region, aln_seq, pos = [], [], []
         for sub_block in aln_block:
-            rec = ParseText.parse_lines_items(sub_block)
-            # CDR are detected
-            if 'Query_' in sub_block[1]:
-                region.append(rec[0][-2])
-                aln_seq.append(rec[1][-2])
-                pos += [int(rec[1][-3]), int(rec[1][-1])]
+            # line 0: region ruler; line 1: Query_N, start, gapped seq, end
+            if len(sub_block) > 1 and 'Query_' in sub_block[1]:
+                items = sub_block[1].split()
+                region.append(sub_block[0].lstrip())
+                aln_seq.append(items[2])
+                pos += [int(items[1]), int(items[3])]
             else:
-                aln_seq.append(rec[0][-2])
-                pos += [int(rec[0][-3]), int(rec[0][-1])]
+                items = sub_block[0].split()
+                aln_seq.append(items[-2])
+                pos += [int(items[-3]), int(items[-1])]
         return region, aln_seq, pos
 
     def gap_seq(self, region, aln_seq, pos):

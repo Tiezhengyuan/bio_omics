@@ -19,7 +19,6 @@ class EncodeAA:
         # for a,b in SMILES_1.items():
         #     b = re.sub(r'\(=O\)|\(=N\)|\(=CN2\)|\(|\)', '', b)
         #     self.smiles[a] = re.sub(r'\d|\=', '', b)
-        print(self.smiles)
 
     def aa_2(self):
         '''
@@ -90,7 +89,7 @@ class EncodeAA:
 
     def freq_1aa(self, seq:str) -> dict:
         '''
-        frequency of 2-AA
+        frequency of 1-AA
         '''
         counts = Counter(seq)
         n = len(seq)
@@ -114,7 +113,7 @@ class EncodeAA:
         return freq
 
 #################
-    def physical_chemical_text(self, seq:str) -> pd.Series:
+    def physical_chemical_text(self, seq:str) -> str:
         '''
         physical chemical properties given a epitope sequence
         '''
@@ -155,8 +154,10 @@ class EncodeAA:
 
         # outcome
         res = pd.Series([seq, label], index=['seq', 'label'])
-        res = pd.concat([res, phyche_mean, phyche_median, phyche_var])
-        res = res.round(decimals=3)
+        # round numeric stats before merging with string values
+        stats = pd.concat([phyche_mean, phyche_median, phyche_var])
+        stats = stats.round(decimals=3)
+        res = pd.concat([res, stats])
         return res
 
     def frequency_aa(self, seq:str, label:int=None) -> list:
@@ -172,7 +173,7 @@ class EncodeAA:
         # two AA
         freq2a = self.freq_2aa(seq)
         for k in self.aa2:
-            v = freq2a.get(k, 0)
+            v = freq2a.get(f'freq_{k}', 0)
             res.append(str(v))
         return res
 
@@ -194,12 +195,14 @@ class EncodeAA:
         res = self.hydrophobicity_ph7(seq) + self.hydrophobicity(seq) + \
                 self.polarity(seq) + self.polarizability(seq) + \
                 self.van_der_Waals_volume(seq)
+        res = np.array(res)
         if label is not None:
             res = np.append(res, label)
         return res
     
     def vector_2d(self, seq:str) -> np.array:
+        # one row per residue, one column per property
         res = self.vector_1d(seq)
         m = len(seq)
         n = int(len(res)/m)
-        return res.reshape(m, n)
+        return res.reshape(n, m).T

@@ -11,7 +11,8 @@ class ProcessSeq:
         example indx = {idx: chr}
         '''
         pool, offset = list(seq), 0
-        for idx, chr in idx_chr.items():
+        # insertions are applied in ascending order of index
+        for idx, chr in sorted(idx_chr.items()):
             pool.insert(idx + offset, chr)
             offset += 1
         return ''.join(pool)

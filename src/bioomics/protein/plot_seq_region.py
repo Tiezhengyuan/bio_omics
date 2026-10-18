@@ -7,7 +7,7 @@ class PlotSeqRegion:
         self.ax = ax
         self.ft = ft
         self.chain_len = chain_len if chain_len else \
-            ft[ft['code']=='W']['length'][0]
+            ft[ft['code']=='W']['length'].iloc[0]
         self.xlim_max = 100
         self.ylim = 1
         self.height = .3

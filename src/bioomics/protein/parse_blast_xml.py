@@ -97,7 +97,8 @@ class ParseBlastXml:
                 res['gene_name'] = gene_name
                 if '-' in gene_name:
                     res['gene_family'] = gene_name.split('-')[0]
-            res['chain_type'] = allele_name[2]
-            res['isotype'] = allele_name[:2]
+            if len(allele_name) > 2:
+                res['chain_type'] = allele_name[2]
+                res['isotype'] = allele_name[:2]
         return res
 

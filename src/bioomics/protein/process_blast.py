@@ -19,7 +19,9 @@ class ProcessBlast:
                 yield path
 
     def _blast_db(self, fa_file:Path, db_type:str, bin_dir:Path=None):
-        outdir = self.outdir if self.outdir.exists() else fa_file.parent
+        fa_file = Path(fa_file)
+        outdir = Path(self.outdir) if self.outdir and Path(self.outdir).exists() \
+            else fa_file.parent
         outdir.mkdir(parents=True, exist_ok=True)
         db_path = outdir / fa_file.stem.replace('.fasta', '')
         cmd = [
@@ -39,6 +41,9 @@ class ProcessBlast:
             if self.verbose:
                 print(f"Command failed with error: {e}")
                 print(f"Stderr: {e.stderr}")
+        except FileNotFoundError as e:
+            if self.verbose:
+                print(f"Command not found: {e}")
         return None
 
     def build_blastp_db(self, fa_file:Path, bin_dir:Path=None):
@@ -65,4 +70,7 @@ class ProcessBlast:
             if self.verbose:
                 print(f"Command failed with error: {e}")
                 print(f"Stderr: {e.stderr}")
+        except FileNotFoundError as e:
+            if self.verbose:
+                print(f"Command not found: {e}")
         return 'fail'

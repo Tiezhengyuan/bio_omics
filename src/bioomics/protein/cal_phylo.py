@@ -21,14 +21,19 @@ class CalPhylo:
         for path in file_iter:
             if path.endswith('.afa'):
                 scores = self.msa_distance(path)
-                for method, dist in scores:
+                for method, dist in scores.items():
                     res[method].append(dist)
         # to df
         for method in self.methods:
-            res[method] = pd.concat(res[method], axis=1).T
+            res[method] = pd.concat(res[method], axis=1).T \
+                if res[method] else pd.DataFrame()
         return res
 
     def msa_distance(self, msa_fa_file:str):
+        '''
+        distance of each sequence to the first one in the MSA
+        return: {method: pd.Series(index=names[1:], values=distances)}
+        '''
         self.data['aln_file'] = msa_fa_file
         # Load multiple sequence alignment
         alignment = AlignIO.read(msa_fa_file, "fasta")
@@ -46,4 +51,4 @@ class CalPhylo:
                 pass
         if scores:
             self.data['distance'] = scores
-        return self.data
+        return scores

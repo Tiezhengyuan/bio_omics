@@ -44,7 +44,7 @@ class AlignSeq:
         for score in aln:
             alignments = score['alignments']
             for alignment in alignments:
-                l1, l2, s = len(seq1), len(seq2), alignment.score
+                l1, l2, s = len(score['seq1']), len(score['seq2']), alignment.score
                 print(f"seq1={l1}, seq2={l2}, score={s}")
                 print(pairwise2.format_alignment(*alignment))
                 break

@@ -10,10 +10,11 @@ import subprocess
 class ProcessIgblast:
 
     def __init__(self, igblast_dir:Path, verbose:bool=False):
-        self.igblast_dir = igblast_dir
+        self.igblast_dir = Path(igblast_dir)
         self.verbose = verbose
 
     def build_pro_db(self, fa_file:Path, outdir:Path=None):
+        fa_file = Path(fa_file)
         if outdir is None:
             outdir = fa_file.parent
         else:
@@ -38,6 +39,9 @@ class ProcessIgblast:
             if self.verbose:
                 print(f"Command failed with error: {e}")
                 print(f"Stderr: {e.stderr}")
+        except FileNotFoundError as e:
+            if self.verbose:
+                print(f"Command not found: {e}")
         return None
 
     def igblastp(self, fa_file:Path, db_path:str, outfile:Path, outfmt:int=None):
@@ -73,4 +77,7 @@ class ProcessIgblast:
             if self.verbose:
                 print(f"Command failed with error: {e}")
                 print(f"Stderr: {e.stderr}")
+        except FileNotFoundError as e:
+            if self.verbose:
+                print(f"Command not found: {e}")
         return 'fail'

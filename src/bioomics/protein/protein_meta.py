@@ -56,12 +56,12 @@ class ProteinMeta:
     def save_meta(self, meta:dict):
         end_time = datetime.now()
         delta = end_time - meta['start_time']
-        meta['duration'] = delta.seconds
-        meta['start_time'] = meta['start_time'].strftime("%m/%d/Y, %H:%M:%S")
-        meta['end_time'] = end_time.strftime("%m/%d/Y, %H:%M:%S")
+        meta['duration'] = int(delta.total_seconds())
+        meta['start_time'] = meta['start_time'].strftime("%m/%d/%Y, %H:%M:%S")
+        meta['end_time'] = end_time.strftime("%m/%d/%Y, %H:%M:%S")
         # save
         with open(meta['meta_file'], 'w') as f:
-            json.dump(meta, f, indent=4)
+            json.dump(meta, f, indent=4, default=str)
         return meta['meta_file']
 
     def get_index_meta(self, index_meta_file:str=None):

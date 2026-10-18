@@ -1,5 +1,6 @@
 from .encode_aa import *
 from .align_seq import *
+from .analyze_seq import *
 from .cal_phylo import *
 from .protein_meta import *
 

@@ -47,7 +47,8 @@ class AnalyzeSeq:
         adjust values of query according to alignment with target
         '''
         target_len = len(alignment.target)
-        _min = np.min(list(val))
+        val = np.asarray(val)
+        _min = np.min(val)
         adj_val = np.array([_min,] * target_len)
     
         for _target, _query in zip(alignment.aligned[0], alignment.aligned[1]):
@@ -62,8 +63,8 @@ class AnalyzeSeq:
         return adj_val
 
     def print_alignments(self):
-        for alignment in alignments:
-            print(alignment)
+        for rec in self.aln:
+            print(rec['alignment'])
 
     def parse_igblastp_text(self, output_file):
         results = []
