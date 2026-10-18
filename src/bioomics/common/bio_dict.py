@@ -31,7 +31,8 @@ class BioDict:
                 annot[k] = BioDict.reference(v)
             else:
                 annot[k] = v
-        refs = dict([tuple(i.split(':', 1)) for i in record.dbxrefs])
+        # NB: skip malformed dbxrefs without ':' (dict() raised ValueError)
+        refs = dict([tuple(i.split(':', 1)) for i in record.dbxrefs if ':' in i])
         return {
             'accession': record.id,
             'seq': str(record.seq),
@@ -52,12 +53,13 @@ class BioDict:
     @staticmethod
     def gbk_source(record):
         '''
-        *.GBK
+        *.GBK (Bio.GenBank.Record objects)
+        NB: attribute is 'definition' (was nonexistent 'record_definition')
         '''
         return {
             'accessions': record.accession,
             'db_source': record.db_source,
-            'record_definition': record.record_definition,
+            'record_definition': record.definition,
             'keywords': record.keywords,
             'locus': record.locus,
             'organism': record.organism,
@@ -67,10 +69,10 @@ class BioDict:
     @staticmethod
     def gbk_feature(record, ft):
         '''
-        *.GBK
+        *.GBK (Bio.GenBank.Record objects)
         '''
         qualifiers = dict([(re.sub(r'^/|=$', '', q.key), \
-            re.sub(r'"', '', q.value)) for q in ft.qualifiers])
+            re.sub(r'"', '', q.value if q.value else '')) for q in ft.qualifiers])
         # print(record.locus, ft, ft.location)
         locations = re.findall(r'\d+', ft.location)
         start = int(locations[0]) if len(locations) > 0 else 0

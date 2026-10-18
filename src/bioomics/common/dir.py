@@ -9,21 +9,15 @@ class Dir:
 
     def init_dir(self):
         '''
-        create the directory if that doesn't exists
+        create the directory (and any missing parents) if it doesn't exist
+        NB: the old BFS loop never terminated for relative paths whose
+        parent chain reached '' (dirname('') == '')
         '''
-        pool = [self.indir,]
-        while pool:
-            curr_dir = pool.pop(0)
-            if not os.path.isdir(curr_dir):
-                parent_dir = os.path.dirname(curr_dir)
-                if os.path.isdir(parent_dir):
-                    try:
-                        os.mkdir(curr_dir, 0o777)
-                    except Exception as e:
-                        print(e)
-                        return False
-                else:
-                    pool = [parent_dir, curr_dir] + pool
+        try:
+            os.makedirs(self.indir, exist_ok=True)
+        except Exception as e:
+            print(e)
+            return False
         return True
 
     def recursive_files(self): 
@@ -44,10 +38,11 @@ class Dir:
         info = {}
         for file_name in os.listdir(self.indir):
             path = os.path.join(self.indir, file_name)
-            if path.endswith(file_extension):
+            if path.endswith(file_extension) and os.path.isfile(path):
                 cmd = ['gzip', path]
                 result = subprocess.run(cmd, capture_output=True, text=True)
-                info[path].append(result)
+                # NB: info[path].append(result) raised KeyError (empty dict)
+                info[path] = [result]
         return info
 
 
@@ -55,13 +50,13 @@ class Dir:
         '''
         format directory
         '''
-        #judge if absolute dir
-        if self.indir.find('/')==0:
-            pass
-        elif self.indir.find('~')==0:
-            self.indir = re.sub('~', os.getenv('HOME'), self.indir)
-        elif self.indir is None:
+        # NB: indir must be checked for None before .find() (AttributeError)
+        if self.indir is None:
             self.indir = os.getcwd()
+        elif self.indir.find('/') == 0: #judge if absolute dir
+            pass
+        elif self.indir.find('~') == 0:
+            self.indir = re.sub('~', os.getenv('HOME'), self.indir)
         else: # ./test or test
             self.indir = os.path.abspath(self.indir)
         #alway followed by '/'

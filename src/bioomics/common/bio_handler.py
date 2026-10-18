@@ -5,10 +5,11 @@ from typing import Iterable
 class BioHandler:
 
     @staticmethod
-    def parse_gbk(infile:str) -> Iterable:
+    def parse_gbk(infile) -> Iterable:
         '''
-        attributes:
+        NB: coerce to str so that pathlib.Path inputs work with .endswith
         '''
+        infile = str(infile)
         if infile.endswith('gz'):
             with gzip.open(infile, 'rt') as f:
                 for record in GenBank.parse(f):
@@ -19,10 +20,11 @@ class BioHandler:
                     yield record
 
     @staticmethod
-    def parse_fasta(infile:str) -> Iterable:
+    def parse_fasta(infile) -> Iterable:
         '''
-        attributes:
+        NB: coerce to str so that pathlib.Path inputs work with .endswith
         '''
+        infile = str(infile)
         if infile.endswith('gz'):
             with gzip.open(infile, 'rt') as f:
                 for record in SeqIO.parse(f, 'fasta'):

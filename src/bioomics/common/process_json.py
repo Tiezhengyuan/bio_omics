@@ -26,7 +26,10 @@ class ProcessJson:
         return False
 
     @staticmethod
-    def iter_to_json(_iter, outdir:Path, chunk_size:int=10_000):
+    def iter_to_json(_iter, outdir, chunk_size:int=10_000):
+        # accept str and Path; ensure the output directory exists
+        outdir = Path(outdir)
+        outdir.mkdir(parents=True, exist_ok=True)
         pool, file_list = [], []
         n, ix = 0, 0
         for record in _iter:
@@ -49,13 +52,18 @@ class ProcessJson:
         return file_list
     
     @staticmethod
-    def get_value(infile:Path, keys:list):
-        if infile.isfile() and keys:
+    def get_value(infile, keys:list):
+        '''
+        NB: Path has no .isfile() (AttributeError) - .is_file() is correct
+        '''
+        infile = Path(infile)
+        if infile.is_file() and keys:
             data = ProcessJson.load_json(infile)
             for key in keys[:-1]:
-                if key in data:
+                if isinstance(data, dict) and key in data:
                     data = data[key]
                 else:
                     return None
-            return data.get(keys[-1])
+            if isinstance(data, dict):
+                return data.get(keys[-1])
         return None

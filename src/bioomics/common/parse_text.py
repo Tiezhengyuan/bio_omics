@@ -14,7 +14,8 @@ class ParseText:
                 tag = 1
                 continue
             if tag:
-                if block[i] == '' and block[i+1] == '':
+                # NB: guard the index: block[i+1] raised IndexError at EOF
+                if block[i] == '' and i + 1 < len(block) and block[i+1] == '':
                     break
                 else:
                     if line:
@@ -35,6 +36,8 @@ class ParseText:
         1. text columns by 1-many whitespace
         2. missing data are whitespace
         '''
+        if not lines:
+            return []
         subdf = pd.DataFrame([list(i) for i in lines])
         match = subdf.apply(lambda x: x.str.isspace().all(), axis=0)
         width = max([len(i) for i in lines])

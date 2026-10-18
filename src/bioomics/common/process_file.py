@@ -10,7 +10,8 @@ class ProcessFile:
     @staticmethod
     def get_meta(outputs_dir:Path):
         ready = {}
-        file_iter = Dir(outputs_dir).recrusive_files()
+        # NB: method is recursive_files (was misspelled 'recrusive_files')
+        file_iter = Dir(outputs_dir).recursive_files()
         for path in file_iter:
             if path.endswith('meta.json'):
                 pdb_id = os.path.basename(os.path.dirname(path))
@@ -19,7 +20,7 @@ class ProcessFile:
 
     @staticmethod
     def iter_files(outputs_dir, file_name):
-        file_iter = Dir(outputs_dir).recrusive_files()
+        file_iter = Dir(outputs_dir).recursive_files()
         for path in file_iter:
             if path.endswith(file_name):
                 pdb_id = os.path.basename(os.path.dirname(path))

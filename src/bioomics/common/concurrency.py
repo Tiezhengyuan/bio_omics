@@ -1,3 +1,4 @@
+import os
 import threading
 import multiprocessing
 
@@ -26,7 +27,14 @@ def multi_processes(data_iter, func):
 
 
 def mp_pool(data_iter, func):
-    pool = multiprocessing.Pool(processes=len(data_iter))
-
-    results = pool.map(func, data_iter)
+    '''
+    NB: the old version used processes=len(data_iter), which raises
+    TypeError for generators and forks len(data_iter) processes
+    '''
+    data = list(data_iter)
+    if not data:
+        return []
+    workers = min(len(data), os.cpu_count() or 1)
+    with multiprocessing.Pool(processes=workers) as pool:
+        results = pool.map(func, data)
     return results

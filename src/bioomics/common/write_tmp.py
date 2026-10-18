@@ -16,13 +16,17 @@ logger = logging.getLogger(__name__)
 class WriteTmp:
     def __init__(self, temporary_dir:str, destination_dir:str, name:str=None):
         """
-        dst_dir: final directory
-        tmp_dir: temporary directory
+        destination_dir: final directory
+        temporary_dir: temporary directory
         """
         self.temp_base = Path(temporary_dir)
-        self.destinaton_dir = Path(destination_dir)
-        self.destinaton_dir.mkdir(parents=True, exist_ok=True)
+        # NB: attribute was misspelled 'destinaton_dir'
+        self.destination_dir = Path(destination_dir)
+        self.destination_dir.mkdir(parents=True, exist_ok=True)
         self.name = name if name else 'io'
+        # NB: initialize so that temp_path raises a clean RuntimeError
+        # (AttributeError) before __enter__ was called
+        self.temp_dir_path = None
 
     def __enter__(self):
         # create temp_path
@@ -55,11 +59,13 @@ class WriteTmp:
         return self.temp_dir_path
     
     def copy_temp(self):
+        if not self.temp_dir_path:
+            return False
         # move files rather than copy
         cmd = [
             'rsync', '-av', '--progress', '--remove-source-files',
             str(self.temp_dir_path) + '/',
-            str(self.destinaton_dir) + '/',
+            str(self.destination_dir) + '/',
         ]
         print('Move results from tempory to destination:', cmd)
         result = subprocess.run(cmd, capture_output=True, text=True)

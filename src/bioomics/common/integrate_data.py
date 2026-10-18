@@ -7,13 +7,21 @@ from typing import Iterable
 from pathlib import Path
 
 class IntegrateData:
-    def __init__(self, meta:dict):
+    def __init__(self, meta):
         '''
-        args: entity_path: store integrated data.
-        args: key_index: use key as index or build new index if
+        args: meta: either the entity directory (str or Path) or a dict
+              with 'entity_path' and optional 'index_file' keys
+        NB: the old version only accepted a dict; every caller that passed
+        a plain path (genBank, refseq, integrate_ncbi_protein,
+        iedb_antigen...) crashed with TypeError
         '''
-        self.entity_path = meta['entity_path']
-        self.index_meta_file = meta['index_file']
+        if isinstance(meta, dict):
+            self.entity_path = str(meta['entity_path'])
+            self.index_meta_file = meta.get(
+                'index_file', os.path.join(self.entity_path, 'index.json'))
+        else:
+            self.entity_path = str(meta)
+            self.index_meta_file = os.path.join(self.entity_path, 'index.json')
         self.index_meta = self.get_index_meta()
 
     def get_index_meta(self) -> dict:
@@ -22,12 +30,19 @@ class IntegrateData:
         key: a certain accession
         value: dictionary
         '''
-        print(f"Try to get path of json files from {self.index_meta_file}")
         if os.path.isfile(self.index_meta_file):
             with open(self.index_meta_file, 'r') as f:
                 index_meta = json.load(f)
                 return index_meta
         return {}
+
+    def get_meta(self, input:dict=None) -> dict:
+        '''
+        merge input into self.index_meta and return it
+        '''
+        if isinstance(input, dict):
+            self.index_meta.update(input)
+        return self.index_meta
 
     def save_index_meta(self, input:dict=None) -> bool:
         if isinstance(input, dict):
@@ -51,8 +66,10 @@ class IntegrateData:
                     yield data
 
     def next_id(self) -> str:
-        if self.index_meta:
-            ids = [int(i['key']) for i in self.index_meta.values()]
+        # NB: non-numeric keys (e.g. accessions) must not break max()
+        ids = [int(i['key']) for i in self.index_meta.values()
+               if str(i.get('key', '')).isdigit()]
+        if ids:
             return str(max(ids) + 1)
         return '1'
     
@@ -89,7 +106,7 @@ class IntegrateData:
             json_file = None
             if key_value is None:
                 key_value = self.next_id()
-                json_file = self.new_json_path(self.next_id())
+                json_file = self.new_json_path(key_value)
             else:
                 json_file = self.key_json_path(key_value)
                         
@@ -112,8 +129,9 @@ class IntegrateData:
         '''
         new data is added or data is updated
         '''
+        # NB: .get so that the fallback never hits an unbound key_value
+        key_value = data.get('key')
         try:
-            key_value = data['key']
             if source and source not in self.index_meta[key_value]['source']:
                 self.index_meta[key_value]['source'].append(source)
             
@@ -124,8 +142,8 @@ class IntegrateData:
                 return json_file
         except Exception as e:
             print(f"Error: can't update json file. error={e}")
-        # add data
-        return self.add_data(data)
+        # fallback: key known but json file missing - re-add under the same key
+        return self.add_data(data, key_value=key_value, source=source)
                 
     def get_data(self, key_value:str) -> dict:
         if key_value in self.index_meta:

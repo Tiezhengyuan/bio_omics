@@ -7,8 +7,9 @@ import pickle
 
 class ProcessPickle:
 
-    def __init__(self, pickle_file:Path, verbose:bool=False):
-        self.pickle_file = pickle_file
+    def __init__(self, pickle_file, verbose:bool=False):
+        # NB: coerce to Path so that str inputs work with .is_file()
+        self.pickle_file = Path(pickle_file)
         self.verbose = verbose
     
     def save_data(self, data:dict):

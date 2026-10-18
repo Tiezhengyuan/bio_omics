@@ -27,11 +27,24 @@ class Utils:
         return input
 
     @staticmethod
-    def update_nested_dict(input:dict, keys:list, value, current=None):
-        if len(keys) == 0:
+    def update_nested_dict(input:dict, keys:list, value):
+        '''
+        set value at the keys path, creating intermediate dicts;
+        the leaf merge follows Utils.update_dict semantics.
+        NB: the old version wrote every key flat into input and
+        returned None
+        '''
+        if not keys:
             return input
-        Utils.update_dict(input, keys[0], value)
-        Utils.update_nested_dict(input, keys[1:], value, current)
+        d = input
+        for key in keys[:-1]:
+            nxt = d.get(key)
+            if not isinstance(nxt, dict):
+                nxt = {}
+                d[key] = nxt
+            d = nxt
+        Utils.update_dict(d, keys[-1], value)
+        return input
 
     @staticmethod
     def copy_data(outdir) -> bool:
