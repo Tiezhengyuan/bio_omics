@@ -26,6 +26,12 @@ pool = {
     'pdb_proseq': 'pdb.pdb_proseq',
     'chain_pdb': 'pdb.chain_pdb',
 
+    # dynamics
+    'equal_seq_rmsd': 'pdb.equal_seq_rmsd',
+    'combo2': 'pdb.combo2',
+    'combo3': 'pdb.combo3',
+    'combo4': 'pdb.combo4',
+    'combo5': 'pdb.combo5',
 
     # uniprot
     'download_uniprot': 'uniprot.download_uniprot',
@@ -40,12 +46,8 @@ pool = {
     'meta_blastp5': 'uniprot.meta_blastp5',
     'align_uniprot': 'uniprot.align_uniprot',
 
-    #dynamics
-    'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
-    'combo2': 'dynamics.combo2',
-    'combo3': 'dynamics.combo3',
-    'combo4': 'dynamics.combo4',
-    'combo5': 'dynamics.combo5',
+    # dynamics
+    # equal_seq_rmsd, combo2-5 moved to pdb
 
     # align
     # meta_blastp5, align_uniprot moved to uniprot
