@@ -8,6 +8,11 @@ pdb_faa -> meta_blastp5  -> align_uniprot
                                      -> label_complex
                     -> align_dregion
                     -> align_jregion
+
+pipelines align_vfrag/vregion/dregion/jregion and label_antibody,
+which populate the tables below, moved to antibody_omics
+(src/pipelines/align); bio_omics keeps the schema and reads the
+tables via views (view.sql) and query_complex.combo_ids
 */
 
 DROP TABLE IF EXISTS meta_blastp5;

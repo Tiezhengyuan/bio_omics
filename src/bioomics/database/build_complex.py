@@ -84,24 +84,8 @@ TABLE_COLUMNS = {
     'align_uniprot': ['pdb_id', 'chain_id', 'uniprot_acc', 
         'evalue', 'bit_score', 'identity',],
     'align_vdj': ['pdb_id', 'model_no', 'v_aln', 'd_aln', 'j_aln'],
-    'align_vfrag': ['pdb_id', 'chain_id', 'identity', 'seq',
-        'fragment', 'seq_from', 'seq_to'],
-    'align_vregion':['pdb_id', 'chain_id', 'allele_name', 'specie',
-        'gene_name', 'gene_family', 'chain_type', 'isotype',
-        'evalue', 'bit_score', 'region_names'],
-    'align_dregion': ['pdb_id', 'chain_id', 'hit_id', 'organism',
-        'evalue', 'bit_score', 'identities', 'query_len', 'align_len',
-        'query_start', 'query_end', 'query_seq', 'match_seq',
-        'sbjct_seq', 'sbjct_start', 'sbjct_end',],
-    'align_jregion': ['pdb_id', 'chain_id', 'allele_name', 'specie',
-        'gene_name', 'gene_family', 'chain_type', 'isotype',
-        'evalue', 'bit_score', 'identities', 'query_len', 'align_len',
-        'query_start', 'query_end', 'query_seq', 'match_seq',
-        'sbjct_seq', 'sbjct_start', 'sbjct_end',],
-    'label_chain': ['pdb_id', 'chain_id', 'first_chain_id',
-        'chain_label', 'category'],
-    'label_complex': ['pdb_id', 'model_no', 'combo_id', 'chain_combo', 
-        'chain_label', 'combo', 'chain_ids', 'category'],
+    # label: align_vfrag/vregion/dregion/jregion, label_chain/label_complex
+    # moved to antibody_omics
 
     # dynamics.sh
     # combination
