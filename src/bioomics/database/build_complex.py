@@ -63,8 +63,6 @@ TABLE_COLUMNS = {
         'non_water_res', 'aa_res', 'dna_res', 'rna_res', 'water_res',
         'ion_res', 'hetero_res', 'other_res'],
     'chain_pdb': ['pdb_id', 'chain_id', 'relative_pdb'],
-    'chain_dssp': ['pdb_id', 'chain_id', 'host', 'model_no',
-        'chain_no', 'dssp_seq',],
    
     # uniprot
     'uniprot': ['uniprot_acc', 'pro_name', 'organism', 'pro_seq', 'creation_date', 'seq_date'],
@@ -121,36 +119,12 @@ TABLE_COLUMNS = {
     'combo3_fixed': ['pdb_id', 'combo_id', 'fixed_pdb',],
     'combo4_fixed': ['pdb_id', 'combo_id', 'fixed_pdb',],
     'combo5_fixed': ['pdb_id', 'combo_id', 'fixed_pdb',],
-    # relax
-    'chain_relaxed': ['pdb_id', 'chain_id', 'relaxed_pdb',
-        'original_energy', 'relaxed_energy',],
-    'combo2_relaxed': ['pdb_id', 'combo_id', 'relaxed_pdb',
-        'original_energy', 'relaxed_energy',],
-    'combo3_relaxed': ['pdb_id', 'combo_id', 'relaxed_pdb', 
-        'original_energy', 'relaxed_energy',],
-    'combo4_relaxed': ['pdb_id', 'combo_id', 'relaxed_pdb', 
-        'original_energy', 'relaxed_energy',],
-    'combo5_relaxed': ['pdb_id', 'combo_id', 'relaxed_pdb',
-        'original_energy', 'relaxed_energy',],
+    # relax: chain_relaxed, combo2..5_relaxed moved to structure_profiling
     # contacts
     'equal_seq_rmsd': ['chain_id', 'equal_chain_id', 'rmsd',
         'chain_pdb', 'equal_chain_pdb',],
-    #qc
-    'pdb_qc': ['pdb_id', 'chain_id', 'angle_rmsz', 'bond_rmsz',
-        'ca_max_dist', 'cb_outlier_frac', 'clash_score',
-        'mainchain_outlier_frac', 'n_chirality_outliers',
-        'n_z_outliers', 'num_breaks', 'num_clashes', 'num_fragments',
-        'num_missing', 'num_strained', 'num_servere_clashes',
-        'pep_max_dist', 'peptide_outlier_frac', 'rama_outlier_frac',
-        'vdw_clash_score', 'z_outlier_frac',],
-    'pdb_relaxed_qc': ['pdb_id', 'chain_id', 'angle_rmsz', 'bond_rmsz',
-        'ca_max_dist', 'cb_outlier_frac', 'clash_score',
-        'mainchain_outlier_frac', 'n_chirality_outliers',
-        'n_z_outliers', 'num_breaks', 'num_clashes', 'num_fragments',
-        'num_missing', 'num_strained', 'num_servere_clashes',
-        'pep_max_dist', 'peptide_outlier_frac', 'rama_outlier_frac',
-        'vdw_clash_score', 'z_outlier_frac',],
-    
+    # qc: pdb_qc / pdb_relaxed_qc moved to structure_profiling
+
     #predict Abs in PDB
     'af_params': ['pdb_id', 'input_id', 'input_table_name', 'input_col_name',
         'input_size', 'group_no', 'combo', 'categories', 'query_faa', 'outdir',],

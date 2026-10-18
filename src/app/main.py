@@ -17,7 +17,6 @@ pool = {
     # pdb-analysis
     'meta_bfactor': 'pdb.meta_bfactor',
     'pdb_bfactor': 'pdb.pdb_bfactor',
-    'chain_dssp': 'pdb.chain_dssp',
 
     # pdb-chain
     'pdb_chain_seq': 'pdb.pdb_chain_seq',
@@ -41,24 +40,16 @@ pool = {
 
     #dynamics
     'chain_fixed': 'dynamics.chain_fixed',
-    'chain_relaxed': 'dynamics.chain_relaxed',
     'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
     'combo2': 'dynamics.combo2',
     'combo2_fixed': 'dynamics.combo2_fixed',
-    'combo2_relaxed': 'dynamics.combo2_relaxed',
     'combo3': 'dynamics.combo3',
     'combo3_fixed': 'dynamics.combo3_fixed',
-    'combo3_relaxed': 'dynamics.combo3_relaxed',
     'combo4': 'dynamics.combo4',
     'combo4_fixed': 'dynamics.combo4_fixed',
-    'combo4_relaxed': 'dynamics.combo4_relaxed',
     'combo5': 'dynamics.combo5',
     'combo5_fixed': 'dynamics.combo5_fixed',
-    'combo5_relaxed': 'dynamics.combo5_relaxed',
 
-    'pdb_qc': 'dynamics.pdb_qc',
-    'pdb_relaxed_qc': 'dynamics.pdb_relaxed_qc',
-    
     # align
     'meta_blastp5': 'align.meta_blastp5',
     'align_uniprot': 'align.align_uniprot',

@@ -3,7 +3,7 @@ records reday for table insertion
 '''
 import os
 from ..common import ProcessPickle
-from ..PDB import AnalyzeDssp, Pdb
+from ..PDB import Pdb
 from ..protein import ParseBlastXml, ParseIgblast
 from ..UniProt import ParseDatRecord
 from .query_complex import QueryComplex

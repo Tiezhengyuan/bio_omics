@@ -177,15 +177,4 @@ CREATE TABLE chain_pdb(
         REFERENCES pdb_chainid(chain_id) ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS chain_dssp;
-CREATE TABLE chain_dssp(
-    pdb_id    VARCHAR(10),
-    chain_id  VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
-    model_no  INT,
-    chain_no  VARCHAR(5),
-    dssp_seq  TEXT,
-    host      VARCHAR(10),
-    UNIQUE(chain_id),
-    CONSTRAINT fk_chaindssp_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
+/* chain_dssp moved to structure_profiling/sql/pdb.sql */
