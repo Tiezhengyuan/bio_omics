@@ -1,4 +1,5 @@
 #! /usr/bin/bash
+set -e
 APP="uv --directory /home/yuan/bio/bio_omics run bomics"
 
 echo "Download PDB data to the local..."

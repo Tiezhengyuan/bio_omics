@@ -19,7 +19,10 @@ if __name__ == "__main__":
     
     # donwload pdb
     p = PullPdb(params['rawdata_dir'], params['verbose'])
-    p.synchronize_pdb(params['data_format'])
+    status = p.synchronize_pdb(params['data_format'])
+    if status != 'success':
+        print(f"ERROR: synchronize_pdb({params['data_format']}) failed, stop to avoid parsing stale data.")
+        sys.exit(1)
 
     # prepare _list dir
     list_dir = params['output_pdb_dir'] /'_list' / params['data_format']
