@@ -1,5 +1,5 @@
 #! /usr/bin/bash
-# bash src/bin/2_pdb_chain.sh
+# bash bin/2_pdb_chain.sh
 APP="uv --directory /home/yuan/bio/bio_omics run bomics"
 
 # identify chains

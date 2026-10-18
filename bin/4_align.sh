@@ -1,5 +1,5 @@
 #! /usr/bin/bash
-# bash src/bin/4_align.sh
+# bash bin/4_align.sh
 APP="uv --directory /home/yuan/bio/bio_omics run bomics"
 
 

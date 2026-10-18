@@ -43,7 +43,7 @@ structure biology
 
 install other packages
     ```
-    pip install -r src/bin/requirements.txt
+    pip install -r bin/requirements.txt
     ```
 
 
@@ -145,7 +145,7 @@ structure biology
 
 install other packages
     ```
-    pip install -r src/bin/requirements.txt
+    pip install -r bin/requirements.txt
     ```
     ```
 

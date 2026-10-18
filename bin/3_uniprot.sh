@@ -1,5 +1,5 @@
 #! /usr/bin/bash
-$ bash src/bin/3_uniprot.sh
+$ bash bin/3_uniprot.sh
 APP="uv --directory /home/yuan/bio/bio_omics run bomics"
 
 # download data
