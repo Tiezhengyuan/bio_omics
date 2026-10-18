@@ -39,16 +39,11 @@ pool = {
     'uniprot_af_rmsd': 'uniprot.uniprot_af_rmsd',
 
     #dynamics
-    'chain_fixed': 'dynamics.chain_fixed',
     'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
     'combo2': 'dynamics.combo2',
-    'combo2_fixed': 'dynamics.combo2_fixed',
     'combo3': 'dynamics.combo3',
-    'combo3_fixed': 'dynamics.combo3_fixed',
     'combo4': 'dynamics.combo4',
-    'combo4_fixed': 'dynamics.combo4_fixed',
     'combo5': 'dynamics.combo5',
-    'combo5_fixed': 'dynamics.combo5_fixed',
 
     # align
     'meta_blastp5': 'align.meta_blastp5',

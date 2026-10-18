@@ -113,12 +113,7 @@ TABLE_COLUMNS = {
         'combo_pdb', 'combo_csv', 'combo_fasta'],
     'combo5': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
         'combo_pdb', 'combo_csv', 'combo_fasta'],
-    # fix pdb
-    'chain_fixed': ['pdb_id', 'chain_id', 'fixed_pdb',],
-    'combo2_fixed': ['pdb_id', 'combo_id', 'fixed_pdb',],
-    'combo3_fixed': ['pdb_id', 'combo_id', 'fixed_pdb',],
-    'combo4_fixed': ['pdb_id', 'combo_id', 'fixed_pdb',],
-    'combo5_fixed': ['pdb_id', 'combo_id', 'fixed_pdb',],
+    # fix: chain_fixed, combo2..5_fixed moved to structure_profiling
     # relax: chain_relaxed, combo2..5_relaxed moved to structure_profiling
     # contacts
     'equal_seq_rmsd': ['chain_id', 'equal_chain_id', 'rmsd',

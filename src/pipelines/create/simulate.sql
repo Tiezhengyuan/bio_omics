@@ -8,8 +8,8 @@ meta_pdb -> pdb_chain_seq -> chain_pdb -> equal_chain_rmsd
                     ->combo_sasa
                     ->combo_contacts
 
-chain_relaxed, combo2..5_relaxed, pdb_qc and pdb_relaxed_qc
-moved to structure_profiling/sql/simulate.sql
+chain_fixed, combo2..5_fixed, chain_relaxed, combo2..5_relaxed,
+pdb_qc and pdb_relaxed_qc moved to structure_profiling/sql/simulate.sql
 */
 
 DROP TABLE IF EXISTS combo2;
@@ -68,17 +68,7 @@ CREATE TABLE combo5 (
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
 
-DROP TABLE IF EXISTS chain_fixed;
-CREATE TABLE chain_fixed (
-    pdb_id              VARCHAR(10),
-    chain_id            VARCHAR(20) COLLATE utf8mb4_bin NOT NULL,
-    fixed_pdb           VARCHAR(80) NOT NULL,
-    UNIQUE (chain_id),
-    CONSTRAINT fk_chain_fixed_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
-
-/* chain_relaxed moved to structure_profiling/sql/simulate.sql */
+/* chain_fixed, chain_relaxed moved to structure_profiling/sql/simulate.sql */
 
 DROP TABLE IF EXISTS equal_seq_rmsd;
 CREATE TABLE equal_seq_rmsd(
@@ -90,53 +80,13 @@ CREATE TABLE equal_seq_rmsd(
     UNIQUE(chain_id, equal_chain_id)
 );
 
-DROP TABLE IF EXISTS combo2_fixed;
-CREATE TABLE combo2_fixed(
-    pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
-    fixed_pdb           VARCHAR(80) NOT NULL,
-    UNIQUE (combo_id),
-    CONSTRAINT fk_combo2_fixed_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
+/* combo2_fixed, combo2_relaxed moved to structure_profiling/sql/simulate.sql */
 
-/* combo2_relaxed moved to structure_profiling/sql/simulate.sql */
+/* combo3_fixed, combo3_relaxed moved to structure_profiling/sql/simulate.sql */
 
-DROP TABLE IF EXISTS combo3_fixed;
-CREATE TABLE combo3_fixed(
-    pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
-    fixed_pdb           VARCHAR(80) NOT NULL,
-    UNIQUE (combo_id),
-    CONSTRAINT fk_combo3_fixed_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
-
-/* combo3_relaxed moved to structure_profiling/sql/simulate.sql */
-
-DROP TABLE IF EXISTS combo4_fixed;
-CREATE TABLE combo4_fixed(
-    pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
-    fixed_pdb           VARCHAR(80) NOT NULL,
-    UNIQUE (combo_id),
-    CONSTRAINT fk_combo4_fixed_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
-
-/* combo4_relaxed moved to structure_profiling/sql/simulate.sql */
-
-DROP TABLE IF EXISTS combo5_fixed;
-CREATE TABLE combo5_fixed(
-    pdb_id              VARCHAR(10),
-    combo_id            VARCHAR(40) COLLATE utf8mb4_bin NOT NULL,
-    fixed_pdb           VARCHAR(80) NOT NULL,
-    UNIQUE (combo_id),
-    CONSTRAINT fk_combo5_fixed_pdb FOREIGN KEY (pdb_id)
-        REFERENCES pdb(pdb_id) ON DELETE CASCADE
-);
+/* combo4_fixed, combo4_relaxed moved to structure_profiling/sql/simulate.sql */
 
 /*
-combo5_relaxed, pdb_qc and pdb_relaxed_qc
+combo5_fixed, combo5_relaxed, pdb_qc and pdb_relaxed_qc
 moved to structure_profiling/sql/simulate.sql
 */

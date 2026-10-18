@@ -23,9 +23,7 @@ dependencies = [
     "mysql-connector-python>=9.7.0",
     "netcdf4>=1.7.4",
     "notebook>=7.6.1",
-    "openmm[cuda12]>=8.5.2",
     "pandas>=3.0.5",
-    "pdbfixer",
     "plotly>=6.9.0",
     "prodigy-prot>=2.4.0",
     "py3dmol>=2.5.5",
@@ -52,9 +50,6 @@ dev = [
     "jupyter>=1.1.1",
     "notebook>=7.6.1",
 ]
-
-[tool.uv.sources]
-pdbfixer = { git = "https://github.com/openmm/pdbfixer.git" }
 
 [tool.uv]
 package = true

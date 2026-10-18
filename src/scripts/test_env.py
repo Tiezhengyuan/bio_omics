@@ -10,24 +10,6 @@ def main():
     if torch.cuda.is_available():
         print("GPU:", torch.cuda.get_device_name(0))
 
-    #############
-    import pdbfixer
-    print("\n\nPdbfixer version:", getattr(pdbfixer, "__version__", "unknown"))
-
-    #############
-    from openmm import version, Platform
-    print("\n\nOpenMM version:", version.version)
-    print("Available platforms:")
-    for i in range(Platform.getNumPlatforms()):
-        platform = Platform.getPlatform(i)
-        print(f"  {i}: {platform.getName()}")
-    try:
-        cuda = Platform.getPlatformByName("CUDA")
-        print("\n✓ CUDA platform is available")
-    except Exception as e:
-        print("\n✗ CUDA platform is NOT available")
-        print(e)
-
     #############    
     import pyrosetta
     pyrosetta.init("-mute all")
