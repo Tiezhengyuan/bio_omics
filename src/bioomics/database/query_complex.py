@@ -132,12 +132,16 @@ class QueryComplex(QueryDb):
             ids[pro_id].append(row['source_id'])
         return ids
 
-    def delete_pdb_ids(self, table_name:str):
+    def delete_pdb_ids(self, table_name:str) -> tuple:
+        '''
+        collect pdb_ids of unknown chains for deletion
+        '''
         query = f"""
-            DELETE FROM {table_name} WHERE chain_type = "x"
+            SELECT pdb_id FROM {table_name}
+            WHERE chain_type = 'x'
         ;"""
-        pdb_ids = self.list_data(query)
-        return tuple(pdb_ids['pdb_id'])
+        rows = self.list_data(query)
+        return tuple(rec['pdb_id'] for rec in rows)
 
     def count_complex(self):
         query = f"""

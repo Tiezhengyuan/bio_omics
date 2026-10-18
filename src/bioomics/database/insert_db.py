@@ -16,12 +16,12 @@ class InsertDb(Db):
         '''
         data is one record
         '''
-        col_str = ", ".join(cols)
-        val_str = ', '.join([f"'{i}'" for i in data])
+        col_str = ', '.join(cols)
+        fmt_str = ', '.join(['%s'] * len(data))
         query = f"""
-            INSERT INTO {table_name} ({col_str}) VALUES ({val_str})
+            INSERT INTO {table_name} ({col_str}) VALUES ({fmt_str})
         """
-        return self.execute(query)
+        return self.execute(query, tuple(data))
 
     def insert_records(self, data:list, table_name:str, cols:list) -> tuple:
         '''

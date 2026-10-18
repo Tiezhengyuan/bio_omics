@@ -23,7 +23,7 @@ class FilterDb:
 
     def uniprot_align_check_iter(self, table_name:str) -> Iterable:
         # collect aln files of which data not in DB
-        pdb_ids = QueryComplex().get_unique_values(table_name, 'pdb_id')
+        pdb_ids = QueryComplex().unique_values(table_name, 'pdb_id')
         align_iter = self.uniprot_align_iter()
         for path in align_iter:
             pdb_id = os.path.basename(os.path.dirname(path))
@@ -42,7 +42,7 @@ class FilterDb:
                     yield path, fa_file
 
     def igblastp_align_check_iter(self, table_name:str) -> Iterable:
-        pdb_ids = QueryComplex().get_unique_values(table_name, 'pdb_id')
+        pdb_ids = QueryComplex().unique_values(table_name, 'pdb_id')
         align_iter = self.igblastp_align_iter()
         for aln_file, fa_file in align_iter:
             pdb_id = os.path.basename(os.path.dirname(aln_file))

@@ -14,9 +14,17 @@ class CreateDb(Db):
         return self.execute(query)
 
     def create_database(self, db_name=None):
-        db_name = db_name if db_name else self.config['database']
+        db_name = db_name if db_name else self.config.get('database')
+        if not db_name:
+            return False
         query = f"CREATE DATABASE {db_name};"
-        result = self.execute(query)
+        # the database doesn't exist yet: connect without selecting it
+        database = self.config.pop('database', None)
+        try:
+            result = self.execute(query)
+        finally:
+            if database:
+                self.config['database'] = database
         if self.verbose:
             if result:
                 print(f"Database {db_name} is created.")

@@ -19,12 +19,19 @@ class UpdateDb(Db):
             cursor.execute(query, record)
             connection.commit()
             return cursor.rowcount
+        except mysql.connector.Error as e:
+            # Roll back if the connection was established
+            if 'connection' in locals() and connection.is_connected():
+                connection.rollback()
+            if self.verbose:
+                print(f"Error: {e}")
         except Exception as e:
             if self.verbose:
                 print(f"Error: {e}")
         finally:
-            if 'connection' in locals() and connection.is_connected():
+            if 'cursor' in locals() and cursor is not None:
                 cursor.close()
+            if 'connection' in locals() and connection.is_connected():
                 connection.close()
         return None
 

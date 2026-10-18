@@ -17,8 +17,7 @@ class DeleteComplex(DeleteDb):
         if n > 0:
             print(f"Number of {n} rows are invalid.", end=' ')
             chunk_size = 100
-            end = n - chunk_size if n > chunk_size else n
-            for i in range(0, end, chunk_size):
+            for i in range(0, n, chunk_size):
                 values = del_pool[i:i+chunk_size]
                 res = self.delete_rows(table_name, col_name, values)
                 if res:

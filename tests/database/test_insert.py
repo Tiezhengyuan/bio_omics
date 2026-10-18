@@ -1,5 +1,5 @@
 '''
-pytest -s tests/database/test_crud.py
+pytest -s tests/database/test_insert.py
 '''
 from ..helper import *
 from src.bioomics import Db, CreateDb, DeleteDb, InsertDb, \
@@ -54,6 +54,31 @@ class TestInsert(TestCase):
         q = QueryComplex(True)
         res = q.num_rows(table_name)
         assert res == 1
+
+    def test_insert_null(self):
+        b = InsertDb(True)
+        b.config['database'] = DB
+
+        # None is stored as NULL, not the string 'None'
+        res = b.insert(['c', None], table_name, cols)
+        assert res
+
+        res = QueryComplex(True).list_data(
+            f"select value from {table_name} where name = 'c'")
+        assert res == [{'value': None}]
+
+    def test_insert_quote(self):
+        b = InsertDb(True)
+        b.config['database'] = DB
+
+        # a quote in the data must not break the query
+        res = b.insert(["o'brien", 30], table_name, cols)
+        assert res
+
+        q = QueryComplex(True)
+        res = q.parse_data(
+            f'select value from {table_name} where name in ', ("o'brien",))
+        assert res == [{'value': 30}]
 
     def test_db_func_insert(self):
         records = [('a', 1), ('b', 2),]

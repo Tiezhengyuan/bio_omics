@@ -21,11 +21,19 @@ class DeleteDb(Db):
         return self.execute(query)
 
     def drop_database(self, db_name=None):
-        db_name = db_name if db_name else self.config['database']
+        db_name = db_name if db_name else self.config.get('database')
+        if not db_name:
+            return False
         query = f"DROP DATABASE {db_name};"
         if self.verbose:
             print(f"Try to drop database {db_name}...")
-        return self.execute(query)
+        # connect without selecting the database being dropped
+        database = self.config.pop('database', None)
+        try:
+            return self.execute(query)
+        finally:
+            if database:
+                self.config['database'] = database
 
     def delete_rows(self, table_name, col_name:str, values:list):
         if self.verbose:

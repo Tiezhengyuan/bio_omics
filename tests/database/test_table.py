@@ -69,3 +69,30 @@ class TestTable(TestCase):
         d.config['database'] = DB
         res = d.drop_table(table_name)
         assert not res
+
+    def test_database(self):
+        db_name = 'bioomics_tmp_db'
+        c = CreateDb(True)
+        c.config['database'] = db_name
+
+        try:
+            # create
+            res = c.create_database()
+            assert res
+
+            # duplicate creation fails
+            res = c.create_database()
+            assert not res
+
+            # drop
+            d = DeleteDb(True)
+            d.config['database'] = db_name
+            res = d.drop_database()
+            assert res
+
+            # drop a non-existent database fails
+            res = d.drop_database()
+            assert not res
+        finally:
+            d = DeleteDb(False)
+            d.drop_database(db_name)
