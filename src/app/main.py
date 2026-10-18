@@ -37,6 +37,8 @@ pool = {
     'uniprot_align_db': 'uniprot.uniprot_align_db',
     'uniprot_af': 'uniprot.uniprot_af',
     'uniprot_af_rmsd': 'uniprot.uniprot_af_rmsd',
+    'meta_blastp5': 'uniprot.meta_blastp5',
+    'align_uniprot': 'uniprot.align_uniprot',
 
     #dynamics
     'equal_seq_rmsd': 'dynamics.equal_seq_rmsd',
@@ -46,8 +48,7 @@ pool = {
     'combo5': 'dynamics.combo5',
 
     # align
-    'meta_blastp5': 'align.meta_blastp5',
-    'align_uniprot': 'align.align_uniprot',
+    # meta_blastp5, align_uniprot moved to uniprot
     # align_vdj/vfrag/vregion/dregion/jregion, label_antibody moved to antibody_omics
     # 'anarci': 'immune.anarci',
 
