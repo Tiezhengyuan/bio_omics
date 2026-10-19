@@ -33,3 +33,10 @@ ${APP} uniprot_align_db
 # pLDDT of alphafold modelling
 # python ${APP} uniprot_alphafold_plddt
 
+##### step into ailgn 
+#### blastp
+
+echo "Align against reference of uniprot using blastp"
+# pdb data, blastp, uniprot references are ready
+parallel -j8 ${APP} meta_blastp5 ::: {0..241}
+parallel -j8 ${APP} align_uniprot ::: {0..241}

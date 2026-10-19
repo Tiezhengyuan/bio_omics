@@ -61,17 +61,3 @@ class TestProcessSeq(TestCase):
             assert f.read() == '>a\nACD\n>b\nEEE\n'
         # no outfile: only records are built
         assert ProcessSeq.to_fasta(data) is False
-
-    def test_to_colabfold_csv(self):
-        outfile = os.path.join(RESULTS_DIR, 'colabfold.csv')
-        data = {'complex1': ['AAA', 'DDD']}
-        assert ProcessSeq.to_colabfold_csv(data, outfile) == 'succeed'
-        with open(outfile) as f:
-            assert f.read() == 'id,sequence\ncomplex1,AAA:DDD\n'
-
-    def test_to_colabfold_fasta(self):
-        outfile = os.path.join(RESULTS_DIR, 'colabfold.faa')
-        data = {'complex1': ['AAA', 'DDD']}
-        assert ProcessSeq.to_colabfold_fasta(data, outfile) == 'succeed'
-        with open(outfile) as f:
-            assert f.read() == '>complex1\nAAA:\nDDD'

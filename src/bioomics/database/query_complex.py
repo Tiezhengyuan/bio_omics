@@ -257,62 +257,6 @@ class QueryComplex(QueryDb):
         combo_ids = [i['combo_id'] for i in rows]
         return combo_ids
     
-    def pdb_chains(self, pdb_group:int) -> dict:
-        query = f"""
-            SELECT c.pdb_id, c.model_no, c.chain_id, d.relative_pdb,
-                s.relative_faa AS chain_faa, s.chain_seq
-            FROM pdb_chainid        c
-            LEFT JOIN meta_pdb      p ON c.pdb_id=p.pdb_id
-            LEFT JOIN pdb_chain_seq s ON c.chain_id=s.chain_id
-            LEFT JOIN chain_pdb     d ON c.chain_id=d.chain_id
-            WHERE p.pdb_group = {pdb_group}
-                AND c.model_no = 0
-                AND s.pro_len >= 3
-                AND s.relative_faa IS NOT NULL
-                AND d.relative_pdb IS NOT NULL
-        ;"""
-        rows = self.list_data(query)
-        df = pd.DataFrame(rows)
-        if not df.empty:
-            g = df.groupby(['pdb_id', 'model_no'])
-            return {key: sub for key, sub in g}
-        return {}
-
-    def retrieve_combo(self, pdb_group:int, combo:int, dest_table_name:str):
-            query = f"""
-                SELECT c.pdb_id, c.combo_id, c.combo_pdb
-                FROM combo{combo}  c
-                LEFT JOIN meta_pdb p ON c.pdb_id = p.pdb_id
-                WHERE p.pdb_group = {pdb_group}
-                    AND c.combo_pdb IS NOT NULL
-                    AND c.combo_id NOT IN (
-                        SELECT combo_id FROM {dest_table_name}
-                    )
-            ;"""
-            rows = self.list_data(query)
-            if self.verbose:
-                print(f"{len(rows)} PDB files ready...")
-            return rows
-
-    def retrieve_combo_fasta(self, pdb_group:int, combo:int, table_name:str):
-        '''
-        used by predict pipelines
-        '''
-        query = f"""
-            SELECT DISTINCT c.pdb_id, c.combo_id, c.combo_fasta
-            FROM label_complex     l
-            LEFT JOIN combo{combo} c ON l.combo_id = c.combo_id
-            LEFT JOIN meta_pdb     p ON c.pdb_id = p.pdb_id
-            WHERE p.pdb_group = {pdb_group}
-                AND NOT EXISTS (
-                    SELECT 1 FROM {table_name} b
-                    WHERE b.combo_id = c.combo_id
-                )
-        """
-        rows = self.list_data(query)
-        print(f"Retrieve {len(rows)} input files from {table_name}...")
-        return rows
-        
     def parse_proseq_name(self, seq_len:int) -> str:
         if seq_len <= 100:
             return 'proseq_100'

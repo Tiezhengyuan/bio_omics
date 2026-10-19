@@ -1,4 +1,5 @@
 #! /usr/bin/bash
+set -e
 # bash bin/2_pdb_chain.sh
 APP="uv --directory /home/yuan/bio/bio_omics run bomics"
 
@@ -20,5 +21,3 @@ parallel -j8 ${APP} pdb_chain_type ::: {0..241}
 
 # need pdb_chain_seq and pdb_chainid
 parallel -j8 ${APP} chain_pdb ::: {0..241}
-# need chain_pdb
-parallel -j8 ${APP} chain_dssp ::: {0..241}

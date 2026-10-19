@@ -8,6 +8,8 @@ meta_pdb -> pdb_chain_seq -> chain_pdb -> equal_chain_rmsd
                     ->combo_sasa
                     ->combo_contacts
 
+combo2..5 are filled by the split pipelines of structure_profiling
+and read here by the predict pipelines (0combo*_af);
 chain_fixed, combo2..5_fixed, chain_relaxed, combo2..5_relaxed,
 pdb_qc and pdb_relaxed_qc moved to structure_profiling/sql/simulate.sql
 */

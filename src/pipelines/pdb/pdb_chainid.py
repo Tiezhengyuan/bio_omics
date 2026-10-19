@@ -56,7 +56,7 @@ def build(row_iter, params, meta):
         if tag == 0:
             if params['verbose']:
                 print(f"Warning: no chains detected in {row['pdb_file']}.")
-            yield (row['pdb_id'],) + (None,) * 4,
+            yield (row['pdb_id'],) + (None,) * 4
             meta['null'] += 1
     
 ##################################

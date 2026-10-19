@@ -86,16 +86,7 @@ TABLE_COLUMNS = {
     # label: align_vdj/vfrag/vregion/dregion/jregion, label_chain/label_complex
     # moved to antibody_omics
 
-    # dynamics.sh
-    # combination
-    'combo2': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
-        'combo_pdb', 'combo_csv', 'combo_fasta'],
-    'combo3': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
-        'combo_pdb', 'combo_csv', 'combo_fasta'],
-    'combo4': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
-        'combo_pdb', 'combo_csv', 'combo_fasta'],
-    'combo5': ['pdb_id', 'combo_id', 'chain_combo', 'chain_pdbs',
-        'combo_pdb', 'combo_csv', 'combo_fasta'],
+    # dynamics: combo2..5 moved to structure_profiling
     # fix: chain_fixed, combo2..5_fixed moved to structure_profiling
     # relax: chain_relaxed, combo2..5_relaxed moved to structure_profiling
     # contacts

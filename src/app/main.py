@@ -28,10 +28,6 @@ pool = {
 
     # dynamics
     'equal_seq_rmsd': 'pdb.equal_seq_rmsd',
-    'combo2': 'pdb.combo2',
-    'combo3': 'pdb.combo3',
-    'combo4': 'pdb.combo4',
-    'combo5': 'pdb.combo5',
 
     # uniprot
     'download_uniprot': 'uniprot.download_uniprot',
@@ -46,8 +42,7 @@ pool = {
     'meta_blastp5': 'uniprot.meta_blastp5',
     'align_uniprot': 'uniprot.align_uniprot',
 
-    # dynamics
-    # equal_seq_rmsd, combo2-5 moved to pdb
+    # dynamics: combo2..5 moved to structure_profiling
 
     # align
     # meta_blastp5, align_uniprot moved to uniprot

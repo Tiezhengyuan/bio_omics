@@ -124,6 +124,8 @@ CREATE TABLE pdb_chain_seq(
     CONSTRAINT fk_chainseq_pdb FOREIGN KEY (pdb_id)
         REFERENCES pdb(pdb_id) ON DELETE CASCADE
 );
+/* pdb_proseq retrieves chains by pro_len */
+CREATE INDEX index_prolen ON pdb_chain_seq (pro_len);
 
 DROP TABLE IF EXISTS pdb_faa;
 CREATE TABLE pdb_faa(
