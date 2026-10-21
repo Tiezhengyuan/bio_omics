@@ -49,14 +49,9 @@ pool = {
     # align_vdj/vfrag/vregion/dregion/jregion, label_antibody moved to antibody_omics
     # 'anarci': 'immune.anarci',
 
-    # predict
-    'af_params': 'predict.af_params',
-    'af_msa': 'predict.af_msa',
-    'af_pred': 'predict.af_pred',
-    'af_summary': 'predict.af_summary',
-    'af_plddt': 'predict.af_plddt',
-    'af_rmsd': 'predict.af_rmsd',
-    'af_tmalign': 'predict.af_tmalign',
+    # predict: af_params, af_msa, af_pred, af_summary, af_plddt, af_rmsd,
+    # af_tmalign moved to structure_profiling:
+    #   see ~/bio/structure_profiling/bin/6_predict.sh
 
     
     # design
