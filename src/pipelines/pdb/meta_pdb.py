@@ -71,8 +71,7 @@ def validate_meta_pdb(params, meta):
         print(f"{n} out of {len(rows)} pdb/cif raw data are not existing.", end=' ')
         dc = DeleteComplex(params['verbose'])
         chunk_size = 100
-        end = n - chunk_size if n > chunk_size else n
-        for i in range(0, end, chunk_size):
+        for i in range(0, n, chunk_size):
             values = del_pool[i:i+chunk_size]
             res = dc.delete_rows(table_name, 'pdb_id', values)
             if res:
