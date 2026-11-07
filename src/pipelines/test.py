@@ -29,7 +29,7 @@ def main():
 
     #update record
     time.sleep(3)
-    footer(params, meta)
+    footer(meta, params)
 
 if __name__ == "__main__":
     main()

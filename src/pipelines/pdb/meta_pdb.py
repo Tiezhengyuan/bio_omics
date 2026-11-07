@@ -104,4 +104,4 @@ if __name__ == "__main__":
     bc = BuildComplex(params['verbose'])
     bc.insert_batch_records(record_iter, params['table_name'])
     
-    footer(params, meta)
+    footer(meta, params)

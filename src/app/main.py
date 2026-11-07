@@ -1,5 +1,4 @@
 #! /usr/bin/python
-import os
 import sys
 import subprocess
 
@@ -54,17 +53,14 @@ pool = {
     #   see ~/bio/structure_profiling/bin/6_predict.sh
 
     
-    # design
-    'predict_summary': 'design.predict_summary',
-    'predict_plddt': 'design.predict_plddt',
-    'predict_contacts': 'design.predict_contacts',
-    'predict_dist': 'design.predict_dist',
-    'predict_sasa': 'design.predict_sasa',
-    'dist_cdr': 'design.dist_cdr',
+    # design: predict_summary, predict_plddt, predict_contacts, dist_cdr
+    # predict_dist / predict_sasa moved to denovo_design:
+    #   see ~/bio/denovo_design/pipelines/
+    # collect_distance moved to antibody_omics:
+    #   see ~/bio/antibody_omics/src/pipelines/collect/
 
-    # collect data
-    'collect_distance': 'collect.collect_distance',
-    'collect_ab_distance': 'collect.collect_ab_distance',
+    # collect_ab_distance moved to complex_contacts:
+    #   see ~/bio/complex_contacts/src/pipelines/collect_ab_distance.py
 
     #other
     'clean_empty': 'clean.clean_empty',
@@ -75,7 +71,6 @@ pool = {
 
 def main():
     # build cmd
-    project_dir = os.path.dirname(__file__)
     name = sys.argv[1] if len(sys.argv) > 1 else None
 
 
@@ -94,7 +89,7 @@ def main():
     print(f"Run python script: {cmd}")
 
     # run
-    result = subprocess.run(cmd)
+    subprocess.run(cmd)
 
 if __name__ == "__main__":
     main()
