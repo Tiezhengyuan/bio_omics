@@ -57,6 +57,25 @@ CREATE VIEW view_pdb_chain AS
     WHERE S.chain_seq IS NOT NULL
 ;
 
+DROP VIEW IF EXISTS view_label_chain;
+CREATE VIEW view_label_chain AS
+    SELECT a.pdb_id, a.chain_id, a.first_chain_id, a.chain_label,
+        a.category, p.release_date, m.pdb_group
+    FROM label_chain   a
+    LEFT JOIN pdb      p ON a.pdb_id = p.pdb_id
+    LEFT JOIN meta_pdb m ON a.pdb_id = m.pdb_id
+    ORDER BY p.release_date DESC
+;
+
+DROP VIEW IF EXISTS view_label_complex;
+CREATE VIEW view_label_complex AS
+    SELECT a.pdb_id, a.combo_id, a.chain_label, a.combo,
+        a.category, p.release_date
+    FROM label_complex a
+    LEFT JOIN pdb    p ON a.pdb_id = p.pdb_id
+    ORDER BY p.release_date DESC
+;
+
 DROP VIEW IF EXISTS view_complex;
 CREATE VIEW view_complex AS
     SELECT pdb_id, count(*) AS num_chains, GROUP_CONCAT(DISTINCT 
