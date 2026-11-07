@@ -1,0 +1,10 @@
+metric,value
+pdb_entries_total,244584.0
+pdb_entries_mapped_to_swissprot,218368.0
+pdb_mapped_fraction,0.8928
+swissprot_entries_total,575503.0
+swissprot_via_blastp_mapping,49926.0
+swissprot_blastp_fraction,0.0868
+swissprot_with_pdb_xref,39017.0
+swissprot_pdb_xref_fraction,0.0678
+chain_level_mapping_rows,671936.0

@@ -1,0 +1,67 @@
+kw_a,kw_b,n_pairs
+Reference proteome,Transferase,64218
+Membrane,Metal-binding,20969
+Membrane,Reference proteome,83166
+Membrane,Transmembrane,82112
+Membrane,Transmembrane helix,80659
+Metal-binding,Reference proteome,80959
+Metal-binding,Transmembrane,13351
+Metal-binding,Transmembrane helix,13271
+Reference proteome,Transmembrane,56964
+Reference proteome,Transmembrane helix,56194
+Transmembrane,Transmembrane helix,80659
+Hydrolase,Reference proteome,44793
+Cytoplasm,Hydrolase,24692
+Metal-binding,Transferase,27166
+ATP-binding,Hydrolase,8425
+ATP-binding,Membrane,12089
+ATP-binding,Metal-binding,23932
+ATP-binding,Nucleotide-binding,83448
+ATP-binding,Reference proteome,54627
+ATP-binding,Transferase,28977
+ATP-binding,Transmembrane,4534
+ATP-binding,Transmembrane helix,4494
+Hydrolase,Membrane,9257
+Hydrolase,Metal-binding,29312
+Hydrolase,Nucleotide-binding,15950
+Hydrolase,Transferase,3226
+Hydrolase,Transmembrane,5548
+Hydrolase,Transmembrane helix,5493
+Membrane,Nucleotide-binding,15038
+Membrane,Transferase,13265
+Metal-binding,Nucleotide-binding,32658
+Nucleotide-binding,Reference proteome,67111
+Nucleotide-binding,Transferase,31045
+Nucleotide-binding,Transmembrane,5019
+Nucleotide-binding,Transmembrane helix,4978
+Transferase,Transmembrane,10043
+Transferase,Transmembrane helix,10021
+Cytoplasm,Metal-binding,45443
+Cytoplasm,Reference proteome,113394
+Cell membrane,Membrane,65741
+Cell membrane,Reference proteome,46581
+Cell membrane,Transmembrane,43166
+Cell membrane,Transmembrane helix,43058
+ATP-binding,Cell membrane,9126
+ATP-binding,Transport,8757
+Cell membrane,Nucleotide-binding,11215
+Cell membrane,Transport,29210
+Membrane,Transport,48963
+Nucleotide-binding,Transport,9559
+Reference proteome,Transport,37804
+Transmembrane,Transport,33298
+Transmembrane helix,Transport,32448
+Cytoplasm,Nucleotide-binding,53725
+Cytoplasm,Transferase,44726
+ATP-binding,Cytoplasm,43665
+Cytoplasm,Membrane,9195
+Cytoplasm,Transport,5926
+Metal-binding,Transport,12558
+Cell membrane,Cytoplasm,5439
+Cell membrane,Metal-binding,9551
+Cytoplasm,Transmembrane,1445
+Cytoplasm,Transmembrane helix,1411
+Cell membrane,Transferase,8060
+Hydrolase,Transport,1195
+Cell membrane,Hydrolase,5494
+Transferase,Transport,777

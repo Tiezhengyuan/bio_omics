@@ -1,0 +1,5 @@
+db_name,n_proteins,coverage_fraction
+AlphaFoldDB,551806,0.9588
+SMR,527374,0.9164
+PDB,39017,0.0678
+PDBsum,39017,0.0678

@@ -1,0 +1,2 @@
+comparison,method,n,rho,p_value
+chain identity vs mean B-factor,spearman,200000,-0.0515,1.8075009138226084e-117

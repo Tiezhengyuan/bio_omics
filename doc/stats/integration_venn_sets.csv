@@ -1,0 +1,5 @@
+set,n
+blastp_mapping_only,19299
+pdb_xref_only,8390
+both,30627
+blastp_union,58316
