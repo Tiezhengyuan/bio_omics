@@ -25,8 +25,9 @@ pool = {
     'pdb_proseq': 'pdb.pdb_proseq',
     'chain_pdb': 'pdb.chain_pdb',
 
-    # dynamics
-    'equal_seq_rmsd': 'pdb.equal_seq_rmsd',
+    # dynamics: equal_seq_rmsd moved to structure_profiling:
+    #   see ~/bio/structure_profiling/src/pipelines/dynamics/equal_seq_rmsd.py
+    #   run: sp equal_seq_rmsd (see ~/bio/structure_profiling/bin/5_qc.sh)
 
     # uniprot
     'download_uniprot': 'uniprot.download_uniprot',

@@ -1,5 +1,5 @@
 /*
-meta_pdb -> pdb_chain_seq -> chain_pdb -> equal_chain_rmsd
+meta_pdb -> pdb_chain_seq -> chain_pdb
          -> combo2 -> combo2_distance
          -> combo3
          -> combo4
@@ -11,7 +11,8 @@ meta_pdb -> pdb_chain_seq -> chain_pdb -> equal_chain_rmsd
 combo2..5 are filled by the split pipelines of structure_profiling
 and read here by the predict pipelines (0combo*_af);
 chain_fixed, combo2..5_fixed, chain_relaxed, combo2..5_relaxed,
-pdb_qc and pdb_relaxed_qc moved to structure_profiling/sql/simulate.sql
+pdb_qc, pdb_relaxed_qc and equal_seq_rmsd
+moved to structure_profiling/sql/simulate.sql
 */
 
 DROP TABLE IF EXISTS combo2;
@@ -72,15 +73,7 @@ CREATE TABLE combo5 (
 
 /* chain_fixed, chain_relaxed moved to structure_profiling/sql/simulate.sql */
 
-DROP TABLE IF EXISTS equal_seq_rmsd;
-CREATE TABLE equal_seq_rmsd(
-    chain_id        VARCHAR(10),
-    equal_chain_id  VARCHAR(10),
-    rmsd            FLOAT NOT NULL,
-    chain_pdb       VARCHAR(60),
-    equal_chain_pdb VARCHAR(60),
-    UNIQUE(chain_id, equal_chain_id)
-);
+/* equal_seq_rmsd moved to structure_profiling/sql/simulate.sql */
 
 /* combo2_fixed, combo2_relaxed moved to structure_profiling/sql/simulate.sql */
 

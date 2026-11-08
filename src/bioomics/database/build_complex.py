@@ -89,9 +89,7 @@ TABLE_COLUMNS = {
     # dynamics: combo2..5 moved to structure_profiling
     # fix: chain_fixed, combo2..5_fixed moved to structure_profiling
     # relax: chain_relaxed, combo2..5_relaxed moved to structure_profiling
-    # contacts
-    'equal_seq_rmsd': ['chain_id', 'equal_chain_id', 'rmsd',
-        'chain_pdb', 'equal_chain_pdb',],
+    # contacts: equal_seq_rmsd moved to structure_profiling
     # qc: pdb_qc / pdb_relaxed_qc moved to structure_profiling
 
     #predict Abs in PDB
