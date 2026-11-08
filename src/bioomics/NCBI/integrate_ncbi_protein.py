@@ -4,7 +4,7 @@ from ..common.concurrency import multi_threads
 from .ncbi import NCBI
 from .parse_id import ParseID
 from .integrate import Integrate
-# from ..integrate_data import IntegrateData
+from ..common.integrate_data import IntegrateData
 
 
 class IntegrateNCBIProtein(Integrate):
@@ -43,8 +43,7 @@ class IntegrateNCBIProtein(Integrate):
         # for data_pool in data_pool_iter:
         #     multi_threads(data_pool, self.integrate_gene2accession)
 
-        self.integrate.save_index_meta()
-        self.integrate.save_meta(self.meta)
+        self.integrate.save_index_meta(self.meta)
         return True
 
     def integrate_uniprotkb(self, chunk_data):
@@ -132,6 +131,5 @@ class IntegrateNCBIProtein(Integrate):
         gz_file = NCBI(self.local_path).download_gene_map('gene_refseq_uniprotkb_collab.gz')
         func(gz_file, self)
 
-        self.integrate.save_index_meta()
-        self.integrate.save_meta(self.meta)
+        self.integrate.save_index_meta(self.meta)
         return True

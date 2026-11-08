@@ -6,6 +6,7 @@ Unit tests for src/bioomics/common/concurrency.py; the heavy benchmark
 the bottom, skipped.
 '''
 from ..helper import *
+import tempfile
 from src.bioomics import *
 from concurrent.futures import ThreadPoolExecutor
 

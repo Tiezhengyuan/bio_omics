@@ -135,7 +135,7 @@ class PullPdb:
             pdb_id = file_name.split('.')[0]
             return pdb_id.upper()
         elif path.endswith('.pdb'):
-            pdb_id = re.sub(r'\pdb$', '', file_name)
+            pdb_id = re.sub(r'\.pdb$', '', file_name)
             return pdb_id.upper()
         return None
     
@@ -181,7 +181,7 @@ class PullPdb:
         print(f"Scan {n} PDB files in {self.pdb_dir}. Detect unknown {len(res)} PDB.")
         return res
 
-    def filter_in_raw_pdb(pdb_ids):
+    def filter_in_raw_pdb(self, pdb_ids):
         file_iter = self.iter_raw_pdb()
         for pdb_id, path in file_iter:
             if pdb_id in pdb_ids:

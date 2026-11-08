@@ -95,12 +95,29 @@ async def async_main(task_funcs:list, data:list, post_func=None, *args):
     await result_processor
 
 # wrap input data
-data = ["A", "B", "C", "D", "E", "F", "G", "H"]
-data = [{'id':i} for i in data]
-# build funcs pool
-funcs = [
-    Predictor.f1,
-    Predictor.f2,
-]
-params = {'host': 'am5'}
-asyncio.run(async_main(funcs, data, None, params))
+def _build_data():
+    data = ["A", "B", "C", "D", "E", "F", "G", "H"]
+    return [{'id': i} for i in data]
+
+async def _run():
+    # build funcs pool
+    funcs = [
+        Predictor.f1,
+        Predictor.f2,
+    ]
+    params = {'host': 'am5'}
+    await async_main(funcs, _build_data(), None, params)
+
+
+from unittest import TestCase
+
+class TestAsyncWorkers(TestCase):
+    '''
+    verify the asyncio worker-pool prototype drains the queue and exits
+    '''
+    def test_async_main(self):
+        asyncio.run(_run())
+
+
+if __name__ == '__main__':
+    asyncio.run(_run())

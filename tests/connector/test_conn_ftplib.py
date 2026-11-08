@@ -1,7 +1,7 @@
 '''
 Test class 
 '''
-from .helper import *
+from tests.helper import *
 from src.bioomics import ConnFTPlib as cf
 
 @ddt
@@ -37,6 +37,7 @@ class TestConnFTPlib(TestCase):
     def test_scan_tree(self, endpoint, ftp_path, pattern):
         res = cf.scan_tree(endpoint, ftp_path, pattern)
 
+    @skip
     @data(
         ['ftp.ncbi.nlm.nih.gov', '/pubmed', 'gz'],
     )
@@ -44,6 +45,7 @@ class TestConnFTPlib(TestCase):
     def test_download_tree(self, endpoint, ftp_path, pattern):
         '''
         download all files
+        NB: skipped - it mirrors the whole /pubmed FTP tree (huge download)
         '''
         local_path = os.path.join(DIR_DATA, 'NCBI')
         cf.download_tree(endpoint, ftp_path, pattern, local_path)

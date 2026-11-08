@@ -47,6 +47,9 @@ class TestNCBI(TestCase):
     def test_download_protein_fasta(self):
         local_files = NCBI(DIR_DATA).download_protein_fasta()
 
+    # downloads the 11 NCBI gene/DATA mapping files (multi-GB in total)
+    # - network-heavy, skipped
+    @skip
     def test_download_id_mapping(self):
         local_files = NCBI(DIR_DATA).download_id_mapping()
         print(local_files)

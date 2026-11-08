@@ -48,6 +48,10 @@ class IntegrateData:
         if isinstance(input, dict):
             self.index_meta.update(input)
         if self.index_meta:
+            # ensure the entity directory exists before writing
+            parent_dir = os.path.dirname(self.index_meta_file)
+            if parent_dir:
+                os.makedirs(parent_dir, exist_ok=True)
             with open(self.index_meta_file, 'w') as f:
                 json.dump(self.index_meta, f, indent=4)
             return True

@@ -6,7 +6,7 @@ import os
 
 from ..common.bio_handler import BioHandler
 from ..common.bio_dict import BioDict
-# from ..integrate_data import IntegrateData
+from ..common.integrate_data import IntegrateData
 
 class GenBank:
     source = 'NCBI_GenBank'
@@ -46,8 +46,7 @@ class GenBank:
                 #         self.meta[k] = 0
                 #     self.meta[k] += v
 
-        self.integrate.save_meta(self.meta)
-        self.integrate.save_index_meta()
+        self.integrate.save_index_meta(self.meta)
         return True
 
     def parse_epitope_proteins(self, local_gz:str):

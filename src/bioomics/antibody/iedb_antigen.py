@@ -6,16 +6,16 @@ antigen --- eptope --- BCR/TCR/BCell/TCell/MHC
 import os
 
 from ..common import Dir
+from ..common.integrate_data import IntegrateData
 from .iedb import IEDB
-# from ..integrate_data import IntegrateData
 
 class IEDBAntigen(IEDB):
     key = 'accession'
 
     def __init__(self, local_path:str):
-        super().__init__(local_path, None, False)
+        super().__init__(local_path)
         self.meta['entity'] = 'antigen'
-        self.meta['entity_path'] = os.path.join(self.meta['local_path'], 'antigen')
+        self.meta['entity_path'] = os.path.join(self.meta['local_db_path'], 'antigen')
         Dir(self.meta['entity_path']).init_dir()
         self.integrate = None
     

@@ -4,7 +4,7 @@ from ..common.concurrency import *
 from .ncbi import NCBI
 from .parse_id import ParseID
 from .integrate import Integrate
-# from ..integrate_data import IntegrateData
+from ..common.integrate_data import IntegrateData
 
 class IntegrateUniProtKBProtein(Integrate):
     entity = 'uniprotkb_protein'
@@ -35,8 +35,7 @@ class IntegrateUniProtKBProtein(Integrate):
             results = mp_pool(data_pool, self.integrate_refseq)
             self._join_meta(results, 'ncbi_refseq_uniprotkb')
 
-        self.integrate.save_index_meta()
-        self.integrate.save_meta(self.meta)
+        self.integrate.save_index_meta(self.meta)
         return True
 
     def integrate_refseq(self, chunk_data):

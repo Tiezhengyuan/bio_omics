@@ -15,7 +15,7 @@ class NCBI(ConnFTP):
     url = 'ftp.ncbi.nlm.nih.gov'
 
     def __init__(self, local_path:str, overwrite:bool=None):
-        super().__init__(url=self.url, overwrite=overwrite)
+        super().__init__(url=self.url, overwrite=overwrite, run_gunzip=False)
         self.local_path = os.path.join(local_path, "NCBI")
 
     def download_assembly_summary(self, groups:list=None):
