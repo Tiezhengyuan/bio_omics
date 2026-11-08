@@ -4,7 +4,6 @@ download data from NCIB FTP
 import os
 
 from ..connector.conn_ftp import ConnFTP
-from ..connector.conn_ftplib import ConnFTPlib
 
 # lock the scope of groups in local version
 ANATOMY_GROUPS = ['archaea', 'bacteria', 'fungi', 'invertebrate', 'plant',
@@ -144,12 +143,14 @@ class NCBI(ConnFTP):
 
     def download_pubmed(self):
         '''
-        download /PubMed including subdirectories and files
+        download /pubmed including subdirectories and files
+        NB: the whole /pubmed tree is tremendous, files are downloaded
+        one by one through their own connections with retries, and
+        existing local files are skipped (overwrite=False by default)
         '''
-        res = ConnFTPlib.download_tree(
-            ftp_endpoint = self.url,
-            ftp_path = '/pubmed',
-            match = '.gz',
-            local_path = self.local_path
+        local_files = self.download_tree(
+            local_path = os.path.join(self.local_path, 'pubmed'),
+            endpoint = 'pubmed',
+            match = r'\.gz$'
         )
-        return res
+        return local_files
