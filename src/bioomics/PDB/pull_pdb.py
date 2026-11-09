@@ -10,8 +10,17 @@ import urllib
 from datetime import date
 from pathlib import Path
 import subprocess
+import time
 
 from ..common.dir import Dir
+
+# wwPDB archive rsync servers, tried in order
+# rsync.rcsb.org: RCSB (USA), serves module ftp_data on port 33444
+# rsync.ebi.ac.uk: PDBe mirror (Europe), default rsync port 873
+PDB_RSYNC_SOURCES = [
+    (33444, 'rsync.rcsb.org::ftp_data/structures/divided'),
+    (873, 'rsync.ebi.ac.uk::pub/databases/pdb/data/structures/divided'),
+]
 
 class PullPdb:
     def __init__(self, pdb_dir:Path=None, verbose=False):
@@ -28,6 +37,11 @@ class PullPdb:
             if self.verbose:
                 print(res.stdout)
             return 'success'
+        except subprocess.CalledProcessError as e:
+            print(f"Command execution failed: error={e}")
+            # surface the real rsync error message, e.g. "did not see server greeting"
+            if e.stderr and e.stderr.strip():
+                print(e.stderr.strip()[-2000:])
         except Exception as e:
             print(f"Command execution failed: error={e}")
         return 'failed'
@@ -36,18 +50,27 @@ class PullPdb:
         '''
         download entire PDB files to the local
         file_format: pdb, mmCIF, xml
+        try the primary RCSB server first, then fall back to the PDBe mirror,
+        a few rounds in case a server is down or throttling connections
         '''
         self.pdb_dir.mkdir(parents=True, exist_ok=True)
         data_format = 'pdb' if data_format is None else data_format
         # -r recursive, -l copy symlinks as symlinks
         # -p keep permissions, -t keep time modifications
         # -v verbose, -z compress file
-        cmd = [
-            "rsync", '-rlpt', '-v', '-z', '--port=33444', 
-            f"rsync.rcsb.org::ftp_data/structures/divided/{data_format}",
-            self.pdb_dir,
-        ]
-        return self._subprocess(cmd)
+        n_tries = 3
+        for attempt in range(1, n_tries + 1):
+            for port, base in PDB_RSYNC_SOURCES:
+                source = f'{base}/{data_format}'
+                cmd = ["rsync", '-rlpt', '-v', '-z', f'--port={port}', source, self.pdb_dir]
+                status = self._subprocess(cmd)
+                if status == 'success':
+                    return status
+                print(f"rsync attempt {attempt}/{n_tries} failed from {source}.")
+            if attempt < n_tries:
+                print('wait 60s before the next round of rsync.')
+                time.sleep(60)
+        return 'failed'
 
     def download_pdb(self, pdb_id:str) -> str:
         '''
